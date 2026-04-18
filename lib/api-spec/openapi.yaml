@@ -20,6 +20,10 @@ tags:
     description: Delivery tracking
   - name: account
     description: Account operations
+  - name: withdrawals
+    description: Withdrawal operations
+  - name: stats
+    description: Usage statistics
 paths:
   /healthz:
     get:
@@ -192,6 +196,181 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TransactionsResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bulk-purchase:
+    post:
+      operationId: bulkPurchase
+      tags: [purchase]
+      summary: Bulk purchase data bundles
+      description: Send up to 50 orders in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkPurchaseRequest"
+      responses:
+        "200":
+          description: Bulk purchase result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkPurchaseResponse"
+        "400":
+          description: Validation or balance error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkPurchaseErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /purchase-history:
+    get:
+      operationId: getPurchaseHistory
+      tags: [orders]
+      summary: Get purchase history
+      description: Returns detailed purchase records with balance tracking
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Purchase history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchaseHistoryResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /claim-referral-bonus:
+    post:
+      operationId: claimReferralBonus
+      tags: [account]
+      summary: Claim referral bonus
+      description: Claim any pending referral bonuses for your account
+      responses:
+        "200":
+          description: Referral bonus claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralBonusResponse"
+        "400":
+          description: No bonus to claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stats:
+    get:
+      operationId: getUsageStats
+      tags: [stats]
+      summary: Get usage statistics
+      description: Returns purchase totals, network breakdown, and spending summary
+      responses:
+        "200":
+          description: Usage stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageStatsResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /withdrawals:
+    post:
+      operationId: createWithdrawal
+      tags: [withdrawals]
+      summary: Create a withdrawal
+      description: Withdraw funds from the wallet to a mobile money number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawalRequest"
+      responses:
+        "200":
+          description: Withdrawal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WithdrawalResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WithdrawalErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /withdrawals/{reference}:
+    get:
+      operationId: getWithdrawalStatus
+      tags: [withdrawals]
+      summary: Get withdrawal status
+      description: Check the status of a withdrawal by reference
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Withdrawal status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WithdrawalStatusResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Server error
           content:
@@ -565,5 +744,371 @@ components:
           type: string
         data:
           $ref: "#/components/schemas/TransactionsData"
+      required:
+        - status
+
+    BulkOrderItem:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+        network:
+          type: string
+          enum: [YELLO, TELECEL, AT_PREMIUM]
+        capacity:
+          type: string
+        ref:
+          type: ["string", "null"]
+      required:
+        - phoneNumber
+        - network
+        - capacity
+
+    BulkPurchaseRequest:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/BulkOrderItem"
+          maxItems: 50
+      required:
+        - orders
+
+    BulkOrderResult:
+      type: object
+      properties:
+        index:
+          type: number
+        ref:
+          type: ["string", "null"]
+        phoneNumber:
+          type: string
+        network:
+          type: string
+        capacity:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+        purchaseId:
+          type: ["string", "null"]
+        orderReference:
+          type: ["string", "null"]
+        transactionReference:
+          type: ["string", "null"]
+        balanceBefore:
+          type: ["number", "null"]
+        balanceAfter:
+          type: ["number", "null"]
+        error:
+          type: ["string", "null"]
+      required:
+        - index
+        - phoneNumber
+        - network
+        - capacity
+        - price
+        - status
+
+    BulkSummary:
+      type: object
+      properties:
+        total:
+          type: number
+        successful:
+          type: number
+        failed:
+          type: number
+        invalid:
+          type: number
+        totalCharged:
+          type: number
+        remainingBalance:
+          type: number
+      required:
+        - total
+        - successful
+        - failed
+
+    BulkPurchaseData:
+      type: object
+      properties:
+        summary:
+          $ref: "#/components/schemas/BulkSummary"
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/BulkOrderResult"
+        validationErrors:
+          type: array
+          items:
+            type: string
+      required:
+        - summary
+        - results
+
+    BulkPurchaseResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/BulkPurchaseData"
+      required:
+        - status
+        - message
+
+    BulkPurchaseErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            totalCost:
+              type: number
+            walletBalance:
+              type: number
+            validOrders:
+              type: number
+            shortfall:
+              type: number
+      required:
+        - status
+        - message
+
+    PurchaseRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        phoneNumber:
+          type: string
+        network:
+          type: string
+        capacity:
+          type: number
+        price:
+          type: number
+        orderStatus:
+          type: string
+        orderReference:
+          type: string
+        balanceBefore:
+          type: ["number", "null"]
+        balanceAfter:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - phoneNumber
+        - network
+        - capacity
+        - price
+        - orderStatus
+        - orderReference
+        - createdAt
+
+    PurchaseHistoryData:
+      type: object
+      properties:
+        purchases:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseRecord"
+        pagination:
+          $ref: "#/components/schemas/TransactionsPagination"
+      required:
+        - purchases
+        - pagination
+
+    PurchaseHistoryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: "#/components/schemas/PurchaseHistoryData"
+      required:
+        - status
+
+    ReferralBonusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            amountClaimed:
+              type: ["number", "null"]
+            newBalance:
+              type: ["number", "null"]
+      required:
+        - status
+        - message
+
+    NetworkStat:
+      type: object
+      properties:
+        network:
+          type: string
+        totalOrders:
+          type: number
+        totalGB:
+          type: number
+        totalSpent:
+          type: number
+      required:
+        - network
+        - totalOrders
+        - totalGB
+        - totalSpent
+
+    UsageStatsData:
+      type: object
+      properties:
+        totalOrders:
+          type: number
+        totalSpent:
+          type: number
+        totalGB:
+          type: number
+        successRate:
+          type: number
+        networkBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/NetworkStat"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseRecord"
+      required:
+        - totalOrders
+        - totalSpent
+        - totalGB
+        - successRate
+
+    UsageStatsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: "#/components/schemas/UsageStatsData"
+      required:
+        - status
+
+    WithdrawalRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        phoneNumber:
+          type: string
+        network:
+          type: string
+          enum: [MTN, TELECEL, AIRTELTIGO]
+        clientRef:
+          type: ["string", "null"]
+      required:
+        - amount
+        - phoneNumber
+        - network
+
+    WithdrawalData:
+      type: object
+      properties:
+        reference:
+          type: string
+        amount:
+          type: number
+        fee:
+          type: number
+        phoneNumber:
+          type: string
+        network:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - reference
+        - amount
+        - phoneNumber
+        - network
+        - status
+
+    WithdrawalResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/WithdrawalData"
+      required:
+        - status
+        - message
+
+    WithdrawalErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        code:
+          type: ["string", "null"]
+      required:
+        - status
+        - message
+
+    WithdrawalStatusData:
+      type: object
+      properties:
+        reference:
+          type: string
+        amount:
+          type: number
+        fee:
+          type: number
+        phoneNumber:
+          type: string
+        network:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - reference
+        - amount
+        - phoneNumber
+        - network
+        - status
+
+    WithdrawalStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: "#/components/schemas/WithdrawalStatusData"
       required:
         - status

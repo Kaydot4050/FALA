@@ -236,3 +236,204 @@ export const GetTransactionsResponse = zod.object({
     })
     .optional(),
 });
+
+/**
+ * Send up to 50 orders in a single request
+ * @summary Bulk purchase data bundles
+ */
+export const bulkPurchaseBodyOrdersMax = 50;
+
+export const BulkPurchaseBody = zod.object({
+  orders: zod
+    .array(
+      zod.object({
+        phoneNumber: zod.string(),
+        network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM"]),
+        capacity: zod.string(),
+        ref: zod.string().nullish(),
+      }),
+    )
+    .max(bulkPurchaseBodyOrdersMax),
+});
+
+export const BulkPurchaseResponse = zod.object({
+  status: zod.string(),
+  message: zod.string(),
+  data: zod
+    .object({
+      summary: zod.object({
+        total: zod.number(),
+        successful: zod.number(),
+        failed: zod.number(),
+        invalid: zod.number().optional(),
+        totalCharged: zod.number().optional(),
+        remainingBalance: zod.number().optional(),
+      }),
+      results: zod.array(
+        zod.object({
+          index: zod.number(),
+          ref: zod.string().nullish(),
+          phoneNumber: zod.string(),
+          network: zod.string(),
+          capacity: zod.string(),
+          price: zod.number(),
+          status: zod.string(),
+          purchaseId: zod.string().nullish(),
+          orderReference: zod.string().nullish(),
+          transactionReference: zod.string().nullish(),
+          balanceBefore: zod.number().nullish(),
+          balanceAfter: zod.number().nullish(),
+          error: zod.string().nullish(),
+        }),
+      ),
+      validationErrors: zod.array(zod.string()).optional(),
+    })
+    .optional(),
+});
+
+/**
+ * Returns detailed purchase records with balance tracking
+ * @summary Get purchase history
+ */
+export const getPurchaseHistoryQueryPageDefault = 1;
+export const getPurchaseHistoryQueryLimitDefault = 20;
+
+export const GetPurchaseHistoryQueryParams = zod.object({
+  page: zod.coerce.number().default(getPurchaseHistoryQueryPageDefault),
+  limit: zod.coerce.number().default(getPurchaseHistoryQueryLimitDefault),
+});
+
+export const GetPurchaseHistoryResponse = zod.object({
+  status: zod.string(),
+  data: zod
+    .object({
+      purchases: zod.array(
+        zod.object({
+          id: zod.string(),
+          phoneNumber: zod.string(),
+          network: zod.string(),
+          capacity: zod.number(),
+          price: zod.number(),
+          orderStatus: zod.string(),
+          orderReference: zod.string(),
+          balanceBefore: zod.number().nullish(),
+          balanceAfter: zod.number().nullish(),
+          createdAt: zod.string(),
+        }),
+      ),
+      pagination: zod.object({
+        currentPage: zod.number(),
+        totalPages: zod.number(),
+        totalItems: zod.number(),
+      }),
+    })
+    .optional(),
+});
+
+/**
+ * Claim any pending referral bonuses for your account
+ * @summary Claim referral bonus
+ */
+export const ClaimReferralBonusResponse = zod.object({
+  status: zod.string(),
+  message: zod.string(),
+  data: zod
+    .object({
+      amountClaimed: zod.number().nullish(),
+      newBalance: zod.number().nullish(),
+    })
+    .optional(),
+});
+
+/**
+ * Returns purchase totals, network breakdown, and spending summary
+ * @summary Get usage statistics
+ */
+export const GetUsageStatsResponse = zod.object({
+  status: zod.string(),
+  data: zod
+    .object({
+      totalOrders: zod.number(),
+      totalSpent: zod.number(),
+      totalGB: zod.number(),
+      successRate: zod.number(),
+      networkBreakdown: zod
+        .array(
+          zod.object({
+            network: zod.string(),
+            totalOrders: zod.number(),
+            totalGB: zod.number(),
+            totalSpent: zod.number(),
+          }),
+        )
+        .optional(),
+      recentActivity: zod
+        .array(
+          zod.object({
+            id: zod.string(),
+            phoneNumber: zod.string(),
+            network: zod.string(),
+            capacity: zod.number(),
+            price: zod.number(),
+            orderStatus: zod.string(),
+            orderReference: zod.string(),
+            balanceBefore: zod.number().nullish(),
+            balanceAfter: zod.number().nullish(),
+            createdAt: zod.string(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
+});
+
+/**
+ * Withdraw funds from the wallet to a mobile money number
+ * @summary Create a withdrawal
+ */
+export const CreateWithdrawalBody = zod.object({
+  amount: zod.number(),
+  phoneNumber: zod.string(),
+  network: zod.enum(["MTN", "TELECEL", "AIRTELTIGO"]),
+  clientRef: zod.string().nullish(),
+});
+
+export const CreateWithdrawalResponse = zod.object({
+  status: zod.string(),
+  message: zod.string(),
+  data: zod
+    .object({
+      reference: zod.string(),
+      amount: zod.number(),
+      fee: zod.number().optional(),
+      phoneNumber: zod.string(),
+      network: zod.string(),
+      status: zod.string(),
+      createdAt: zod.string().optional(),
+    })
+    .optional(),
+});
+
+/**
+ * Check the status of a withdrawal by reference
+ * @summary Get withdrawal status
+ */
+export const GetWithdrawalStatusParams = zod.object({
+  reference: zod.coerce.string(),
+});
+
+export const GetWithdrawalStatusResponse = zod.object({
+  status: zod.string(),
+  data: zod
+    .object({
+      reference: zod.string(),
+      amount: zod.number(),
+      fee: zod.number().optional(),
+      phoneNumber: zod.string(),
+      network: zod.string(),
+      status: zod.string(),
+      createdAt: zod.string().optional(),
+      updatedAt: zod.string().optional(),
+    })
+    .optional(),
+});

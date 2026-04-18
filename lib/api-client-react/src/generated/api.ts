@@ -18,17 +18,28 @@ import type {
 
 import type {
   BalanceResponse,
+  BulkPurchaseErrorResponse,
+  BulkPurchaseRequest,
+  BulkPurchaseResponse,
   DataPackagesResponse,
   DeliveryTrackerResponse,
   ErrorResponse,
   GetDataPackagesParams,
+  GetPurchaseHistoryParams,
   GetTransactionsParams,
   HealthStatus,
   OrderStatusResponse,
   PurchaseErrorResponse,
+  PurchaseHistoryResponse,
   PurchaseRequest,
   PurchaseResponse,
+  ReferralBonusResponse,
   TransactionsResponse,
+  UsageStatsResponse,
+  WithdrawalErrorResponse,
+  WithdrawalRequest,
+  WithdrawalResponse,
+  WithdrawalStatusResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -628,6 +639,536 @@ export function useGetTransactions<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetTransactionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Send up to 50 orders in a single request
+ * @summary Bulk purchase data bundles
+ */
+export const getBulkPurchaseUrl = () => {
+  return `/api/bulk-purchase`;
+};
+
+export const bulkPurchase = async (
+  bulkPurchaseRequest: BulkPurchaseRequest,
+  options?: RequestInit,
+): Promise<BulkPurchaseResponse> => {
+  return customFetch<BulkPurchaseResponse>(getBulkPurchaseUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(bulkPurchaseRequest),
+  });
+};
+
+export const getBulkPurchaseMutationOptions = <
+  TError = ErrorType<BulkPurchaseErrorResponse | ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkPurchase>>,
+    TError,
+    { data: BodyType<BulkPurchaseRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkPurchase>>,
+  TError,
+  { data: BodyType<BulkPurchaseRequest> },
+  TContext
+> => {
+  const mutationKey = ["bulkPurchase"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkPurchase>>,
+    { data: BodyType<BulkPurchaseRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkPurchase(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkPurchaseMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkPurchase>>
+>;
+export type BulkPurchaseMutationBody = BodyType<BulkPurchaseRequest>;
+export type BulkPurchaseMutationError = ErrorType<
+  BulkPurchaseErrorResponse | ErrorResponse
+>;
+
+/**
+ * @summary Bulk purchase data bundles
+ */
+export const useBulkPurchase = <
+  TError = ErrorType<BulkPurchaseErrorResponse | ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkPurchase>>,
+    TError,
+    { data: BodyType<BulkPurchaseRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof bulkPurchase>>,
+  TError,
+  { data: BodyType<BulkPurchaseRequest> },
+  TContext
+> => {
+  return useMutation(getBulkPurchaseMutationOptions(options));
+};
+
+/**
+ * Returns detailed purchase records with balance tracking
+ * @summary Get purchase history
+ */
+export const getGetPurchaseHistoryUrl = (params?: GetPurchaseHistoryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/purchase-history?${stringifiedParams}`
+    : `/api/purchase-history`;
+};
+
+export const getPurchaseHistory = async (
+  params?: GetPurchaseHistoryParams,
+  options?: RequestInit,
+): Promise<PurchaseHistoryResponse> => {
+  return customFetch<PurchaseHistoryResponse>(
+    getGetPurchaseHistoryUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetPurchaseHistoryQueryKey = (
+  params?: GetPurchaseHistoryParams,
+) => {
+  return [`/api/purchase-history`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetPurchaseHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPurchaseHistory>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetPurchaseHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPurchaseHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPurchaseHistoryQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPurchaseHistory>>
+  > = ({ signal }) => getPurchaseHistory(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPurchaseHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPurchaseHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPurchaseHistory>>
+>;
+export type GetPurchaseHistoryQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get purchase history
+ */
+
+export function useGetPurchaseHistory<
+  TData = Awaited<ReturnType<typeof getPurchaseHistory>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetPurchaseHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPurchaseHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPurchaseHistoryQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Claim any pending referral bonuses for your account
+ * @summary Claim referral bonus
+ */
+export const getClaimReferralBonusUrl = () => {
+  return `/api/claim-referral-bonus`;
+};
+
+export const claimReferralBonus = async (
+  options?: RequestInit,
+): Promise<ReferralBonusResponse> => {
+  return customFetch<ReferralBonusResponse>(getClaimReferralBonusUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getClaimReferralBonusMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimReferralBonus>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof claimReferralBonus>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["claimReferralBonus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof claimReferralBonus>>,
+    void
+  > = () => {
+    return claimReferralBonus(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClaimReferralBonusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof claimReferralBonus>>
+>;
+
+export type ClaimReferralBonusMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Claim referral bonus
+ */
+export const useClaimReferralBonus = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof claimReferralBonus>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof claimReferralBonus>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getClaimReferralBonusMutationOptions(options));
+};
+
+/**
+ * Returns purchase totals, network breakdown, and spending summary
+ * @summary Get usage statistics
+ */
+export const getGetUsageStatsUrl = () => {
+  return `/api/stats`;
+};
+
+export const getUsageStats = async (
+  options?: RequestInit,
+): Promise<UsageStatsResponse> => {
+  return customFetch<UsageStatsResponse>(getGetUsageStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUsageStatsQueryKey = () => {
+  return [`/api/stats`] as const;
+};
+
+export const getGetUsageStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUsageStats>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUsageStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUsageStatsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsageStats>>> = ({
+    signal,
+  }) => getUsageStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getUsageStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetUsageStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUsageStats>>
+>;
+export type GetUsageStatsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get usage statistics
+ */
+
+export function useGetUsageStats<
+  TData = Awaited<ReturnType<typeof getUsageStats>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUsageStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetUsageStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Withdraw funds from the wallet to a mobile money number
+ * @summary Create a withdrawal
+ */
+export const getCreateWithdrawalUrl = () => {
+  return `/api/withdrawals`;
+};
+
+export const createWithdrawal = async (
+  withdrawalRequest: WithdrawalRequest,
+  options?: RequestInit,
+): Promise<WithdrawalResponse> => {
+  return customFetch<WithdrawalResponse>(getCreateWithdrawalUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(withdrawalRequest),
+  });
+};
+
+export const getCreateWithdrawalMutationOptions = <
+  TError = ErrorType<WithdrawalErrorResponse | ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWithdrawal>>,
+    TError,
+    { data: BodyType<WithdrawalRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createWithdrawal>>,
+  TError,
+  { data: BodyType<WithdrawalRequest> },
+  TContext
+> => {
+  const mutationKey = ["createWithdrawal"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createWithdrawal>>,
+    { data: BodyType<WithdrawalRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createWithdrawal(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateWithdrawalMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createWithdrawal>>
+>;
+export type CreateWithdrawalMutationBody = BodyType<WithdrawalRequest>;
+export type CreateWithdrawalMutationError = ErrorType<
+  WithdrawalErrorResponse | ErrorResponse
+>;
+
+/**
+ * @summary Create a withdrawal
+ */
+export const useCreateWithdrawal = <
+  TError = ErrorType<WithdrawalErrorResponse | ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createWithdrawal>>,
+    TError,
+    { data: BodyType<WithdrawalRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createWithdrawal>>,
+  TError,
+  { data: BodyType<WithdrawalRequest> },
+  TContext
+> => {
+  return useMutation(getCreateWithdrawalMutationOptions(options));
+};
+
+/**
+ * Check the status of a withdrawal by reference
+ * @summary Get withdrawal status
+ */
+export const getGetWithdrawalStatusUrl = (reference: string) => {
+  return `/api/withdrawals/${reference}`;
+};
+
+export const getWithdrawalStatus = async (
+  reference: string,
+  options?: RequestInit,
+): Promise<WithdrawalStatusResponse> => {
+  return customFetch<WithdrawalStatusResponse>(
+    getGetWithdrawalStatusUrl(reference),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetWithdrawalStatusQueryKey = (reference: string) => {
+  return [`/api/withdrawals/${reference}`] as const;
+};
+
+export const getGetWithdrawalStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getWithdrawalStatus>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  reference: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWithdrawalStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetWithdrawalStatusQueryKey(reference);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getWithdrawalStatus>>
+  > = ({ signal }) =>
+    getWithdrawalStatus(reference, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!reference,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getWithdrawalStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetWithdrawalStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getWithdrawalStatus>>
+>;
+export type GetWithdrawalStatusQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get withdrawal status
+ */
+
+export function useGetWithdrawalStatus<
+  TData = Awaited<ReturnType<typeof getWithdrawalStatus>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  reference: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWithdrawalStatus>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetWithdrawalStatusQueryOptions(reference, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

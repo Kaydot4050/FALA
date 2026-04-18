@@ -186,6 +186,200 @@ export interface TransactionsResponse {
   data?: TransactionsData;
 }
 
+export type BulkOrderItemNetwork =
+  (typeof BulkOrderItemNetwork)[keyof typeof BulkOrderItemNetwork];
+
+export const BulkOrderItemNetwork = {
+  YELLO: "YELLO",
+  TELECEL: "TELECEL",
+  AT_PREMIUM: "AT_PREMIUM",
+} as const;
+
+export interface BulkOrderItem {
+  phoneNumber: string;
+  network: BulkOrderItemNetwork;
+  capacity: string;
+  /** @nullable */
+  ref?: string | null;
+}
+
+export interface BulkPurchaseRequest {
+  /** @maxItems 50 */
+  orders: BulkOrderItem[];
+}
+
+export interface BulkOrderResult {
+  index: number;
+  /** @nullable */
+  ref?: string | null;
+  phoneNumber: string;
+  network: string;
+  capacity: string;
+  price: number;
+  status: string;
+  /** @nullable */
+  purchaseId?: string | null;
+  /** @nullable */
+  orderReference?: string | null;
+  /** @nullable */
+  transactionReference?: string | null;
+  /** @nullable */
+  balanceBefore?: number | null;
+  /** @nullable */
+  balanceAfter?: number | null;
+  /** @nullable */
+  error?: string | null;
+}
+
+export interface BulkSummary {
+  total: number;
+  successful: number;
+  failed: number;
+  invalid?: number;
+  totalCharged?: number;
+  remainingBalance?: number;
+}
+
+export interface BulkPurchaseData {
+  summary: BulkSummary;
+  results: BulkOrderResult[];
+  validationErrors?: string[];
+}
+
+export interface BulkPurchaseResponse {
+  status: string;
+  message: string;
+  data?: BulkPurchaseData;
+}
+
+export type BulkPurchaseErrorResponseData = {
+  totalCost?: number;
+  walletBalance?: number;
+  validOrders?: number;
+  shortfall?: number;
+};
+
+export interface BulkPurchaseErrorResponse {
+  status: string;
+  message: string;
+  data?: BulkPurchaseErrorResponseData;
+}
+
+export interface PurchaseRecord {
+  id: string;
+  phoneNumber: string;
+  network: string;
+  capacity: number;
+  price: number;
+  orderStatus: string;
+  orderReference: string;
+  /** @nullable */
+  balanceBefore?: number | null;
+  /** @nullable */
+  balanceAfter?: number | null;
+  createdAt: string;
+}
+
+export interface PurchaseHistoryData {
+  purchases: PurchaseRecord[];
+  pagination: TransactionsPagination;
+}
+
+export interface PurchaseHistoryResponse {
+  status: string;
+  data?: PurchaseHistoryData;
+}
+
+export type ReferralBonusResponseData = {
+  /** @nullable */
+  amountClaimed?: number | null;
+  /** @nullable */
+  newBalance?: number | null;
+};
+
+export interface ReferralBonusResponse {
+  status: string;
+  message: string;
+  data?: ReferralBonusResponseData;
+}
+
+export interface NetworkStat {
+  network: string;
+  totalOrders: number;
+  totalGB: number;
+  totalSpent: number;
+}
+
+export interface UsageStatsData {
+  totalOrders: number;
+  totalSpent: number;
+  totalGB: number;
+  successRate: number;
+  networkBreakdown?: NetworkStat[];
+  recentActivity?: PurchaseRecord[];
+}
+
+export interface UsageStatsResponse {
+  status: string;
+  data?: UsageStatsData;
+}
+
+export type WithdrawalRequestNetwork =
+  (typeof WithdrawalRequestNetwork)[keyof typeof WithdrawalRequestNetwork];
+
+export const WithdrawalRequestNetwork = {
+  MTN: "MTN",
+  TELECEL: "TELECEL",
+  AIRTELTIGO: "AIRTELTIGO",
+} as const;
+
+export interface WithdrawalRequest {
+  amount: number;
+  phoneNumber: string;
+  network: WithdrawalRequestNetwork;
+  /** @nullable */
+  clientRef?: string | null;
+}
+
+export interface WithdrawalData {
+  reference: string;
+  amount: number;
+  fee?: number;
+  phoneNumber: string;
+  network: string;
+  status: string;
+  createdAt?: string;
+}
+
+export interface WithdrawalResponse {
+  status: string;
+  message: string;
+  data?: WithdrawalData;
+}
+
+export interface WithdrawalErrorResponse {
+  status: string;
+  message: string;
+  /** @nullable */
+  code?: string | null;
+}
+
+export interface WithdrawalStatusData {
+  reference: string;
+  amount: number;
+  fee?: number;
+  phoneNumber: string;
+  network: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface WithdrawalStatusResponse {
+  status: string;
+  data?: WithdrawalStatusData;
+}
+
 export type GetDataPackagesParams = {
   network?: GetDataPackagesNetwork;
 };
@@ -200,6 +394,11 @@ export const GetDataPackagesNetwork = {
 } as const;
 
 export type GetTransactionsParams = {
+  page?: number;
+  limit?: number;
+};
+
+export type GetPurchaseHistoryParams = {
   page?: number;
   limit?: number;
 };

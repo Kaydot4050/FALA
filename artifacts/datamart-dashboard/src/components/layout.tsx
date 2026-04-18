@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useGetBalance } from "@workspace/api-client-react";
-import { Wallet, Activity, Home as HomeIcon, Search, ListOrdered } from "lucide-react";
+import { Wallet, Activity, Home as HomeIcon, Search, ListOrdered, Layers, PieChart, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,7 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
           
           <div className="flex items-center gap-6">
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <nav className="hidden lg:flex items-center gap-5 text-sm font-medium">
               <Link 
                 href="/" 
                 className={cn(
@@ -29,6 +29,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 Buy Data
+              </Link>
+              <Link 
+                href="/bulk" 
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location === "/bulk" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Bulk Buy
               </Link>
               <Link 
                 href="/order" 
@@ -47,6 +56,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 Live Status
+              </Link>
+              <Link 
+                href="/history" 
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location === "/history" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                History
+              </Link>
+              <Link 
+                href="/stats" 
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location === "/stats" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Stats
+              </Link>
+              <Link 
+                href="/withdrawals" 
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location === "/withdrawals" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Withdrawals
               </Link>
               <Link 
                 href="/transactions" 
@@ -77,7 +113,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="border-t border-border/40 py-6 mt-auto">
+      <footer className="border-t border-border/40 py-6 mt-auto pb-24 md:pb-6">
         <div className="container max-w-5xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>DataMart &copy; {new Date().getFullYear()}</p>
           <div className="flex gap-4">
@@ -88,23 +124,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </footer>
       
       {/* Mobile nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/40 bg-background/95 backdrop-blur z-50 pb-safe">
-        <div className="flex justify-around items-center h-16 px-4">
-          <Link href="/" className={cn("flex flex-col items-center gap-1", location === "/" ? "text-primary" : "text-muted-foreground")}>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t border-border/40 bg-background/95 backdrop-blur z-50 pb-safe">
+        <div className="flex justify-around items-center h-16 px-2 sm:px-4">
+          <Link href="/" className={cn("flex flex-col items-center gap-1 min-w-[64px]", location === "/" ? "text-primary" : "text-muted-foreground")}>
             <HomeIcon className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Buy</span>
+            <span className="text-[10px] font-medium">Buy Data</span>
           </Link>
-          <Link href="/order" className={cn("flex flex-col items-center gap-1", location.startsWith("/order") ? "text-primary" : "text-muted-foreground")}>
-            <Search className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Order</span>
+          <Link href="/bulk" className={cn("flex flex-col items-center gap-1 min-w-[64px]", location === "/bulk" ? "text-primary" : "text-muted-foreground")}>
+            <Layers className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Bulk</span>
           </Link>
-          <Link href="/tracker" className={cn("flex flex-col items-center gap-1", location === "/tracker" ? "text-primary" : "text-muted-foreground")}>
-            <Activity className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Status</span>
-          </Link>
-          <Link href="/transactions" className={cn("flex flex-col items-center gap-1", location === "/transactions" ? "text-primary" : "text-muted-foreground")}>
+          <Link href="/history" className={cn("flex flex-col items-center gap-1 min-w-[64px]", location === "/history" ? "text-primary" : "text-muted-foreground")}>
             <ListOrdered className="h-5 w-5" />
             <span className="text-[10px] font-medium">History</span>
+          </Link>
+          <Link href="/stats" className={cn("flex flex-col items-center gap-1 min-w-[64px]", location === "/stats" ? "text-primary" : "text-muted-foreground")}>
+            <PieChart className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Stats</span>
+          </Link>
+          <Link href="/withdrawals" className={cn("flex flex-col items-center gap-1 min-w-[64px]", location === "/withdrawals" ? "text-primary" : "text-muted-foreground")}>
+            <ArrowLeftRight className="h-5 w-5" />
+            <span className="text-[10px] font-medium">Withdraw</span>
           </Link>
         </div>
       </div>
