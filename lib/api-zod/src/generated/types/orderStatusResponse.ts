@@ -5,7 +5,9 @@
  * DataMart GH reseller API proxy
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderData } from "./orderData";
 
-export interface HealthStatus {
+export interface OrderStatusResponse {
   status: string;
+  data?: OrderData;
 }

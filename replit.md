@@ -16,6 +16,33 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Project: DataMart GH Reseller Portal
+
+A customer-facing data bundle purchase website that proxies the DataMart GH API.
+
+### Architecture
+
+- **Frontend** (`artifacts/datamart-dashboard`): React + Vite, served at `/`
+- **Backend** (`artifacts/api-server`): Express proxy server at `/api`
+  - Proxies all requests to `https://api.datamartgh.shop/api/developer`
+  - Uses `DATAMART_API_KEY` secret for authentication
+
+### Pages
+
+- `/` — Home: browse data packages by network (YELLO/MTN, TELECEL, AT_PREMIUM) and purchase
+- `/order/:reference` — Order status check
+- `/tracker` — Live delivery tracker (polls every 15s)
+- `/transactions` — Transaction history
+
+### Configuration Required
+
+Set the `DATAMART_API_KEY` secret (from DataMart GH developer portal) to enable live data.
+
+### DataMart API
+
+Base URL: `https://api.datamartgh.shop/api/developer`  
+Auth: `X-API-Key` header
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
