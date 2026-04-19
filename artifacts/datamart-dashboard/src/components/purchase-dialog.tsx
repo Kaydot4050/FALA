@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter
@@ -22,12 +22,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePurchaseData } from "@workspace/api-client-react";
 import type { DataPackage } from "@workspace/api-client-react";
+import type { NetworkId } from "@/pages/home";
 import { Loader2, CheckCircle2, ChevronRight, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+const NETWORK_LABELS: Record<NetworkId, string> = {
+  YELLO: "MTN",
+  TELECEL: "Telecel",
+  AT_PREMIUM: "AT Premium",
+  at: "AirtelTigo",
+};
+
 const phoneSchema = z.object({
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9]+$/, "Must contain only numbers"),
+  phoneNumber: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .regex(/^[0-9]+$/, "Must contain only numbers"),
 });
 
 type FormValues = z.infer<typeof phoneSchema>;
@@ -36,19 +47,17 @@ interface PurchaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPackage: DataPackage | null;
-  network: "YELLO" | "TELECEL" | "AT_PREMIUM";
+  network: NetworkId;
 }
 
 export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }: PurchaseDialogProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [successData, setSuccessData] = useState<{ reference: string; message: string } | null>(null);
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(phoneSchema),
-    defaultValues: {
-      phoneNumber: "",
-    },
+    defaultValues: { phoneNumber: "" },
   });
 
   const purchaseMutation = usePurchaseData({
@@ -57,14 +66,14 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
         if (data.data?.orderReference) {
           setSuccessData({
             reference: data.data.orderReference,
-            message: data.message
+            message: data.message ?? "Your data bundle is on the way.",
           });
           form.reset();
         } else {
           toast({
             variant: "destructive",
             title: "Purchase Failed",
-            description: data.message || "Could not complete purchase",
+            description: data.message || "Could not complete the purchase.",
           });
         }
       },
@@ -72,42 +81,38 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
         toast({
           variant: "destructive",
           title: "Error",
-          description: error?.message || "An unexpected error occurred",
+          description: error?.message || "An unexpected error occurred.",
         });
-      }
-    }
+      },
+    },
   });
 
-  // Reset state when dialog opens/closes
   useEffect(() => {
     if (!open) {
-      setTimeout(() => {
+      const t = setTimeout(() => {
         setSuccessData(null);
         form.reset();
         purchaseMutation.reset();
       }, 300);
+      return () => clearTimeout(t);
     }
-  }, [open, form, purchaseMutation]);
+  }, [open]);
 
   const onSubmit = (values: FormValues) => {
     if (!selectedPackage) return;
-
     purchaseMutation.mutate({
       data: {
         phoneNumber: values.phoneNumber,
-        network: network,
-        capacity: selectedPackage.capacity.toString(),
-        gateway: "wallet"
-      }
+        network: network as any,
+        capacity: String(selectedPackage.capacity),
+        gateway: "wallet",
+      },
     });
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied to clipboard",
-      description: "Order reference has been copied.",
-    });
+    toast({ title: "Copied", description: "Order reference copied to clipboard." });
   };
 
   const viewOrder = () => {
@@ -124,36 +129,36 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
       <DialogContent className="sm:max-w-md">
         {successData ? (
           <div className="flex flex-col items-center justify-center py-8 text-center space-y-6">
-            <div className="h-16 w-16 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mb-2">
+            <div className="h-16 w-16 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            
+
             <div className="space-y-2">
               <h2 className="text-2xl font-bold tracking-tight">Purchase Successful</h2>
               <p className="text-muted-foreground">{successData.message}</p>
             </div>
-            
+
             <div className="bg-muted w-full p-4 rounded-lg flex items-center justify-between border border-border">
               <div className="text-left">
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Order Reference</p>
                 <p className="font-mono font-bold text-lg">{successData.reference}</p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => copyToClipboard(successData.reference)}
                 title="Copy reference"
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
-            
-            <div className="flex w-full gap-3 mt-4">
+
+            <div className="flex w-full gap-3">
               <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
               <Button className="flex-1 group" onClick={viewOrder}>
-                View Order Status
+                Track Order
                 <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
@@ -166,21 +171,23 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
                 Enter the phone number to receive this data bundle.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="bg-muted/50 p-4 rounded-lg border border-border mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-muted-foreground">Network</span>
                 <span className="font-bold text-sm bg-background px-2 py-1 rounded shadow-sm border border-border">
-                  {network === "YELLO" ? "MTN" : network === "TELECEL" ? "Telecel" : "AT"}
+                  {NETWORK_LABELS[network]}
                 </span>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-muted-foreground">Package</span>
-                <span className="font-bold">{selectedPackage.capacity}GB ({selectedPackage.mb}MB)</span>
+                <span className="font-bold">{selectedPackage.capacity} GB ({selectedPackage.mb} MB)</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-border mt-2">
                 <span className="text-sm font-medium text-muted-foreground">Total Price</span>
-                <span className="font-bold text-lg text-primary">GHS {selectedPackage.price.toFixed(2)}</span>
+                <span className="font-bold text-lg text-primary">
+                  GHS {Number(selectedPackage.price).toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -193,12 +200,12 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="e.g. 0241234567" 
+                        <Input
+                          placeholder="e.g. 0241234567"
                           type="tel"
                           autoComplete="tel"
                           autoFocus
-                          {...field} 
+                          {...field}
                           className="text-lg py-6"
                         />
                       </FormControl>
@@ -206,18 +213,18 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
                     </FormItem>
                   )}
                 />
-                
-                <DialogFooter className="mt-8">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => onOpenChange(false)}
                     disabled={purchaseMutation.isPending}
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={purchaseMutation.isPending}
                     className="min-w-32"
                   >
@@ -227,7 +234,7 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
                         Processing...
                       </>
                     ) : (
-                      'Buy Now'
+                      "Buy Now"
                     )}
                   </Button>
                 </DialogFooter>
