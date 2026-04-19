@@ -59,7 +59,8 @@
 
   --color-brand-yello: #ffcc00;
   --color-brand-telecel: #e60000;
-  --color-brand-at: #008080;
+  --color-brand-at: #0033a0;
+  --color-brand-attigo: #ef3d42;
 
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
@@ -78,13 +79,13 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* Clean, warm light mode */
-  --background: 40 33% 98%; /* Warm off-white */
-  --foreground: 240 10% 10%;
-  --border: 240 5% 90%;
+  /* Falaa Deals — warm light mode */
+  --background: 220 30% 98%;
+  --foreground: 224 20% 10%;
+  --border: 220 15% 88%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 10%;
-  --card-border: 240 5% 90%;
+  --card-foreground: 224 20% 10%;
+  --card-border: 220 15% 88%;
   
   --sidebar: 0 0% 100%;
   --sidebar-foreground: 240 10% 10%;
@@ -99,23 +100,23 @@
   --popover-foreground: 240 10% 10%;
   --popover-border: 240 5% 90%;
 
-  --primary: 240 10% 10%;
+  --primary: 252 78% 52%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 5% 96%;
-  --secondary-foreground: 240 10% 10%;
+  --secondary: 220 20% 94%;
+  --secondary-foreground: 224 20% 10%;
 
-  --muted: 240 5% 96%;
-  --muted-foreground: 240 5% 40%;
+  --muted: 220 20% 94%;
+  --muted-foreground: 220 10% 42%;
 
-  --accent: 240 5% 96%;
-  --accent-foreground: 240 10% 10%;
+  --accent: 220 20% 94%;
+  --accent-foreground: 224 20% 10%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 240 5% 90%;
-  --ring: 240 10% 10%;
+  --input: 220 15% 88%;
+  --ring: 252 78% 52%;
 
   --chart-1: 221 83% 53%;
   --chart-2: 142 71% 45%;
@@ -176,8 +177,8 @@
   --popover-foreground: 0 0% 98%;
   --popover-border: 240 5% 16%;
 
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 10% 4%;
+  --primary: 252 70% 65%;
+  --primary-foreground: 0 0% 100%;
 
   --secondary: 240 5% 16%;
   --secondary-foreground: 0 0% 98%;
