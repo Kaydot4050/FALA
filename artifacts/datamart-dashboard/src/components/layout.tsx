@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { Radio, Search } from "lucide-react";
+import { Radio, Search, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
 
 function FalaaDealsMark() {
   return (
@@ -14,6 +15,34 @@ function FalaaDealsMark() {
         </linearGradient>
       </defs>
     </svg>
+  );
+}
+
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      onClick={toggleTheme}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className={cn(
+        "relative flex items-center w-14 h-7 rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 shrink-0",
+        isDark ? "bg-primary" : "bg-muted border border-border"
+      )}
+    >
+      <span
+        className={cn(
+          "absolute flex items-center justify-center w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300",
+          isDark ? "left-8" : "left-1"
+        )}
+      >
+        {isDark
+          ? <Moon className="w-3 h-3 text-primary" />
+          : <Sun className="w-3 h-3 text-amber-500" />
+        }
+      </span>
+    </button>
   );
 }
 
@@ -37,35 +66,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold">
-            <Link
-              href="/"
-              className={cn(
-                "transition-colors hover:text-primary",
-                location === "/" ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              Buy Data
-            </Link>
-            <Link
-              href="/order"
-              className={cn(
-                "transition-colors hover:text-primary",
-                location.startsWith("/order") ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              Track Order
-            </Link>
-            <Link
-              href="/tracker"
-              className={cn(
-                "transition-colors hover:text-primary",
-                location === "/tracker" ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              Live Status
-            </Link>
-          </nav>
+          <div className="flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6 text-sm font-semibold">
+              <Link
+                href="/"
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location === "/" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Buy Data
+              </Link>
+              <Link
+                href="/order"
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location.startsWith("/order") ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Track Order
+              </Link>
+              <Link
+                href="/tracker"
+                className={cn(
+                  "transition-colors hover:text-primary",
+                  location === "/tracker" ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                Live Status
+              </Link>
+            </nav>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
