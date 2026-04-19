@@ -1,0 +1,17 @@
+[build]
+  command = "pnpm -r --if-present run build"
+  publish = "artifacts/datamart-dashboard/dist"
+
+[functions]
+  directory = "artifacts/api-server/netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
