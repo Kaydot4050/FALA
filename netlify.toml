@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm -r --if-present run build"
+  command = "PORT=3000 BASE_PATH=/ pnpm -r --if-present run build"
   publish = "artifacts/datamart-dashboard/dist"
 
 [functions]
