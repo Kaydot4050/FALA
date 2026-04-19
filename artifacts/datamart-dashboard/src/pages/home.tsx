@@ -72,33 +72,77 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-10 pb-28 md:pb-12">
 
-      {/* ── Hero — animates in on mount ── */}
-      <section className="animate-fade-in-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/90 via-primary to-violet-700 text-primary-foreground px-6 py-10 md:px-12 md:py-14 mt-2">
-        {/* decorative blobs */}
-        <div className="absolute -top-12 -right-12 w-56 h-56 rounded-full bg-white/10 blur-3xl pointer-events-none animate-pulse-slow" />
-        <div className="absolute bottom-0 left-8 w-40 h-40 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+      {/* ── Hero — high-impact animated banner ── */}
+      <section className="relative overflow-hidden rounded-3xl bg-slate-950 text-white px-6 py-12 md:px-14 md:py-24 mt-2 shadow-2xl isolate">
+        {/* Dynamic Abstract Background Layer */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a0b2e] via-slate-900 to-[#120524] z-[-2]" />
+        
+        {/* Animated Blobs & Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[70%] rounded-full bg-fuchsia-600/30 blur-[100px] mix-blend-screen animate-blob pointer-events-none" />
+        <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-violet-600/30 blur-[120px] mix-blend-screen animate-blob pointer-events-none" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[50%] rounded-full bg-blue-500/20 blur-[100px] mix-blend-screen animate-blob pointer-events-none" style={{ animationDelay: '4s' }}/>
+        
+        {/* Grid Overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,black,transparent)] z-[-1]" />
 
-        <div className="relative z-10 max-w-xl">
-          <span className="animate-fade-in inline-block bg-white/20 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
-            Ghana&apos;s best data prices
-          </span>
-          <h1 className="animate-fade-in-up-delay-1 text-3xl md:text-5xl font-extrabold tracking-tight leading-tight mb-3">
-            Instant data bundles,<br />zero hassle.
+        <div className="relative z-10 max-w-2xl">
+          <div className="animate-fade-in-up flex items-center gap-3 mb-8">
+            <span className="relative flex h-3.5 w-3.5 shadow-[0_0_10px_rgba(34,197,94,0.5)] rounded-full">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500"></span>
+            </span>
+            <span className="inline-block bg-white/5 backdrop-blur-md border border-white/10 text-white/90 text-xs font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-sm">
+              Live Delivery Network
+            </span>
+          </div>
+
+          <h1 className="animate-fade-in-up-delay-1 text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 drop-shadow-xl">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-indigo-100 animate-pulse-slow">
+              Unstoppable Data.
+            </span>
+            <br />
+            <span className="text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.2)]">Zero Hassle.</span>
           </h1>
-          <p className="animate-fade-in-up-delay-2 text-base md:text-lg text-white/80 leading-relaxed">
-            Pick your network, choose a bundle, enter your number &mdash; data lands in seconds.
-            No account needed.
+          
+          <p className="animate-fade-in-up-delay-2 text-lg md:text-xl text-indigo-100/80 leading-relaxed font-medium max-w-xl mb-10">
+            Experience lightning-fast bundle delivery. Pick your network, verify your number, and enjoy high-speed internet <span className="text-white relative"><span className="relative z-10 font-bold">instantly</span><span className="absolute bottom-1 left-0 w-full h-2 bg-fuchsia-500/50 -rotate-2 z-0 scale-110"></span></span>.
           </p>
+          
+          {/* Action badges */}
+          <div className="animate-fade-in-up-delay-3 relative z-10 flex flex-wrap gap-4 mt-8">
+            {TRUST_BADGES.map(({ icon: Icon, label }, idx) => (
+              <div 
+                key={label} 
+                className="group relative overflow-hidden flex items-center gap-2.5 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/30 rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] cursor-default"
+                style={{ animationDelay: `${400 + idx * 100}ms` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                <div className="bg-white/10 p-1.5 rounded-full ring-1 ring-white/10 group-hover:ring-fuchsia-500/50 transition-colors">
+                  <Icon className="h-4 w-4 text-fuchsia-300 group-hover:text-fuchsia-200" />
+                </div>
+                <span className="text-white/90">{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* trust badges */}
-        <div className="animate-fade-in-up-delay-3 relative z-10 flex flex-wrap gap-3 mt-8">
-          {TRUST_BADGES.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-semibold">
-              <Icon className="h-4 w-4" />
-              {label}
-            </div>
-          ))}
+        {/* 3D Floating Elements (Visible on Mobile) */}
+        <div className="absolute -right-32 -top-16 lg:right-10 lg:top-1/2 lg:-translate-y-1/2 w-96 h-96 animate-fade-in-up-delay-2 pointer-events-none perspective-[1000px] opacity-40 lg:opacity-100 scale-[0.6] lg:scale-100 origin-top-right lg:origin-center z-0">
+           <div className="absolute inset-0 bg-gradient-to-tr from-violet-600/80 to-fuchsia-500/80 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] animate-blob opacity-60 mix-blend-screen" />
+           <div className="absolute inset-4 bg-gradient-to-br from-blue-500/80 to-indigo-600/80 rounded-[60%_40%_30%_70%/60%_30%_70%_40%] animate-blob opacity-80 mix-blend-screen" style={{ animationDelay: '2s' }} />
+           
+           <div className="absolute inset-0 flex items-center justify-center animate-float">
+             <div className="relative w-48 h-48 backdrop-blur-2xl bg-white/10 rounded-full border border-white/20 flex flex-col items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+               <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent z-0" />
+               <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 blur-xl rounded-full" />
+               <span className="relative z-10 text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-md">24/7</span>
+               <span className="relative z-10 text-xs font-bold uppercase tracking-[0.3em] text-indigo-200 mt-1">Uptime</span>
+             </div>
+           </div>
+
+           {/* Floating secondary orbs */}
+           <div className="absolute top-10 right-10 w-16 h-16 bg-gradient-to-br from-fuchsia-400 to-purple-600 rounded-full blur-[2px] animate-float-reverse shadow-lg shadow-purple-500/50" />
+           <div className="absolute bottom-12 left-10 w-12 h-12 bg-gradient-to-tr from-cyan-400 to-blue-600 rounded-full blur-[1px] animate-float shadow-lg shadow-blue-500/50" style={{ animationDelay: '1s' }} />
         </div>
       </section>
 

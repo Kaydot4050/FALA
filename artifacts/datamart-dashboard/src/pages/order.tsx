@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { useGetOrderStatus } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Package, Clock, CheckCircle2, XCircle, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Package, Clock, CheckCircle2, XCircle, RefreshCw, AlertCircle, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -49,28 +49,49 @@ export default function OrderStatus() {
 
   return (
     <div className="max-w-2xl mx-auto w-full space-y-8 pb-12">
-      <div className="text-center space-y-2 mt-4 md:mt-10">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Order Status</h1>
-        <p className="text-muted-foreground">Track your data bundle delivery in real-time</p>
-      </div>
+      {/* Animated Hero Header */}
+      <section className="relative overflow-hidden rounded-3xl bg-slate-950 text-white px-6 py-12 md:py-16 mt-4 md:mt-6 shadow-2xl isolate flex flex-col items-center text-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#120524] via-slate-900 to-[#1a0b2e] z-[-2]" />
+        
+        <div className="absolute top-[-20%] left-[10%] w-[40%] h-[70%] rounded-full bg-indigo-600/20 blur-[80px] mix-blend-screen animate-blob pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[50%] h-[60%] rounded-full bg-violet-600/20 blur-[100px] mix-blend-screen animate-blob pointer-events-none" style={{ animationDelay: '2s' }} />
+        
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,black,transparent)] z-[-1]" />
+        
+        <div className="relative z-10 w-full max-w-xl mx-auto animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 mb-6 bg-white/5 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full shadow-sm">
+            <Search className="h-4 w-4 text-indigo-400" />
+            <span className="text-white/90 text-xs font-bold uppercase tracking-widest">
+              Live Order Lookup
+            </span>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 drop-shadow-lg">
+            Track your <span className="bg-clip-text text-transparent bg-gradient-to-r from-violet-300 to-indigo-200 animate-pulse-slow">delivery</span> status
+          </h1>
+          <p className="text-indigo-100/80 leading-relaxed font-medium mb-8">
+            Enter your unique order reference below to check the real-time fulfillment progress.
+          </p>
 
-      <form onSubmit={handleSearch} className="relative flex w-full max-w-md mx-auto items-center">
-        <Input
-          type="text"
-          placeholder="Enter Order Reference..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="pr-12 h-12 text-lg bg-card"
-        />
-        <Button 
-          type="submit" 
-          size="icon" 
-          variant="ghost" 
-          className="absolute right-1 top-1 bottom-1 h-10 w-10 text-muted-foreground hover:text-foreground"
-        >
-          <Search className="h-5 w-5" />
-        </Button>
-      </form>
+          <form onSubmit={handleSearch} className="relative flex w-full group animate-fade-in-up-delay-2">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-fuchsia-500 rounded-2xl blur opacity-25 group-focus-within:opacity-60 transition duration-500"></div>
+            <Input
+              type="text"
+              placeholder="e.g. REF-123456"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="relative w-full pr-14 h-14 text-lg bg-slate-900 border-white/20 text-white placeholder:text-white/40 rounded-xl focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-all shadow-inner"
+            />
+            <Button 
+              type="submit" 
+              size="icon" 
+              className="absolute right-2 top-2 bottom-2 h-10 w-10 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white transition-colors"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </form>
+        </div>
+      </section>
 
       {reference && (
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -98,8 +119,9 @@ export default function OrderStatus() {
               </p>
             </div>
           ) : (
-            <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-border bg-muted/30">
+            <div className="relative border border-border rounded-2xl bg-card backdrop-blur-xl shadow-lg overflow-hidden transition-all group hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <div className="p-6 border-b border-border bg-muted/30 relative z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Reference</p>

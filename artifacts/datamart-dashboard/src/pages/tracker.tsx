@@ -15,31 +15,53 @@ export default function Tracker() {
 
   return (
     <div className="max-w-4xl mx-auto w-full space-y-8 pb-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mt-4 md:mt-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Live Delivery Tracker</h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
+      {/* Animated Banner Header */}
+      <section className="relative overflow-hidden rounded-3xl bg-slate-950 text-white px-6 py-8 md:px-10 md:py-12 mt-4 md:mt-6 shadow-2xl isolate flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a0b2e] via-slate-900 to-[#120524] z-[-2]" />
+        
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[70%] rounded-full bg-blue-600/20 blur-[80px] mix-blend-screen animate-blob pointer-events-none" />
+        <div className="absolute bottom-[0%] right-[10%] w-[40%] h-[80%] rounded-full bg-fuchsia-600/20 blur-[100px] mix-blend-screen animate-blob pointer-events-none" style={{ animationDelay: '3s' }} />
+        
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,black,transparent)] z-[-1]" />
+        
+        <div className="relative z-10 w-full animate-fade-in-up">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="relative flex h-3 w-3 shadow-[0_0_10px_rgba(34,197,94,0.5)] rounded-full">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </span>
-            Real-time fulfillment network status
+            <span className="inline-block bg-white/5 backdrop-blur-md border border-white/10 text-white/90 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
+              Fulfillment Network
+            </span>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-2 drop-shadow-lg">
+            <span className="text-white drop-shadow-[0_2px_15px_rgba(255,255,255,0.2)]">Live Delivery</span>{" "}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-indigo-200 animate-pulse-slow">Tracker</span>
+          </h1>
+          <p className="text-indigo-100/80 leading-relaxed font-medium">
+            Real-time monitoring of all active bundle dispatches.
           </p>
         </div>
         
         {scanner && (
-          <div className="bg-muted px-4 py-2 rounded-full border border-border flex items-center gap-2 text-sm font-medium">
-            <Radio className="h-4 w-4 text-primary" />
-            Scanner: {scanner.active ? (
-              <span className="text-green-500">Active</span>
-            ) : scanner.waiting ? (
-              <span className="text-yellow-500">Waiting ({scanner.waitSeconds}s)</span>
-            ) : (
-              <span className="text-muted-foreground">Idle</span>
-            )}
+          <div className="relative z-10 shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors px-6 py-4 rounded-2xl flex flex-col items-center md:items-end gap-2 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.5)] w-full md:w-auto animate-fade-in-up-delay-2">
+            <div className="flex items-center gap-2 font-bold text-sm text-white/90 uppercase tracking-widest">
+              <Radio className="h-4 w-4 text-indigo-400 animate-pulse" />
+              Gateway Engine
+            </div>
+            <div className="bg-slate-950/60 px-4 py-2 flex items-center justify-center rounded-xl text-lg font-black tracking-widest border border-white/5 w-full md:w-auto min-w-[140px]">
+              {scanner.active ? (
+                <span className="text-green-400 shadow-green-500/50 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">ACTIVE</span>
+              ) : scanner.waiting ? (
+                <span className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] animate-pulse">WAITING {scanner.waitSeconds}s</span>
+              ) : (
+                <span className="text-white/40">IDLE</span>
+              )}
+            </div>
           </div>
         )}
-      </div>
+      </section>
 
       {isLoading && !tracker ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -172,14 +194,23 @@ export default function Tracker() {
 }
 
 function StatCard({ title, value, icon: Icon, color, bg }: { title: string, value: number, icon: any, color: string, bg: string }) {
+  let shadowGlow = "";
+  if (color.includes("green")) shadowGlow = "hover:shadow-[0_0_20px_rgba(34,197,94,0.15)] hover:border-green-500/30";
+  if (color.includes("yellow")) shadowGlow = "hover:shadow-[0_0_20px_rgba(234,179,8,0.15)] hover:border-yellow-500/30";
+  if (color.includes("blue")) shadowGlow = "hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/30";
+  if (color.includes("red")) shadowGlow = "hover:shadow-[0_0_20px_rgba(239,68,68,0.15)] hover:border-red-500/30";
+
   return (
-    <div className="border border-border rounded-xl p-5 bg-card shadow-sm flex items-center gap-4">
-      <div className={cn("p-3 rounded-lg flex items-center justify-center", bg, color)}>
-        <Icon className="h-6 w-6" />
-      </div>
-      <div>
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <p className="text-3xl font-bold tracking-tight">{value.toLocaleString()}</p>
+    <div className={cn("group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 shadow-sm", shadowGlow)}>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/[0.02] dark:to-white/[0.02] pointer-events-none" />
+      <div className="relative flex items-center gap-4 z-10">
+        <div className={cn("p-3.5 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 border border-transparent group-hover:border-current/10", bg, color)}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
+          <p className="text-3xl font-extrabold tracking-tight group-hover:text-primary transition-colors">{value.toLocaleString()}</p>
+        </div>
       </div>
     </div>
   );

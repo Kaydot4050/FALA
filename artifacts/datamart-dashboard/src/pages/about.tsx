@@ -72,14 +72,23 @@ export default function About() {
     <div className="flex flex-col gap-8 pb-28 md:pb-12 max-w-2xl mx-auto w-full">
 
       {/* ── Hero ── */}
-      <FadeSection className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/90 via-primary to-violet-700 text-primary-foreground px-6 py-10">
-        <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10">
-          <span className="inline-block bg-white/20 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
+      <FadeSection className="relative overflow-hidden rounded-3xl bg-slate-950 text-white px-8 py-14 shadow-2xl isolate border border-slate-800">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-slate-900 to-[#1e1b4b] z-[-2]" />
+        
+        <div className="absolute -top-1/2 -left-1/4 w-[80%] h-[150%] rounded-full bg-emerald-600/10 blur-[100px] mix-blend-screen animate-blob pointer-events-none" />
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[80%] rounded-full bg-indigo-600/20 blur-[100px] mix-blend-screen animate-blob pointer-events-none" style={{ animationDelay: '2s' }} />
+        
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,black,transparent)] z-[-1]" />
+
+        <div className="relative z-10 text-center max-w-xl mx-auto flex flex-col items-center">
+          <span className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 text-white text-xs font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-6 shadow-sm">
+            <Building2 className="w-4 h-4 text-emerald-400" />
             About us
           </span>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Falaa Deals</h1>
-          <p className="text-white/80 leading-relaxed">
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-4 drop-shadow-lg">
+            Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-indigo-300 animate-pulse-slow">Story</span>
+          </h1>
+          <p className="text-indigo-100/80 leading-relaxed font-medium text-lg">
             Providing affordable, reliable data bundles to everyone in Ghana — making internet connectivity accessible for work, education, and entertainment.
           </p>
         </div>
@@ -115,14 +124,15 @@ export default function About() {
             {WHY_CHOOSE.map(({ icon: Icon, color, title, desc }, i) => (
               <div
                 key={title}
-                className="flex items-start gap-4 bg-card border border-border rounded-2xl p-5"
+                className="group relative flex items-start gap-4 bg-card border border-border rounded-2xl p-5 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 overflow-hidden"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <span className={cn("flex items-center justify-center w-10 h-10 rounded-xl shrink-0", color)}>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <span className={cn("flex items-center justify-center w-12 h-12 rounded-xl shrink-0 transition-transform duration-300 group-hover:scale-110", color)}>
                   <Icon className="w-5 h-5" />
                 </span>
-                <div>
-                  <p className="font-bold text-sm mb-1">{title}</p>
+                <div className="relative z-10">
+                  <p className="font-bold text-base mb-1 group-hover:text-primary transition-colors">{title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               </div>

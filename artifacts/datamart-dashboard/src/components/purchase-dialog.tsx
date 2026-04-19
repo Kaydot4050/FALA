@@ -96,6 +96,7 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
       }, 300);
       return () => clearTimeout(t);
     }
+    return;
   }, [open]);
 
   const onSubmit = (values: FormValues) => {
