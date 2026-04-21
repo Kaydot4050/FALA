@@ -4,6 +4,26 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { useGetBalance } from "@workspace/api-client-react";
 import { useState } from "react";
+import { useDeliveryStatus } from "@/hooks/use-delivery-status";
+
+function StatusIndicator() {
+  const { status } = useDeliveryStatus();
+  
+  if (!status) return null;
+
+  return (
+    <div className="relative flex h-3 w-3 items-center justify-center">
+      <div className={cn(
+        "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+        status.dotColor
+      )} />
+      <div className={cn(
+        "relative inline-flex h-2 w-2 rounded-full",
+        status.dotColor
+      )} />
+    </div>
+  );
+}
 
 function WalletBalance() {
   const { data: balanceData, isLoading, error } = useGetBalance({
@@ -69,7 +89,7 @@ const NAV_LINKS = [
   { href: "/",        label: "Home",        exact: true },
   { href: "/buy",    label: "Buy Data",    exact: true },
   { href: "/order",   label: "Track Order", exact: false },
-  { href: "/tracker", label: "Live Status", exact: true },
+  { href: "/tracker", label: "Delivery", exact: true },
   { href: "/about",   label: "About",       exact: true },
 ];
 
@@ -84,7 +104,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       
       {/* Top promo strip */}
       <div className="bg-gradient-to-r from-primary via-primary/80 to-primary/40 text-white text-center text-[11px] font-semibold py-2 px-4 tracking-wide shadow-lg">
-        ⚡ Instant delivery on all networks — No signup required
+        No signup required to buy data
       </div>
 
       <header className="sticky top-0 z-50 w-full md:px-4 md:pt-6 pointer-events-none">
@@ -121,6 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
             {/* ── Action Section ── */}
             <div className="flex items-center gap-4">
+               <StatusIndicator />
                <ThemeToggle />
             </div>
           </div>

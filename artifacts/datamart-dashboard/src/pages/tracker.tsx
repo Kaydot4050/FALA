@@ -1,38 +1,29 @@
-import { useGetDeliveryTracker } from "@workspace/api-client-react";
+import { useDeliveryStatus } from "@/hooks/use-delivery-status";
 import { Link, useLocation } from "wouter";
-import { Activity, Radio, CheckCircle2, Clock, AlertTriangle, ArrowRight, Search, RefreshCw, Package } from "lucide-react";
+import { Activity, CheckCircle2, Clock, AlertTriangle, RefreshCw, Timer } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export default function Tracker() {
-  // Poll every 15 seconds for our local summaries
-  const { data: trackerRes, isLoading } = useGetDeliveryTracker({
-    query: { refetchInterval: 15000 }
-  });
-
+  const { status: deliveryStatus, isLoading, tracker } = useDeliveryStatus();
   const [location, setLocation] = useLocation();
 
-
-
-  const tracker = trackerRes?.data;
   const stats = tracker?.stats;
   const scanner = tracker?.scanner;
 
   return (
-    <div className="w-full space-y-8 pb-12">
+    <div className="w-full space-y-10 pb-20">
       {/* ── Glassmorphic Status Card ── */}
       <section className="flex items-center justify-center pt-6 md:pt-10 pb-4 animate-fade-in">
-        <div className="w-full max-w-4xl h-auto md:h-64 relative rounded-[24px] md:rounded-[40px] bg-black/60 backdrop-blur-3xl border border-white/5 shadow-2xl flex flex-row items-center justify-between p-5 md:px-16 overflow-hidden group">
+        <div className="w-full max-w-4xl h-auto md:h-64 relative rounded-[24px] md:rounded-[40px] bg-card/60 backdrop-blur-3xl border border-border/50 shadow-2xl flex flex-row items-center justify-between p-5 md:px-16 overflow-hidden group">
           
           {/* Info Side */}
           <div className="flex flex-col items-start text-left space-y-1 md:space-y-4">
              <div className="space-y-0.5 md:space-y-1">
-               <h2 className="text-sm md:text-3xl font-bold tracking-tight text-white line-clamp-2 md:line-clamp-none max-w-[120px] md:max-w-none leading-tight">Live Delivery Tracker</h2>
+               <h2 className="text-sm md:text-3xl font-bold tracking-tight text-foreground line-clamp-2 md:line-clamp-none max-w-[120px] md:max-w-none leading-tight transition-colors">Delivery Progress</h2>
                <div className="h-0.5 md:h-1 w-8 md:w-12 bg-primary/40 rounded-full" />
              </div>
-             <p className="text-[9px] md:text-sm text-white/40 font-medium max-w-[100px] md:max-w-[280px] leading-relaxed line-clamp-2 md:line-clamp-none">
+             <p className="text-[9px] md:text-sm text-foreground/50 font-medium max-w-[100px] md:max-w-[280px] leading-relaxed line-clamp-2 md:line-clamp-none transition-colors">
                Real-time monitoring of all active bundle dispatches.
              </p>
           </div>
@@ -58,9 +49,9 @@ export default function Tracker() {
             <div className="relative flex items-center justify-center">
               <div className={cn(
                 "h-16 w-16 md:h-40 md:w-40 rounded-full border-[3px] md:border-[5px] flex flex-col items-center justify-center transition-colors duration-500",
-                scanner?.active ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.1)]" : scanner?.waiting ? "border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "border-white/10"
+                scanner?.active ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.1)]" : scanner?.waiting ? "border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "border-border/40"
               )}>
-                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/90">Status</span>
+                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-foreground/90 transition-colors">Status</span>
               </div>
             </div>
           </div>
@@ -77,7 +68,7 @@ export default function Tracker() {
           ))}
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="max-w-4xl mx-auto w-full grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <StatCard 
             title="Delivered" 
             value={stats.delivered} 
@@ -111,65 +102,59 @@ export default function Tracker() {
 
 
 
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6 pt-4">
-        {/* Processing Now */}
-        <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden flex flex-col">
-          <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
-            <h3 className="text-xs md:text-sm font-semibold flex items-center gap-2">
-              <RefreshIcon active={scanner?.active} />
-              Processing Now
-            </h3>
-          </div>
-          <div className="p-3 md:p-6 flex-1 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-[200px]">
-            {tracker?.checkingNow?.summary ? (
-              <div className="space-y-4 w-full">
-                <div className="bg-primary/5 border border-primary/20 p-2 md:p-6 rounded-lg">
-                  <p className="text-sm md:text-lg font-bold tracking-tight text-primary leading-tight">
-                    {tracker.checkingNow.summary}
+      {/* ── Delivery Progress List ── */}
+      <section className="max-w-4xl mx-auto w-full space-y-6 pt-4 animate-fade-in-up-delay-2">
+        <div className="bg-card/40 backdrop-blur-3xl border border-border/40 rounded-[24px] p-6 md:p-10 space-y-8">
+          {/* Dynamic Delivery Alert */}
+          {deliveryStatus ? (
+            <div className={cn("border rounded-2xl p-4 md:p-6 flex items-start md:items-center gap-4 transition-all duration-500", deliveryStatus.bgClass, deliveryStatus.borderClass)}>
+              <div className={cn("p-2.5 rounded-xl", `bg-${deliveryStatus.accentColor}/10`, deliveryStatus.colorClass)}>
+                <deliveryStatus.icon className={cn("h-5 w-5", deliveryStatus.status === 'fast' && "animate-pulse")} />
+              </div>
+              <p className={cn("text-sm md:text-lg font-medium leading-tight", deliveryStatus.colorClass)}>
+                {deliveryStatus.message}
+              </p>
+            </div>
+          ) : (
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 md:p-6 flex items-start md:items-center gap-4 group hover:border-emerald-500/40 transition-colors">
+              <div className="bg-emerald-500/10 p-2.5 rounded-xl text-emerald-400">
+                 <Activity className="h-5 w-5 animate-pulse" />
+              </div>
+              <p className="text-sm md:text-lg font-medium text-emerald-400/90 leading-tight">
+                Deliveries are <span className="font-bold text-emerald-400 underline decoration-emerald-500/30 underline-offset-4">blazing fast!</span> Your order should arrive within minutes.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            {/* Last Delivered */}
+            {tracker?.lastDelivered?.summary && (
+              <div className="flex items-start gap-4 animate-fade-in">
+                <div className="mt-1 bg-emerald-500/20 p-1 rounded-full shrink-0">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm md:text-base font-medium text-emerald-400/90">
+                    <span className="font-bold text-emerald-400">Last delivered:</span> {tracker.lastDelivered.summary}
                   </p>
                 </div>
-                {tracker.message && (
-                  <p className="text-[10px] md:text-xs text-muted-foreground mt-2 md:mt-4">{tracker.message}</p>
-                )}
-              </div>
-            ) : (
-              <div className="text-muted-foreground flex flex-col items-center gap-2">
-                <Clock className="h-8 w-8 opacity-50" />
-                <p className="text-[10px] md:text-xs">Waiting for next batch...</p>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Recently Delivered */}
-        <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden flex flex-col">
-          <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
-            <h3 className="text-xs md:text-sm font-semibold flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              Recently Delivered
-            </h3>
-          </div>
-          <div className="p-3 md:p-6 flex-1 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-[200px]">
-            {tracker?.lastDelivered?.summary ? (
-              <div className="w-full bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 p-2 md:p-6 rounded-lg">
-                <p className="text-sm md:text-lg font-bold tracking-tight text-green-700 dark:text-green-400 leading-tight">
-                  {tracker.lastDelivered.summary}
+            {/* Checking Now */}
+            <div className="flex items-start gap-4">
+              <div className="mt-1 bg-primary/20 p-1 rounded-full shrink-0">
+                <RefreshCw className={cn("h-4 w-4 text-primary", scanner?.active && "animate-spin")} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm md:text-base font-medium text-primary/90">
+                  <span className="font-bold text-primary">Checking now:</span> {tracker?.checkingNow?.summary || "Searching for new batches..."}
                 </p>
-                {tracker.lastDelivered.trackingId && (
-                  <p className="text-[9px] md:text-xs font-mono text-green-600/70 dark:text-green-500/50 mt-2 md:mt-4 uppercase tracking-wider">
-                    Ref: {tracker.lastDelivered.trackingId}
-                  </p>
-                )}
               </div>
-            ) : (
-              <div className="text-muted-foreground flex flex-col items-center gap-2">
-                <Activity className="h-8 w-8 opacity-50" />
-                <p className="text-[10px] md:text-xs">No recent deliveries in this session</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
       
 
     </div>

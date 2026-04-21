@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams, Link } from "wouter";
-import { useGetOrderStatus } from "@workspace/api-client-react";
+import { useGetOrderStatus, useGetDeliveryTracker } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -44,6 +44,12 @@ export default function OrderStatus() {
       retry: 1
     }
   });
+
+  const { data: trackerRes } = useGetDeliveryTracker({
+    query: { refetchInterval: 15000 }
+  });
+  const tracker = trackerRes?.data;
+  const scanner = tracker?.scanner;
 
   // Sync mode if reference comes from URL
   useEffect(() => {
@@ -106,28 +112,18 @@ export default function OrderStatus() {
   const order = orderRes?.data;
 
   return (
-    <div className="w-full space-y-10 pb-20">
-      {/* ── Header ── */}
-      <div className="space-y-4 animate-fade-in">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Shop
-        </Link>
-        <div className="space-y-2">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Track Your Order</h1>
-          <p className="text-muted-foreground text-lg">Check the status of your data bundle delivery</p>
-        </div>
-      </div>
+    <div className="w-full space-y-10 pb-24 relative overflow-hidden">
 
-      {/* ── Search Container ── */}
-      <section className="animate-scale-in">
-        <div className="bg-card border border-border/60 rounded-[20px] p-5 md:p-10 shadow-2xl space-y-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
-          <div className="space-y-6">
-            <label className="text-sm font-semibold uppercase tracking-widest text-muted-foreground block">Search by</label>
+      <div className="relative z-10 w-full pt-4 md:pt-10 max-w-4xl mx-auto">
+
+
+        <section className="animate-scale-in">
+          <div className="bg-card/40 backdrop-blur-3xl border border-border/40 rounded-[28px] p-5 md:p-8 shadow-sm space-y-8 relative overflow-hidden group hover:border-border/60 transition-colors">
+            <div className="space-y-6">
+            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 block">Search by</label>
             
             {/* Tab Switcher */}
-            <div className="grid grid-cols-3 gap-2 bg-muted/50 p-1.5 rounded-2xl border border-border/40">
+            <div className="grid grid-cols-3 gap-2 bg-muted/50 p-1.5 rounded-[20px] border border-border/40">
               <TabButton 
                 active={searchMode === 'phone'} 
                 onClick={() => setSearchMode('phone')} 
@@ -149,9 +145,9 @@ export default function OrderStatus() {
             </div>
 
             {/* Input Field */}
-            <form onSubmit={(e) => handleSearch(e)} className="space-y-4">
+            <form onSubmit={(e) => handleSearch(e)} className="space-y-5">
               <div className="relative group">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within:text-primary transition-colors">
                   <Search className="h-5 w-5" />
                 </div>
                 <Input
@@ -162,21 +158,21 @@ export default function OrderStatus() {
                   }
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="bg-background border-border h-14 md:h-16 pl-14 text-base md:text-lg rounded-[20px] focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/40 transition-all shadow-inner"
+                  className="bg-muted border-border/40 h-14 md:h-16 pl-14 text-base md:text-lg rounded-[20px] focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/50 transition-all shadow-inner text-foreground font-medium"
                 />
               </div>
 
               <Button 
                 type="submit" 
                 disabled={isSearching}
-                className="w-full h-14 md:h-16 bg-slate-800 hover:bg-slate-700 text-white font-bold text-base md:text-lg rounded-[20px] transition-all active:scale-[0.98] shadow-lg group"
+                className="w-full h-14 md:h-16 bg-slate-950 hover:bg-slate-900 text-white font-black text-base md:text-lg rounded-[20px] transition-all active:scale-[0.98] border border-border/40 hover:border-primary/40 group relative overflow-hidden shadow-none"
               >
                 {isSearching ? (
                   <RefreshCw className="h-6 w-6 animate-spin mr-2" />
                 ) : (
                   <Search className="h-5 w-5 mr-3 opacity-50 group-hover:opacity-100" />
                 )}
-                Track Order
+                <span className="relative z-10">Track Order</span>
               </Button>
             </form>
           </div>
@@ -184,10 +180,10 @@ export default function OrderStatus() {
       </section>
 
       {/* ── Results Area ── */}
-      <div className="min-h-[200px]">
+      <div className="min-h-[200px] max-w-4xl mx-auto mt-10">
         {/* Loading State */}
         {(isLoading || isSearching) && (
-          <div className="bg-card border border-border rounded-[20px] p-6 md:p-8 space-y-4 animate-pulse">
+          <div className="bg-card border border-border rounded-[20px] p-6 md:p-8 space-y-4 animate-pulse shadow-sm">
             <Skeleton className="h-8 w-1/3" />
             <Skeleton className="h-24 w-full" />
           </div>
@@ -202,9 +198,9 @@ export default function OrderStatus() {
 
         {/* Phone Search Results (List) */}
         {!isLoading && !isSearching && searchResults.filter(o => o.status !== 'pending').length > 0 && (
-          <div className="space-y-6 animate-scale-in">
+          <div className="space-y-6 animate-scale-in mt-10 md:mt-20">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold tracking-tight">Orders Found on This Number</h3>
+              <h3 className="text-xl font-bold tracking-tight">Orders Found</h3>
               <span className="text-sm bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full font-bold">
                 {searchResults.filter(o => o.status !== 'pending').length} {searchResults.filter(o => o.status !== 'pending').length === 1 ? 'Order' : 'Orders'}
               </span>
@@ -226,10 +222,7 @@ export default function OrderStatus() {
                       </div>
 
                       <div className="space-y-4 relative z-10">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter mb-0.5">Tracking ID</p>
-                          <p className="font-mono font-bold text-sm text-primary truncate">{order.orderReference || order.paystackReference.slice(0, 12) + '...'}</p>
-                        </div>
+
                         
                         <div className="flex items-end justify-between">
                           <div>
@@ -261,6 +254,7 @@ export default function OrderStatus() {
         )}
       </div>
 
+
       {/* ── Status Guide ── */}
       <section className="space-y-6 pt-10 border-t border-white/5 animate-fade-in-up-delay-3">
         <h2 className="text-2xl font-bold tracking-tight">Order Status Guide</h2>
@@ -270,6 +264,7 @@ export default function OrderStatus() {
           <GuideItem config={statusConfig.fulfilled} />
         </div>
       </section>
+      </div>
     </div>
   );
 }
@@ -279,13 +274,13 @@ function TabButton({ active, onClick, icon: Icon, label }: { active: boolean, on
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 px-1 sm:px-4 rounded-xl text-[10px] sm:text-sm font-bold transition-all h-full",
+        "flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5 py-1.5 sm:py-3 px-1 sm:px-5 rounded-[16px] text-[10px] sm:text-xs font-black transition-all h-full tracking-wider uppercase",
         active 
-          ? "bg-background text-foreground shadow-lg scale-[1.02] border border-border" 
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          ? "bg-slate-950 text-white shadow-xl scale-[1.02] border border-white/10" 
+          : "text-muted-foreground/40 hover:text-foreground hover:bg-muted/50"
       )}
     >
-      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+      <Icon className="h-3.5 w-3.5" />
       <span className="truncate">{label}</span>
     </button>
   );
@@ -332,20 +327,18 @@ function OrderResultCard({ order, config }: { order: any, config: any }) {
   const cfg = config[order.orderStatus.toLowerCase()] || config.pending;
   
   return (
-    <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-2xl shadow-primary/5 transition-all hover:border-primary/20 relative group">
-
-
-      <div className="p-5 md:p-8 border-b border-border bg-muted/20">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-sm transition-all hover:border-border/60 relative group">
+      <div className="p-5 md:p-8 border-b border-border bg-muted/10">
+        <div className="flex flex-row justify-between items-center gap-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">Tracking ID</p>
-            <p className="text-2xl font-mono font-black text-primary uppercase tracking-tight">{order.reference}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Tracking ID</p>
+            <p className="text-xl md:text-2xl font-mono font-black text-primary uppercase tracking-tight">{order.reference}</p>
           </div>
           <StatusBadge status={order.orderStatus} config={config} />
         </div>
       </div>
       
-      <div className="p-6 md:p-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <div className="p-5 md:p-8 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
         <DetailItem label="Data Bundle" value={`${order.capacity}GB`} subValue={order.network} icon={Package} />
         <DetailItem label="Recipient" value={order.phoneNumber} isMono />
         <DetailItem 
@@ -362,20 +355,20 @@ function OrderResultCard({ order, config }: { order: any, config: any }) {
 
 function DetailItem({ label, value, subValue, icon: Icon, isMono, isPrimary }: { label: string, value: string, subValue?: string, icon?: any, isMono?: boolean, isPrimary?: boolean }) {
   return (
-    <div className="space-y-1.5 group">
-      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-        {Icon && <Icon className="h-3.5 w-3.5 opacity-50" />}
+    <div className="space-y-1 md:space-y-1.5 group">
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+        {Icon && <Icon className="h-3 w-3 opacity-50" />}
         {label}
       </p>
       <div className="flex items-baseline gap-1.5">
         <p className={cn(
-          "text-xl font-extrabold tracking-tight", 
+          "text-lg md:text-xl font-extrabold tracking-tight", 
           isMono && "font-mono", 
           isPrimary ? "text-primary" : "text-foreground"
         )}>
           {value}
         </p>
-        {subValue && <span className="text-sm font-medium text-muted-foreground">{subValue}</span>}
+        {subValue && <span className="text-[10px] md:text-sm font-medium text-muted-foreground">{subValue}</span>}
       </div>
     </div>
   );

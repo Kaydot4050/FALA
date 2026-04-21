@@ -48,7 +48,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="flex flex-col gap-20 pb-40">
+    <div className="flex flex-col gap-11 md:gap-16 pb-24">
 
       {/* ── Cinematic Hero ── */}
       <section className="relative min-h-[45vh] md:min-h-[65vh] flex flex-col justify-center overflow-hidden rounded-[20px] px-6 py-10 md:py-20 md:px-16 mt-4 isolate shadow-2xl">
@@ -102,7 +102,7 @@ export default function Home() {
           <div className="animate-wander absolute" style={{ top: '15%', left: '65%' }}>
             <div className="relative h-44 w-44 scale-[0.6] md:scale-100">
               {/* Outer ring */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-600/30 via-primary/20 to-fuchsia-600/30 border border-white/5 shadow-[0_0_60px_rgba(147,51,234,0.2)]" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-600/30 via-primary/20 to-fuchsia-600/30 border border-white/5" />
               {/* Middle ring */}
               <div className="absolute inset-4 rounded-full bg-gradient-to-br from-purple-500/25 via-primary/30 to-fuchsia-500/25 border border-white/10" />
               {/* Inner frosted circle */}
@@ -111,7 +111,7 @@ export default function Home() {
                 <span className="text-[8px] font-bold uppercase tracking-[0.25em] text-white/50">Uptime</span>
               </div>
               {/* Orbiting dot 1 — cyan */}
-              <div className="absolute h-4 w-4 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.6)] animate-orbit" style={{ top: '-2px', left: 'calc(50% - 8px)' }} />
+              <div className="absolute h-4 w-4 rounded-full bg-cyan-400 animate-orbit" style={{ top: '-2px', left: 'calc(50% - 8px)' }} />
               {/* Orbiting dot 2 — magenta */}
               <div className="absolute h-3 w-3 rounded-full bg-fuchsia-400 shadow-[0_0_12px_rgba(232,121,249,0.6)] animate-orbit-reverse" style={{ bottom: '8px', right: '-2px' }} />
             </div>
@@ -128,7 +128,7 @@ export default function Home() {
               <div className="absolute -inset-x-20 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-1000" />
               <div className="relative z-10 space-y-0.5 md:space-y-1 group-hover:translate-x-1 transition-transform duration-500">
                 <p className="text-xl md:text-4xl font-black tracking-tighter text-white group-hover:text-primary transition-colors">{value}</p>
-                <p className="text-[7px] md:text-[10px] uppercase font-bold tracking-tight md:tracking-[0.2em] text-slate-500 leading-none">{label}</p>
+                <p className="text-[7px] md:text-[10px] uppercase font-bold tracking-tight md:tracking-[0.2em] text-muted-foreground leading-none">{label}</p>
               </div>
               <div className="hidden md:flex relative z-10 h-12 w-12 rounded-[12px] bg-primary/10 items-center justify-center text-primary group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-inner group-hover:bg-primary/20">
                 <Icon className="h-6 w-6 group-hover:animate-pulse" />
@@ -148,7 +148,7 @@ export default function Home() {
             </div>
             <h2 className="text-3xl md:text-4xl font-black tracking-tight">Trending Bundles</h2>
           </div>
-          <Link href="/tracker" className="text-xs font-bold text-slate-500 hover:text-white transition-colors flex items-center gap-2 group">
+          <Link href="/tracker" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
             See Live History
             <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -240,7 +240,7 @@ export default function Home() {
 
       {/* ── Trust Section ── */}
       <AnimatedSection className="pt-20 border-t border-white/5">
-        <h2 className="text-center text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 mb-12">
+        <h2 className="text-center text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/60 mb-12">
           Infrastructure Verification
         </h2>
         <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-6">
@@ -249,14 +249,14 @@ export default function Home() {
             { icon: ShieldCheck, title: "Vault Security",       desc: "Paystack encryption." },
             { icon: Clock,       title: "24/7 Automated",  desc: "Online 24/7/365." },
           ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="flex flex-col gap-3 md:gap-6 p-3 md:p-10 rounded-[20px] bg-slate-900/40 border border-white/5 hover:border-primary/40 transition-all duration-700 text-center md:text-left group relative overflow-hidden hover:bg-slate-900/60">
+            <div key={title} className="flex flex-col gap-3 md:gap-6 p-3 md:p-10 rounded-[20px] bg-card/60 backdrop-blur-xl border border-border/60 hover:border-primary/40 transition-all duration-700 text-center md:text-left group relative overflow-hidden active:scale-98">
               <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-              <div className="h-10 w-10 md:h-14 md:w-14 rounded-[10px] md:rounded-[12px] bg-primary/10 flex items-center justify-center text-primary shadow-xl shadow-primary/5 mx-auto md:mx-0 shrink-0 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 group-hover:bg-primary/20">
+              <div className="h-10 w-10 md:h-14 md:w-14 rounded-[10px] md:rounded-[12px] bg-primary/10 flex items-center justify-center text-primary mx-auto md:mx-0 shrink-0 group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-500 group-hover:bg-primary/20">
                 <Icon className="h-5 w-5 md:h-7 md:w-7 group-hover:animate-pulse" />
               </div>
               <div className="space-y-1 md:space-y-2 relative z-10">
-                <h3 className="font-black text-[9px] md:text-xl text-white tracking-tight uppercase leading-tight group-hover:text-primary transition-colors duration-500">{title}</h3>
-                <p className="text-[8px] md:text-sm font-medium text-slate-500 leading-tight group-hover:text-slate-400 transition-colors duration-500">{desc}</p>
+                <h3 className="font-black text-[9px] md:text-xl text-foreground md:text-white tracking-tight uppercase leading-tight group-hover:text-primary transition-colors duration-500">{title}</h3>
+                <p className="text-[8px] md:text-sm font-medium text-muted-foreground leading-tight transition-colors duration-500">{desc}</p>
               </div>
             </div>
           ))}

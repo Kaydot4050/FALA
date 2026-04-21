@@ -204,7 +204,7 @@ export default function BuyData() {
                       </span>
                       <span className="text-sm md:text-xl font-bold text-muted-foreground uppercase">GB</span>
                     </div>
-                    <p className="hidden md:block text-[10px] text-slate-500 font-bold uppercase tracking-widest">Non-Expiry</p>
+                    <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Non-Expiry</p>
                   </div>
 
                   <div className="mt-auto pt-4 border-t border-white/5">
@@ -231,7 +231,7 @@ export default function BuyData() {
       {/* ── Steps & Trust ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 pt-20 border-t border-white/5">
         <div className="space-y-8">
-           <h3 className="text-xs font-black uppercase tracking-[0.4em] text-slate-600">Fulfillment Guide</h3>
+           <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/60">Fulfillment Guide</h3>
            <div className="space-y-4">
               {STEPS.map(({ icon: Icon, title, desc }, i) => (
                 <div key={title} className="flex items-center gap-4 md:gap-6 p-4 md:p-6 rounded-[20px] bg-card border border-border text-left shadow-sm">
@@ -248,7 +248,7 @@ export default function BuyData() {
         </div>
 
         <div className="space-y-8">
-           <h3 className="text-xs font-black uppercase tracking-[0.4em] text-slate-600">Buyer Protection</h3>
+           <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/60">Buyer Protection</h3>
            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 { icon: ShieldCheck, title: "Secure", desc: "Paystack Vault" },

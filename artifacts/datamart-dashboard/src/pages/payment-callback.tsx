@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { CheckCircle2, XCircle, Loader2, ArrowLeft, Phone, Wifi } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, ArrowLeft, Phone, Wifi, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 type OrderStatus = "loading" | "fulfilled" | "paid" | "pending" | "failed";
 
@@ -16,10 +17,16 @@ interface OrderData {
 }
 
 export default function PaymentCallback() {
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [status, setStatus] = useState<OrderStatus>("loading");
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [pollCount, setPollCount] = useState(0);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied", description: "Tracking # copied to clipboard." });
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -146,8 +153,14 @@ export default function PaymentCallback() {
                 </div>
                 {orderData.orderReference && (
                   <div className="flex justify-between items-center pt-2 border-t">
-                    <span className="text-sm text-muted-foreground">Reference</span>
-                    <span className="font-mono text-sm text-primary">{orderData.orderReference}</span>
+                    <span className="text-sm text-muted-foreground">Tracking ID</span>
+                    <button 
+                      onClick={() => copyToClipboard(orderData.orderReference || "")}
+                      className="group flex items-center gap-2 hover:bg-white/5 px-2 py-1 rounded transition-colors"
+                    >
+                      <span className="font-mono text-sm text-primary font-bold">#{orderData.orderReference}</span>
+                      <Copy className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </button>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-2 border-t">
