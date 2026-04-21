@@ -106,22 +106,13 @@ export default function Tracker() {
       <section className="max-w-4xl mx-auto w-full space-y-6 pt-4 animate-fade-in-up-delay-2">
         <div className="bg-card/40 backdrop-blur-3xl border border-border/40 rounded-[24px] p-6 md:p-10 space-y-8">
           {/* Dynamic Delivery Alert */}
-          {deliveryStatus ? (
+          {deliveryStatus && !tracker?.checkingNow?.summary?.toLowerCase().includes("searching") && (
             <div className={cn("border rounded-2xl p-4 md:p-6 flex items-start md:items-center gap-4 transition-all duration-500", deliveryStatus.bgClass, deliveryStatus.borderClass)}>
               <div className={cn("p-2.5 rounded-xl", `bg-${deliveryStatus.accentColor}/10`, deliveryStatus.colorClass)}>
                 <deliveryStatus.icon className={cn("h-5 w-5", deliveryStatus.status === 'fast' && "animate-pulse")} />
               </div>
               <p className={cn("text-sm md:text-lg font-medium leading-tight", deliveryStatus.colorClass)}>
                 {deliveryStatus.message}
-              </p>
-            </div>
-          ) : (
-            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 md:p-6 flex items-start md:items-center gap-4 group hover:border-emerald-500/40 transition-colors">
-              <div className="bg-emerald-500/10 p-2.5 rounded-xl text-emerald-400">
-                 <Activity className="h-5 w-5 animate-pulse" />
-              </div>
-              <p className="text-sm md:text-lg font-medium text-emerald-400/90 leading-tight">
-                Deliveries are <span className="font-bold text-emerald-400 underline decoration-emerald-500/30 underline-offset-4">blazing fast!</span> Your order should arrive within minutes.
               </p>
             </div>
           )}

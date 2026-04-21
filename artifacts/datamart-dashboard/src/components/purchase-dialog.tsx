@@ -25,6 +25,7 @@ import type { NetworkId } from "@/pages/home";
 import { Loader2, CheckCircle2, ChevronRight, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
 
 const NETWORK_LABELS: Record<NetworkId, string> = {
   YELLO: "MTN",
@@ -34,6 +35,9 @@ const NETWORK_LABELS: Record<NetworkId, string> = {
 };
 
 const purchaseSchema = z.object({
+  recipientName: z
+    .string()
+    .min(1, "Name is required"),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 digits")
@@ -57,7 +61,10 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
 
   const form = useForm<FormValues>({
     resolver: zodResolver(purchaseSchema),
-    defaultValues: { phoneNumber: "" },
+    defaultValues: { 
+      recipientName: "",
+      phoneNumber: "" 
+    },
   });
 
   useEffect(() => {
@@ -81,6 +88,7 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          recipientName: values.recipientName,
           phoneNumber: values.phoneNumber,
           network,
           capacity: String(selectedPackage.capacity),
@@ -176,7 +184,13 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
             <div className="bg-muted/50 p-4 rounded-lg border border-border mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-muted-foreground">Network</span>
-                <span className="font-bold text-sm bg-background px-2 py-1 rounded shadow-sm border border-border">
+                <span className={cn(
+                  "font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm border transition-colors",
+                  network === "YELLO" && "bg-[#FFCC00] text-slate-900 border-[#FF9500]/50",
+                  network === "TELECEL" && "bg-[#E60000] text-white border-red-700/50",
+                  network === "at" && "bg-[#0033A0] text-white border-blue-900/50",
+                  !["YELLO", "TELECEL", "at"].includes(network) && "bg-background text-foreground border-border"
+                )}>
                   {NETWORK_LABELS[network]}
                 </span>
               </div>
@@ -196,16 +210,34 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
+                  name="recipientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Recipient Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. Ama Serwaa"
+                          type="text"
+                          {...field}
+                          className="text-lg py-6"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g. 0241234567"
+                          placeholder="0241234567"
                           type="tel"
                           autoComplete="tel"
-                          autoFocus
                           {...field}
                           className="text-lg py-6"
                         />
