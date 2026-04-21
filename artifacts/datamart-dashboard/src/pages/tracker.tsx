@@ -133,16 +133,18 @@ export default function Tracker() {
             )}
 
             {/* Checking Now */}
-            <div className="flex items-start gap-4">
-              <div className="mt-1 bg-primary/20 p-1 rounded-full shrink-0">
-                <RefreshCw className={cn("h-4 w-4 text-primary", scanner?.active && "animate-spin")} />
+            {tracker?.checkingNow?.summary && !tracker?.checkingNow?.summary?.toLowerCase().includes("searching") && (
+              <div className="flex items-start gap-4">
+                <div className="mt-1 bg-primary/20 p-1 rounded-full shrink-0">
+                  <RefreshCw className={cn("h-4 w-4 text-primary", scanner?.active && "animate-spin")} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm md:text-base font-medium text-primary/90">
+                    <span className="font-bold text-primary">Checking now:</span> {tracker.checkingNow.summary}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm md:text-base font-medium text-primary/90">
-                  <span className="font-bold text-primary">Checking now:</span> {tracker?.checkingNow?.summary || "Searching for new batches..."}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
