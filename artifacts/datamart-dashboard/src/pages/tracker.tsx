@@ -1,5 +1,4 @@
 import { useGetDeliveryTracker } from "@workspace/api-client-react";
-import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Activity, Radio, CheckCircle2, Clock, AlertTriangle, ArrowRight, Search, RefreshCw, Package } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,60 +13,8 @@ export default function Tracker() {
   });
 
   const [location, setLocation] = useLocation();
-  const [searchMode, setSearchMode] = useState<'id' | 'phone'>('phone');
-  const [searchInput, setSearchInput] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
 
-  // Official Widget Integration
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = "https://api.datamartgh.shop/share/widget.js";
-    script.async = true;
-    script.setAttribute('data-api-key', '6914cd63913675d19ef6de56b2b35162577a4dc568f9ecf70b4830cabb8f903e');
-    script.setAttribute('data-container', 'datamart-live-tracker');
-    script.setAttribute('data-theme', 'dark');
-    document.body.appendChild(script);
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const query = searchInput.trim();
-    if (!query) return;
-
-    // Auto-detect phone numbers to prevent user errors when tab is on 'id'
-    const isPhoneNumber = /^(?:\+?233|0)\d{9}$/.test(query);
-    const actualMode = isPhoneNumber ? 'phone' : searchMode;
-
-    if (actualMode !== searchMode) {
-      setSearchMode(actualMode);
-    }
-
-    if (actualMode === 'id') {
-      setLocation(`/order/${query}`);
-      return;
-    }
-
-    // Phone search
-    setIsSearching(true);
-    setSearchResults([]);
-    try {
-      const res = await fetch(`/api/order/phone/${encodeURIComponent(searchInput.trim())}`);
-      const data = await res.json();
-      if (data.status === 'success' && data.data) {
-        // Filter out pending results for history
-        setSearchResults(data.data.filter((o: any) => o.status !== 'pending'));
-      }
-    } catch (err) {
-      console.error("Search failed:", err);
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const tracker = trackerRes?.data;
   const stats = tracker?.stats;
@@ -165,111 +112,7 @@ export default function Tracker() {
         </div>
       ) : null}
 
-      {/* ── Find My Order ── */}
-      <section className="animate-scale-in">
-        <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-sm">
-          <div className="p-5 md:p-8 bg-muted/30 border-b border-border">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-1">
-                <h2 className="text-xl md:text-2xl font-bold tracking-tight">Find My Order</h2>
-                <p className="text-sm text-muted-foreground">Search by phone number or reference ID to track your delivery.</p>
-              </div>
-              
-              <div className="flex p-1 bg-muted rounded-xl w-fit">
-                <button 
-                  onClick={() => setSearchMode('phone')}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                    searchMode === 'phone' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  By Phone
-                </button>
-                <button 
-                  onClick={() => setSearchMode('id')}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-xs font-bold transition-all",
-                    searchMode === 'id' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  By Order ID
-                </button>
-              </div>
-            </div>
 
-            <form onSubmit={handleSearch} className="mt-8 relative flex w-full max-w-2xl group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/30 to-indigo-500/30 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
-              <Input
-                type="text"
-                placeholder={searchMode === 'phone' ? "Enter your phone number (e.g. 0548169191)" : "Enter Order Reference (e.g. MN-YR6767ON)"}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="relative w-full pr-14 h-14 bg-card border-border text-lg rounded-xl focus:ring-1 focus:ring-primary/20 transition-all"
-              />
-              <Button 
-                type="submit" 
-                size="icon" 
-                disabled={isSearching}
-                className="absolute right-2 top-2 bottom-2 h-10 w-10 rounded-lg bg-primary hover:bg-primary/90 text-white transition-all active:scale-95"
-              >
-                {isSearching ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
-              </Button>
-            </form>
-          </div>
-
-          <div className="p-5 md:p-8">
-            {searchResults.length > 0 ? (
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Search Results</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {searchResults.map((order) => (
-                      <Link
-                        key={order.id}
-                        href={`/order/${order.orderReference || order.id}`}
-                      className="group flex items-center justify-between p-4 md:p-6 rounded-2xl border border-border bg-muted/20 hover:bg-card hover:border-primary/20 hover:shadow-md transition-all animate-scale-in active:scale-95 active:brightness-95"
-                      >
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "h-10 w-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-inner",
-                          order.network === 'YELLO' ? "bg-[#ffcc00]/10 text-[#ffcc00]" : 
-                          order.network === 'at' ? "bg-[#0033a0]/10 text-[#0033a0]" : "bg-[#e60000]/10 text-[#e60000]"
-                        )}>
-                          {order.network === 'YELLO' ? 'MTN' : order.network.toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm tracking-tight">{order.capacity}GB Data Bundle</p>
-                          <p className="text-[10px] uppercase font-mono text-muted-foreground">{order.orderReference || 'Pending Reference'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter border",
-                          order.status === 'fulfilled' ? "bg-green-500/10 text-green-600 border-green-500/20" :
-                          order.status === 'failed' ? "bg-red-500/10 text-red-600 border-red-500/20" :
-                          "bg-primary/10 text-primary border-primary/20 animate-pulse"
-                        )}>
-                          {order.status}
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ) : searchInput && isSearching === false ? (
-               <div className="flex flex-col items-center justify-center py-12 text-center opacity-50">
-                  <Package className="h-12 w-12 mb-4 text-muted-foreground/30" />
-                  <p className="text-sm font-medium">Use the form above to search for your orders.</p>
-               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center opacity-40">
-                <Activity className="h-12 w-12 mb-4 text-muted-foreground/30" />
-                <p className="text-sm font-medium">Real-time order retrieval system ready.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
 
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6 pt-4">
         {/* Processing Now */}
@@ -331,37 +174,7 @@ export default function Tracker() {
         </div>
       </div>
       
-      {/* Official DataMart Live Stream */}
-      <div className="border border-border rounded-[20px] p-5 md:p-8 bg-[#0a0a0a] shadow-2xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-60" />
-        
-        <div className="flex items-center justify-between mb-8 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-[12px] bg-primary/20 flex items-center justify-center border border-primary/30">
-              <Radio className="h-6 w-6 text-primary animate-pulse" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-xl tracking-tight text-white uppercase">Live Delivery Stream</h3>
-              <p className="text-xs text-primary/50 font-bold tracking-widest uppercase">Direct Network Feed</p>
-            </div>
-          </div>
-          <div className="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black text-primary flex items-center gap-2 uppercase tracking-tighter">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary/40 animate-ping" />
-            Live Processing
-          </div>
-        </div>
-        
-        <div 
-          id="datamart-live-tracker" 
-          className="relative z-10 min-h-[300px] w-full rounded-xl md:rounded-2xl overflow-hidden [&_.dtw-container]:!bg-transparent [&_.dtw-card]:!bg-white/5 [&_.dtw-card]:!border-white/10 [&_.dtw-text-primary]:!text-primary [&_.dtw-text-muted]:!text-white/40 [&_.dtw-badge]:!bg-primary/20 [&_.dtw-badge]:!text-primary"
-        >
-          {/* Widget loads here */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-4">
-            <RefreshCw className="h-10 w-10 text-white/10 animate-spin" />
-            <p className="text-white/20 text-sm font-bold uppercase tracking-widest">Connecting to network stream...</p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }

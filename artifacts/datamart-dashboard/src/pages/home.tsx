@@ -9,8 +9,8 @@ const STEPS = [
 ];
 
 const STATS = [
-  { value: "12.4k", label: "Deliveries Today", icon: TrendingUp },
-  { value: "0.8s", label: "Avg. Fulfillment", icon: Zap },
+  { value: "100+", label: "Deliveries Today", icon: TrendingUp },
+  { value: "1-60min", label: "Avg. Fulfillment", icon: Zap },
   { value: "100%", label: "Secure Gateway", icon: ShieldCheck },
 ];
 
