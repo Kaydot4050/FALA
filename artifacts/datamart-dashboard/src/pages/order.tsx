@@ -58,7 +58,15 @@ export default function OrderStatus() {
     const query = directQuery || searchInput.trim();
     if (!query) return;
 
-    if (searchMode === 'reference' || searchMode === 'transId') {
+    // Auto-detect phone numbers (e.g. 0548169191 or 233548169191) to prevent user errors
+    const isPhoneNumber = /^(?:\+?233|0)\d{9}$/.test(query);
+    const actualMode = isPhoneNumber ? 'phone' : searchMode;
+
+    if (actualMode !== searchMode) {
+      setSearchMode(actualMode);
+    }
+
+    if (actualMode === 'reference' || actualMode === 'transId') {
       setLocation(`/order/${query}`);
       setSearchResults([]);
     } else {
@@ -81,32 +89,17 @@ export default function OrderStatus() {
     }
   };
 
-  const handleDelete = async (reference: string) => {
-    if (!confirm("Are you sure you want to remove this order from your history?")) return;
-    
-    try {
-      const res = await fetch(`/api/order/${encodeURIComponent(reference)}`, { 
-        method: 'DELETE' 
-      });
-      if (res.ok) {
-        // Refresh UI
-        if (searchMode === 'phone') {
-          handleSearch(undefined, searchInput);
-        } else {
-          setLocation('/order');
-          setSearchInput("");
-          setSearchResults([]);
-        }
-      }
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
-  };
 
-  const statusConfig = {
+
+  const fulfilledState = { icon: CheckCircle2, label: 'Delivered', color: 'text-emerald-400', bg: 'bg-emerald-400/20', border: 'border-emerald-400/40', desc: 'Data delivered successfully! Check your phone' };
+
+  const statusConfig: Record<string, any> = {
     pending: { icon: Clock, label: 'Pending', color: 'text-amber-400', bg: 'bg-amber-400/20', border: 'border-amber-400/40', desc: 'Order received, waiting to be processed' },
     processing: { icon: RefreshCw, label: 'Processing', color: 'text-primary', bg: 'bg-primary/20', border: 'border-primary/40', desc: 'Your data is being sent to the network', spin: true },
-    fulfilled: { icon: CheckCircle2, label: 'Delivered', color: 'text-emerald-400', bg: 'bg-emerald-400/20', border: 'border-emerald-400/40', desc: 'Data delivered successfully! Check your phone' },
+    fulfilled: fulfilledState,
+    success: fulfilledState,
+    completed: fulfilledState,
+    delivered: fulfilledState,
     failed: { icon: XCircle, label: 'Failed', color: 'text-rose-400', bg: 'bg-rose-400/20', border: 'border-rose-400/40', desc: 'Transaction failed. Please contact support' }
   };
 
@@ -203,7 +196,7 @@ export default function OrderStatus() {
         {/* Reference Search Result (Single Order) */}
         {!isLoading && !isSearching && order && urlReference && (
           <div className="animate-scale-in">
-            <OrderResultCard order={order} config={statusConfig} onDelete={handleDelete} />
+            <OrderResultCard order={order} config={statusConfig} />
           </div>
         )}
 
@@ -219,13 +212,7 @@ export default function OrderStatus() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {searchResults.filter(o => o.status !== 'pending').map((order) => (
                 <div key={order.id} className="relative group">
-                  {/* Delete Button (Absolute) */}
-                  <button 
-                    onClick={() => handleDelete(order.orderReference || order.paystackReference)}
-                    className="absolute top-4 right-4 z-20 p-2 bg-rose-500/10 text-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+
 
                   <Link href={`/order/${order.orderReference || order.paystackReference}`}>
                     <div className="bg-card border border-border hover:border-primary/30 p-5 rounded-[20px] group transition-all hover:shadow-xl cursor-pointer relative overflow-hidden h-full flex flex-col justify-between active:scale-95 active:brightness-95">
@@ -341,18 +328,12 @@ function StatusBadge({ status, config, dotOnly }: { status: string, config: any,
   );
 }
 
-function OrderResultCard({ order, config, onDelete }: { order: any, config: any, onDelete: (ref: string) => void }) {
+function OrderResultCard({ order, config }: { order: any, config: any }) {
   const cfg = config[order.orderStatus.toLowerCase()] || config.pending;
   
   return (
     <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-2xl shadow-primary/5 transition-all hover:border-primary/20 relative group">
-      {/* Delete Button */}
-      <button 
-        onClick={() => onDelete(order.reference)}
-        className="absolute top-6 right-6 z-20 p-3 bg-rose-500/10 text-rose-500 rounded-[12px] opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white shadow-lg"
-      >
-        <Trash2 className="h-5 w-5" />
-      </button>
+
 
       <div className="p-5 md:p-8 border-b border-border bg-muted/20">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -364,10 +345,9 @@ function OrderResultCard({ order, config, onDelete }: { order: any, config: any,
         </div>
       </div>
       
-      <div className="p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="p-6 md:p-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
         <DetailItem label="Data Bundle" value={`${order.capacity}GB`} subValue={order.network} icon={Package} />
         <DetailItem label="Recipient" value={order.phoneNumber} isMono />
-        <DetailItem label="Total GHS" value={order.price.toFixed(2)} isPrimary />
         <DetailItem 
           label="Purchase Date" 
           value={order.createdAt ? format(new Date(order.createdAt), "MMM d, yyyy") : "Just now"} 

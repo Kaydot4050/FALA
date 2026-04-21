@@ -36,10 +36,19 @@ export default function Tracker() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchInput.trim()) return;
+    const query = searchInput.trim();
+    if (!query) return;
 
-    if (searchMode === 'id') {
-      setLocation(`/order/${searchInput.trim()}`);
+    // Auto-detect phone numbers to prevent user errors when tab is on 'id'
+    const isPhoneNumber = /^(?:\+?233|0)\d{9}$/.test(query);
+    const actualMode = isPhoneNumber ? 'phone' : searchMode;
+
+    if (actualMode !== searchMode) {
+      setSearchMode(actualMode);
+    }
+
+    if (actualMode === 'id') {
+      setLocation(`/order/${query}`);
       return;
     }
 

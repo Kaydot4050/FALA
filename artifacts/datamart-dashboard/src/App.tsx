@@ -19,8 +19,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/buy" component={Buy} />
-      <Route path="/order" component={OrderStatus} />
-      <Route path="/order/:reference" component={OrderStatus} />
+      <Route path="/order/:reference?" component={OrderStatus} />
       <Route path="/tracker" component={Tracker} />
       <Route path="/about" component={About} />
       <Route path="/payment/callback" component={PaymentCallback} />
