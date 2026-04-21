@@ -355,16 +355,7 @@ function OrderResultCard({ order, config }: { order: any, config: any }) {
         />
       </div>
 
-      <div className="px-6 pb-6 md:px-8 md:pb-8 flex justify-center">
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.reload()}
-          className="w-full sm:w-auto h-12 rounded-xl px-10 font-bold border-border hover:bg-muted transition-all"
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh Live Status
-        </Button>
-      </div>
+
     </div>
   );
 }
