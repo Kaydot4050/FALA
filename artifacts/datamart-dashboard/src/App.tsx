@@ -9,6 +9,8 @@ import OrderStatus from "@/pages/order";
 import Tracker from "@/pages/tracker";
 import About from "@/pages/about";
 import { ThemeProvider } from "@/components/theme-provider";
+import PaymentCallback from "@/pages/payment-callback";
+import Buy from "@/pages/buy";
 
 const queryClient = new QueryClient();
 
@@ -16,10 +18,12 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/buy" component={Buy} />
       <Route path="/order" component={OrderStatus} />
       <Route path="/order/:reference" component={OrderStatus} />
       <Route path="/tracker" component={Tracker} />
       <Route path="/about" component={About} />
+      <Route path="/payment/callback" component={PaymentCallback} />
       <Route component={NotFound} />
     </Switch>
   );

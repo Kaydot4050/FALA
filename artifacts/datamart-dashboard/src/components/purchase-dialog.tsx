@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { usePurchaseData } from "@workspace/api-client-react";
 import type { DataPackage } from "@workspace/api-client-react";
 import type { NetworkId } from "@/pages/home";
 import { Loader2, CheckCircle2, ChevronRight, Copy } from "lucide-react";
@@ -34,14 +33,14 @@ const NETWORK_LABELS: Record<NetworkId, string> = {
   at: "AirtelTigo",
 };
 
-const phoneSchema = z.object({
+const purchaseSchema = z.object({
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 digits")
     .regex(/^[0-9]+$/, "Must contain only numbers"),
 });
 
-type FormValues = z.infer<typeof phoneSchema>;
+type FormValues = z.infer<typeof purchaseSchema>;
 
 interface PurchaseDialogProps {
   open: boolean;
@@ -54,37 +53,11 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [successData, setSuccessData] = useState<{ reference: string; message: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(phoneSchema),
+    resolver: zodResolver(purchaseSchema),
     defaultValues: { phoneNumber: "" },
-  });
-
-  const purchaseMutation = usePurchaseData({
-    mutation: {
-      onSuccess: (data) => {
-        if (data.data?.orderReference) {
-          setSuccessData({
-            reference: data.data.orderReference,
-            message: data.message ?? "Your data bundle is on the way.",
-          });
-          form.reset();
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Purchase Failed",
-            description: data.message || "Could not complete the purchase.",
-          });
-        }
-      },
-      onError: (error: any) => {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error?.message || "An unexpected error occurred.",
-        });
-      },
-    },
   });
 
   useEffect(() => {
@@ -92,23 +65,50 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
       const t = setTimeout(() => {
         setSuccessData(null);
         form.reset();
-        purchaseMutation.reset();
+        setIsLoading(false);
       }, 300);
       return () => clearTimeout(t);
     }
     return;
   }, [open]);
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     if (!selectedPackage) return;
-    purchaseMutation.mutate({
-      data: {
-        phoneNumber: values.phoneNumber,
-        network: network as any,
-        capacity: String(selectedPackage.capacity),
-        gateway: "wallet",
-      },
-    });
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: values.phoneNumber,
+          network,
+          capacity: String(selectedPackage.capacity),
+          amount: selectedPackage.price,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success" && data.data?.authorizationUrl) {
+        // Redirect to Paystack checkout
+        window.location.href = data.data.authorizationUrl;
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Payment Failed",
+          description: data.error || data.message || "Could not initialize payment.",
+        });
+        setIsLoading(false);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.message || "An unexpected error occurred.",
+      });
+      setIsLoading(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -215,27 +215,28 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
                   )}
                 />
 
+
                 <DialogFooter>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => onOpenChange(false)}
-                    disabled={purchaseMutation.isPending}
+                    disabled={isLoading}
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    disabled={purchaseMutation.isPending}
+                    disabled={isLoading}
                     className="min-w-32"
                   >
-                    {purchaseMutation.isPending ? (
+                    {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
+                        Redirecting to Payment...
                       </>
                     ) : (
-                      "Buy Now"
+                      "Pay Now"
                     )}
                   </Button>
                 </DialogFooter>

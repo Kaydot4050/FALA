@@ -1,4 +1,4 @@
-import type { NetworkId } from "@/pages/home";
+import type { NetworkId } from "@/pages/buy";
 
 interface NetworkLogoProps {
   network: NetworkId;

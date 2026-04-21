@@ -15,7 +15,7 @@ export default function Transactions() {
         <p className="text-muted-foreground">View your recent wallet activity and purchases.</p>
       </div>
 
-      <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+      <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="divide-y divide-border">
             {[1, 2, 3, 4, 5].map(i => (
@@ -46,7 +46,7 @@ export default function Transactions() {
               const isPending = tx.status === "PENDING";
               
               return (
-                <div key={tx.reference || idx} className="p-4 sm:p-6 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                <div key={tx.reference || idx} className="p-4 md:p-6 flex items-center justify-between hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className={cn(
                       "flex items-center justify-center h-10 w-10 rounded-full shrink-0",
@@ -57,9 +57,9 @@ export default function Transactions() {
                       {isCredit ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
                     </div>
                     <div>
-                      <p className="font-medium">{tx.type.replace(/_/g, ' ')}</p>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        {tx.createdAt ? format(new Date(tx.createdAt), "MMM d, yyyy • h:mm a") : ""}
+                      <p className="font-bold text-sm md:text-base">{tx.type.replace(/_/g, ' ')}</p>
+                      <p className="text-[11px] md:text-sm text-muted-foreground flex items-center gap-1.5">
+                        {tx.createdAt ? format(new Date(tx.createdAt), "MMM d, h:mm a") : ""}
                       </p>
                     </div>
                   </div>

@@ -24,9 +24,19 @@ export async function datamartFetch(
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  return fetch(url, {
-    ...options,
-    headers,
-    cache: "no-store",
-  });
+  // Add 15 second timeout to prevent hanging
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

@@ -13,6 +13,7 @@
     "typescript": "~5.9.2"
   },
   "dependencies": {
+    "cross-env": "^10.1.0",
     "serverless-http": "^4.0.0"
   }
 }

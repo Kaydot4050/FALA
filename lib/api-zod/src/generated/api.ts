@@ -71,6 +71,7 @@ export const PurchaseDataBody = zod.object({
   network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM"]),
   capacity: zod.string(),
   gateway: zod.string().default(purchaseDataBodyGatewayDefault),
+  email: zod.string().email().optional(),
 });
 
 export const PurchaseDataResponse = zod.object({

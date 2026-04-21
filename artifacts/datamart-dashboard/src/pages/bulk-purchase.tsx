@@ -104,12 +104,12 @@ export default function BulkPurchase() {
 
       {!results ? (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
-            <div className="p-4 sm:p-6 space-y-4">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
+            <div className="p-3.5 sm:p-6 space-y-4">
               {rows.map((row, index) => {
                 const availablePackages = packagesData ? packagesData[row.network] || [] : [];
                 return (
-                  <div key={row.id} className="flex flex-col sm:flex-row gap-3 items-end p-4 rounded-lg bg-muted/30 border border-border/50">
+                  <div key={row.id} className="flex flex-col sm:flex-row gap-3 items-end p-3.5 md:p-4 rounded-lg bg-muted/30 border border-border/50">
                     <div className="w-full sm:w-12 text-center text-sm font-medium text-muted-foreground shrink-0 pb-3 sm:pb-0">
                       #{index + 1}
                     </div>
@@ -182,7 +182,7 @@ export default function BulkPurchase() {
               )}
             </div>
             
-            <div className="bg-muted/50 p-4 sm:p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-muted/50 p-3.5 sm:p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-sm font-medium space-x-4">
                 <span>Total Orders: <span className="font-bold">{rows.length}</span></span>
                 <span>Estimated Cost: <span className="font-bold text-primary">GHS {calculateTotalCost().toFixed(2)}</span></span>
@@ -200,21 +200,21 @@ export default function BulkPurchase() {
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border border-border rounded-xl p-5 bg-card shadow-sm text-center">
+            <div className="border border-border rounded-[20px] p-4 md:p-5 bg-card shadow-sm text-center">
               <p className="text-sm font-medium text-muted-foreground">Total Processed</p>
               <p className="text-3xl font-bold mt-1">{results.summary?.total || 0}</p>
             </div>
-            <div className="border border-border rounded-xl p-5 bg-card shadow-sm text-center">
+            <div className="border border-border rounded-[20px] p-4 md:p-5 bg-card shadow-sm text-center">
               <p className="text-sm font-medium text-green-600 dark:text-green-500">Successful</p>
               <p className="text-3xl font-bold mt-1">{results.summary?.successful || 0}</p>
             </div>
-            <div className="border border-border rounded-xl p-5 bg-card shadow-sm text-center">
+            <div className="border border-border rounded-[20px] p-4 md:p-5 bg-card shadow-sm text-center">
               <p className="text-sm font-medium text-red-600 dark:text-red-500">Failed</p>
               <p className="text-3xl font-bold mt-1">{results.summary?.failed || 0}</p>
             </div>
           </div>
 
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
             <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
               <h3 className="font-semibold">Order Results</h3>
               <button 

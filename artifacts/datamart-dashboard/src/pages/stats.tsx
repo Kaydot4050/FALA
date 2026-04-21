@@ -45,7 +45,7 @@ export default function Stats() {
           <p className="text-muted-foreground">Overview of your usage and earnings.</p>
         </div>
         
-        <div className="flex items-center gap-3 bg-card border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex items-center gap-3 bg-card border border-border rounded-[20px] p-3.5 md:p-4 shadow-sm">
           <div className="bg-primary/10 p-3 rounded-full text-primary">
             <Wallet className="h-6 w-6" />
           </div>
@@ -71,7 +71,7 @@ export default function Stats() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
             <div className="bg-muted/50 p-4 border-b border-border">
               <h3 className="font-semibold">Network Breakdown</h3>
             </div>
@@ -114,7 +114,7 @@ export default function Stats() {
             </div>
           </div>
           
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
             <div className="bg-muted/50 p-4 border-b border-border">
               <h3 className="font-semibold">Recent Activity</h3>
             </div>
@@ -146,7 +146,7 @@ export default function Stats() {
         </div>
 
         <div className="space-y-6">
-          <div className="border border-border rounded-xl bg-card shadow-sm p-6 text-center space-y-4">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm p-5 md:p-6 text-center space-y-4">
             <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
               <Gift className="h-8 w-8" />
             </div>
@@ -172,7 +172,7 @@ export default function Stats() {
 
 function StatCard({ title, value, icon: Icon, loading }: { title: string, value: string | React.ReactNode, icon: any, loading?: boolean }) {
   return (
-    <div className="border border-border rounded-xl p-5 bg-card shadow-sm flex flex-col justify-center">
+    <div className="border border-border rounded-[20px] p-4 md:p-5 bg-card shadow-sm flex flex-col justify-center">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <Icon className="h-4 w-4 text-muted-foreground opacity-50" />

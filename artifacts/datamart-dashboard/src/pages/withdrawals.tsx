@@ -62,7 +62,7 @@ export default function Withdrawals() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
             <div className="bg-muted/50 p-4 border-b border-border">
               <h3 className="font-semibold flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-primary" />
@@ -70,7 +70,7 @@ export default function Withdrawals() {
               </h3>
             </div>
             
-            <div className="p-6">
+            <div className="p-5 md:p-6">
               <div className="bg-blue-50 dark:bg-blue-900/10 text-blue-800 dark:text-blue-300 p-4 rounded-lg mb-6 text-sm flex items-start gap-3 border border-blue-200 dark:border-blue-800/30">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
@@ -157,14 +157,14 @@ export default function Withdrawals() {
         </div>
 
         <div className="space-y-6">
-          <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden">
+          <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden">
             <div className="bg-muted/50 p-4 border-b border-border">
               <h3 className="font-semibold flex items-center gap-2">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 Check Status
               </h3>
             </div>
-            <div className="p-6">
+            <div className="p-5 md:p-6">
               <form onSubmit={handleCheckStatus} className="flex gap-2 mb-6">
                 <input
                   type="text"
@@ -184,7 +184,7 @@ export default function Withdrawals() {
               </form>
 
               {searchRef && (
-                <div className="border border-border rounded-lg bg-muted/20 p-5">
+                <div className="border border-border rounded-lg bg-muted/20 p-4 md:p-5">
                   {statusLoading ? (
                     <div className="flex flex-col items-center justify-center py-6 text-muted-foreground space-y-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary/50" />

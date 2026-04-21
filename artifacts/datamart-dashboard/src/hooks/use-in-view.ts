@@ -14,7 +14,7 @@ export function useInView(options?: IntersectionObserverInit) {
           observer.disconnect();
         }
       },
-      { threshold: 0.12, ...options }
+      { threshold: 0.05, ...options }
     );
     observer.observe(el);
     return () => observer.disconnect();

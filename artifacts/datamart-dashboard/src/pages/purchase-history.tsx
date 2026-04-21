@@ -21,17 +21,17 @@ export default function PurchaseHistory() {
         <p className="text-muted-foreground">View all your past data purchases.</p>
       </div>
 
-      <div className="border border-border rounded-xl bg-card shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+      <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden flex flex-col min-h-[500px]">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+            <thead className="text-[10px] md:text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
               <tr>
-                <th className="px-6 py-4 font-medium">Date</th>
-                <th className="px-6 py-4 font-medium">Phone Number</th>
-                <th className="px-6 py-4 font-medium">Package</th>
-                <th className="px-6 py-4 font-medium">Amount</th>
-                <th className="px-6 py-4 font-medium">Reference</th>
-                <th className="px-6 py-4 font-medium text-right">Status</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Date</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Phone Number</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Package</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Amount</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">Reference</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-medium text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -63,23 +63,23 @@ export default function PurchaseHistory() {
 
                   return (
                     <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                        {format(new Date(p.createdAt), "MMM d, yyyy HH:mm")}
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-[11px] md:text-sm text-muted-foreground">
+                        {format(new Date(p.createdAt), "MMM d, HH:mm")}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium">
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap font-bold text-xs md:text-sm">
                         {p.phoneNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-semibold">{p.capacity}GB</span>
-                        <span className="text-xs text-muted-foreground ml-1.5">{p.network}</span>
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
+                        <span className="font-extrabold text-[11px] md:text-sm">{p.capacity}GB</span>
+                        <span className="text-[10px] text-muted-foreground ml-1.5">{p.network}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium">
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap font-bold text-xs md:text-sm">
                         GHS {p.price.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-muted-foreground uppercase tracking-wider">
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap font-mono text-[9px] md:text-xs text-muted-foreground uppercase tracking-wider">
                         {p.orderReference}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-right">
                         <span className={cn(
                           "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
                           isCompleted && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",

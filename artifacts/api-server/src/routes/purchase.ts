@@ -16,6 +16,7 @@ router.post("/purchase", async (req, res): Promise<void> => {
     network: parsed.data.network,
     capacity: parsed.data.capacity,
     gateway: parsed.data.gateway ?? "wallet",
+    email: (parsed.data as any).email || `customer-${parsed.data.phoneNumber}@datamartgh.shop`,
   };
 
   const upstream = await datamartFetch("/purchase", {

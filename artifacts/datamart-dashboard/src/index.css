@@ -57,10 +57,10 @@
   --color-sidebar-accent-border: var(--sidebar-accent-border);
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-  --color-brand-yello: #ffcc00;
-  --color-brand-telecel: #e60000;
-  --color-brand-at: #0033a0;
-  --color-brand-attigo: #ef3d42;
+  --color-brand-yello: #ffd900;
+  --color-brand-telecel: #ff1100;
+  --color-brand-at: #0066ff;
+  --color-brand-attigo: #ff3d42;
 
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
@@ -80,34 +80,34 @@
   --elevate-2: rgba(0,0,0, .08);
 
   /* Falaa Deals — warm light mode */
-  --background: 220 30% 98%;
-  --foreground: 224 20% 10%;
-  --border: 220 15% 88%;
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --border: 240 5.9% 90%;
   --card: 0 0% 100%;
-  --card-foreground: 224 20% 10%;
-  --card-border: 220 15% 88%;
+  --card-foreground: 240 10% 3.9%;
+  --card-border: 240 5.9% 90%;
   
   --sidebar: 0 0% 100%;
-  --sidebar-foreground: 240 10% 10%;
-  --sidebar-border: 240 5% 90%;
-  --sidebar-primary: 240 10% 10%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 5% 96%;
-  --sidebar-accent-foreground: 240 10% 10%;
-  --sidebar-ring: 240 10% 10%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-border: 240 5.9% 90%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-ring: 240 5% 64.9%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 10%;
-  --popover-border: 240 5% 90%;
+  --popover-foreground: 240 10% 3.9%;
+  --popover-border: 240 5.9% 90%;
 
-  --primary: 252 78% 52%;
+  --primary: 230 100% 65%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 20% 94%;
-  --secondary-foreground: 224 20% 10%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
 
-  --muted: 220 20% 94%;
-  --muted-foreground: 220 10% 42%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
 
   --accent: 220 20% 94%;
   --accent-foreground: 224 20% 10%;
@@ -116,7 +116,7 @@
   --destructive-foreground: 0 0% 100%;
 
   --input: 220 15% 88%;
-  --ring: 252 78% 52%;
+  --ring: 230 100% 65%;
 
   --chart-1: 221 83% 53%;
   --chart-2: 142 71% 45%;
@@ -177,7 +177,7 @@
   --popover-foreground: 0 0% 98%;
   --popover-border: 240 5% 16%;
 
-  --primary: 252 70% 65%;
+  --primary: 230 100% 65%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 240 5% 16%;
@@ -222,6 +222,25 @@
   to   { opacity: 1; }
 }
 
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 @keyframes pingSlow {
   0%, 100% { transform: scale(1); opacity: 1; }
   50%       { transform: scale(1.5); opacity: 0; }
@@ -264,6 +283,32 @@
 .animate-fade-in-up-delay-3 {
   animation: fadeInUp 0.6s 0.32s ease-out both;
 }
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out both;
+}
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out both;
+}
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out both;
+}
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: shimmer 2.5s infinite;
+}
 .animate-ping-once {
   animation: pingSlow 0.6s ease-out;
 }
@@ -278,6 +323,47 @@
 }
 .animate-blob {
   animation: blob 10s infinite;
+}
+.animate-wander {
+  animation: wander 20s ease-in-out infinite;
+}
+
+@keyframes wander {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  15%  { transform: translate(-120px, 60px) rotate(8deg); }
+  30%  { transform: translate(80px, 140px) rotate(-5deg); }
+  45%  { transform: translate(-60px, -80px) rotate(12deg); }
+  60%  { transform: translate(140px, 40px) rotate(-8deg); }
+  75%  { transform: translate(-40px, 120px) rotate(5deg); }
+  90%  { transform: translate(60px, -60px) rotate(-3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
+}
+
+@keyframes orbit-reverse {
+  from { transform: rotate(0deg) translateX(70px) rotate(0deg); }
+  to   { transform: rotate(-360deg) translateX(70px) rotate(360deg); }
+}
+
+.animate-orbit {
+  top: 50% !important;
+  left: 50% !important;
+  margin-top: -8px;
+  margin-left: -8px;
+  animation: orbit 8s linear infinite;
+}
+.animate-orbit-reverse {
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin-top: -6px;
+  margin-left: -6px;
+  animation: orbit-reverse 12s linear infinite;
 }
 
 @layer utilities {
@@ -312,6 +398,46 @@
     z-index: 0;
   }
 
+  .nav-active-glow {
+    position: relative;
+  }
+  .nav-active-glow::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 4px;
+    background: hsl(var(--primary));
+    border-radius: 2px;
+    box-shadow: 0 0 12px hsl(var(--primary));
+  }
+
+  @keyframes header-shine {
+    from { transform: translateX(-100%) skewX(-20deg); }
+    to { transform: translateX(200%) skewX(-20deg); }
+  }
+  .animate-header-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .animate-header-shine::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: header-shine 3s infinite;
+  }
+
   .hover-elevate:not(.no-default-hover-elevate)::after,
   .active-elevate:not(.no-default-active-elevate)::after,
   .hover-elevate-2:not(.no-default-hover-elevate)::after,
@@ -334,11 +460,54 @@
     background-color: var(--elevate-2);
   }
 
-  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate:not(.no-active-interaction-elevate)::after,
-  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* ── Utilities ── */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* ── Moving Border Trace ── */
+  @keyframes spin-border {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-border-spin {
+    animation: spin-border 3s linear infinite;
+  }
+
+  .trace-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .trace-border {
+    position: absolute;
+    inset: -200%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 280deg,
+      var(--trace-color, hsl(var(--primary))) 320deg,
+      transparent 360deg
+    );
+    z-index: 0;
+  }
+
+  .trace-content {
+    position: relative;
+    z-index: 10;
+    background: inherit;
+    border-radius: inherit;
+    margin: 4px; /* Thickness of the border */
+    height: calc(100% - 8px);
+    width: calc(100% - 8px);
   }
 }

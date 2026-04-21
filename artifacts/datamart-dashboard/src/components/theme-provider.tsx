@@ -4,12 +4,16 @@ type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
+  brandColor: string;
   toggleTheme: () => void;
+  setBrandColor: (color: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: "light",
+  brandColor: "230 100% 65%",
   toggleTheme: () => {},
+  setBrandColor: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -18,6 +22,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem("falaa-theme") as Theme | null;
     if (stored === "dark" || stored === "light") return stored;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  const [brandColor, setBrandColor] = useState<string>(() => {
+    if (typeof window === "undefined") return "230 100% 65%";
+    return localStorage.getItem("falaa-brand-color") || "230 100% 65%";
   });
 
   useEffect(() => {
@@ -30,10 +39,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("falaa-theme", theme);
   }, [theme]);
 
+  // Apply brand color to CSS variable
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--primary', brandColor);
+    localStorage.setItem("falaa-brand-color", brandColor);
+  }, [brandColor]);
+
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, brandColor, toggleTheme, setBrandColor }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -10,6 +10,8 @@ import accountRouter from "./account";
 import referralRouter from "./referral";
 import statsRouter from "./stats";
 import withdrawalsRouter from "./withdrawals";
+import paystackRouter from "./paystack";
+import datamartWebhookRouter from "./datamart-webhook";
 
 const router: IRouter = Router();
 
@@ -24,5 +26,7 @@ router.use(accountRouter);
 router.use(referralRouter);
 router.use(statsRouter);
 router.use(withdrawalsRouter);
+router.use(paystackRouter);
+router.use(datamartWebhookRouter);
 
 export default router;
