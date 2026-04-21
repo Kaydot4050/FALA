@@ -22,52 +22,49 @@ export default function Tracker() {
 
   return (
     <div className="w-full space-y-8 pb-12">
-      {/* Animated Banner Header */}
-      <section className="relative overflow-hidden rounded-[20px] bg-slate-950 text-white px-4 py-5 md:px-10 md:py-12 mt-2 md:mt-6 shadow-2xl isolate flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-shimmer">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a0b2e] via-slate-900 to-[#120524] z-[-2]" />
-        
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[70%] rounded-full bg-primary/20 blur-[80px] mix-blend-screen animate-blob pointer-events-none" />
-        <div className="absolute bottom-[0%] right-[10%] w-[40%] h-[80%] rounded-full bg-fuchsia-600/20 blur-[100px] mix-blend-screen animate-blob pointer-events-none" style={{ animationDelay: '3s' }} />
-        
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,black,transparent)] z-[-1]" />
-        
-        <div className="relative z-10 w-full animate-fade-in-up">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="relative flex h-2 w-2 shadow-[0_0_10px_rgba(34,197,94,0.5)] rounded-full">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            <span className="inline-block bg-white/5 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
-              Fulfillment Network
-            </span>
-          </div>
+      {/* ── Glassmorphic Status Card ── */}
+      <section className="flex items-center justify-center pt-6 md:pt-10 pb-4 animate-fade-in">
+        <div className="w-full max-w-4xl h-auto md:h-64 relative rounded-[24px] md:rounded-[40px] bg-black/60 backdrop-blur-3xl border border-white/5 shadow-2xl flex flex-row items-center justify-between p-5 md:px-16 overflow-hidden group">
           
-          <h1 className="text-2xl md:text-5xl font-extrabold tracking-tight mb-1 drop-shadow-lg">
-            <span className="text-white drop-shadow-[0_2px_15px_rgba(255,255,255,0.2)]">Live Delivery</span>{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/60 to-primary/40 animate-pulse-slow">Tracker</span>
-          </h1>
-          <p className="text-primary-foreground/60 leading-relaxed font-medium text-[11px] md:text-base">
-            Real-time monitoring of all active bundle dispatches.
-          </p>
-        </div>
-        
-        {scanner && (
-          <div className="relative z-10 shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-colors px-4 py-3 rounded-[12px] flex flex-col items-center md:items-end gap-1.5 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.5)] w-full md:w-auto animate-fade-in-up-delay-2">
-            <div className="flex items-center gap-2 font-bold text-[10px] md:text-sm text-white/90 uppercase tracking-widest">
-              <Radio className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
-              Gateway Engine
-            </div>
-            <div className="bg-slate-950/60 px-4 py-1.5 flex items-center justify-center rounded-xl text-sm md:text-lg font-black tracking-widest border border-white/5 w-full md:w-auto min-w-[120px] md:min-w-[140px]">
-              {scanner.active ? (
-                <span className="text-green-400 shadow-green-500/50 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">ACTIVE</span>
-              ) : scanner.waiting ? (
-                <span className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] animate-pulse">WAITING {scanner.waitSeconds}s</span>
-              ) : (
-                <span className="text-white/40">IDLE</span>
+          {/* Info Side */}
+          <div className="flex flex-col items-start text-left space-y-1 md:space-y-4">
+             <div className="space-y-0.5 md:space-y-1">
+               <h2 className="text-sm md:text-3xl font-bold tracking-tight text-white line-clamp-2 md:line-clamp-none max-w-[120px] md:max-w-none leading-tight">Live Delivery Tracker</h2>
+               <div className="h-0.5 md:h-1 w-8 md:w-12 bg-primary/40 rounded-full" />
+             </div>
+             <p className="text-[9px] md:text-sm text-white/40 font-medium max-w-[100px] md:max-w-[280px] leading-relaxed line-clamp-2 md:line-clamp-none">
+               Real-time monitoring of all active bundle dispatches.
+             </p>
+          </div>
+
+          {/* Status Side */}
+          <div className="flex flex-row-reverse items-center gap-3 md:gap-12">
+            {/* Status Label */}
+            <div className="text-right">
+              <p className={cn(
+                "text-sm md:text-3xl font-black tracking-[0.1em] md:tracking-[0.2em] uppercase",
+                scanner?.active ? "text-green-500" : scanner?.waiting ? "text-amber-500" : "text-white"
+              )}>
+                {scanner?.active ? "Active" : scanner?.waiting ? "Waiting" : "Idle"}
+              </p>
+              {scanner?.waiting && (
+                <p className="text-[7px] md:text-[10px] text-amber-500/60 font-bold uppercase tracking-tighter md:tracking-widest mt-0.5 md:mt-1">
+                  {scanner.waitSeconds}s
+                </p>
               )}
             </div>
+
+            {/* Central Ring */}
+            <div className="relative flex items-center justify-center">
+              <div className={cn(
+                "h-16 w-16 md:h-40 md:w-40 rounded-full border-[3px] md:border-[5px] flex flex-col items-center justify-center transition-colors duration-500",
+                scanner?.active ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.1)]" : scanner?.waiting ? "border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "border-white/10"
+              )}>
+                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-white/90">Status</span>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </section>
 
       {isLoading && !tracker ? (
@@ -118,7 +115,7 @@ export default function Tracker() {
         {/* Processing Now */}
         <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden flex flex-col">
           <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
-            <h3 className="font-semibold flex items-center gap-2">
+            <h3 className="text-xs md:text-sm font-semibold flex items-center gap-2">
               <RefreshIcon active={scanner?.active} />
               Processing Now
             </h3>
@@ -127,18 +124,18 @@ export default function Tracker() {
             {tracker?.checkingNow?.summary ? (
               <div className="space-y-4 w-full">
                 <div className="bg-primary/5 border border-primary/20 p-2 md:p-6 rounded-lg">
-                  <p className="text-sm md:text-2xl font-bold tracking-tight text-primary leading-tight">
+                  <p className="text-sm md:text-lg font-bold tracking-tight text-primary leading-tight">
                     {tracker.checkingNow.summary}
                   </p>
                 </div>
                 {tracker.message && (
-                  <p className="text-[10px] md:text-sm text-muted-foreground mt-2 md:mt-4">{tracker.message}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground mt-2 md:mt-4">{tracker.message}</p>
                 )}
               </div>
             ) : (
               <div className="text-muted-foreground flex flex-col items-center gap-2">
                 <Clock className="h-8 w-8 opacity-50" />
-                <p>Waiting for next batch...</p>
+                <p className="text-[10px] md:text-xs">Waiting for next batch...</p>
               </div>
             )}
           </div>
@@ -147,7 +144,7 @@ export default function Tracker() {
         {/* Recently Delivered */}
         <div className="border border-border rounded-[20px] bg-card shadow-sm overflow-hidden flex flex-col">
           <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
-            <h3 className="font-semibold flex items-center gap-2">
+            <h3 className="text-xs md:text-sm font-semibold flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
               Recently Delivered
             </h3>
@@ -155,7 +152,7 @@ export default function Tracker() {
           <div className="p-3 md:p-6 flex-1 flex flex-col justify-center items-center text-center min-h-[120px] md:min-h-[200px]">
             {tracker?.lastDelivered?.summary ? (
               <div className="w-full bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30 p-2 md:p-6 rounded-lg">
-                <p className="text-sm md:text-xl font-bold tracking-tight text-green-700 dark:text-green-400 leading-tight">
+                <p className="text-sm md:text-lg font-bold tracking-tight text-green-700 dark:text-green-400 leading-tight">
                   {tracker.lastDelivered.summary}
                 </p>
                 {tracker.lastDelivered.trackingId && (
@@ -167,7 +164,7 @@ export default function Tracker() {
             ) : (
               <div className="text-muted-foreground flex flex-col items-center gap-2">
                 <Activity className="h-8 w-8 opacity-50" />
-                <p>No recent deliveries in this session</p>
+                <p className="text-[10px] md:text-xs">No recent deliveries in this session</p>
               </div>
             )}
           </div>

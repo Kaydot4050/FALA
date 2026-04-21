@@ -68,6 +68,7 @@ function ColorCircle({ color, name }: { color: string, name: string }) {
 const NAV_LINKS = [
   { href: "/",        label: "Home",        exact: true },
   { href: "/buy",    label: "Buy Data",    exact: true },
+  { href: "/order",   label: "Track Order", exact: false },
   { href: "/tracker", label: "Live Status", exact: true },
   { href: "/about",   label: "About",       exact: true },
 ];
