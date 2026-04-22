@@ -4,6 +4,7 @@ export interface DataPackage {
   capacity: string;
   mb: string;
   price: string;
+  oldPrice?: string;
   network: string;
   inStock: boolean;
 }
@@ -14,6 +15,26 @@ export interface DataPackage {
  */
 const PRICE_MAP: Record<string, string> = {
   // MTN (YELLO)
+  "YELLO_1GB": "4.99",
+  "YELLO_2GB": "9.49",
+  "YELLO_3GB": "13.50",
+  "YELLO_4GB": "18.50",
+  "YELLO_5GB": "23.50",
+  "YELLO_6GB": "26.99",
+  "YELLO_8GB": "36.70",
+  "YELLO_10GB": "43.70",
+  "YELLO_15GB": "67.00",
+  "YELLO_20GB": "84.00",
+  "YELLO_25GB": "105.00",
+  "YELLO_30GB": "130.00",
+  "YELLO_40GB": "170.00",
+  "YELLO_50GB": "210.00",
+};
+
+/**
+ * Historical prices for strike-through UI
+ */
+const OLD_PRICE_MAP: Record<string, string> = {
   "YELLO_1GB": "5.00",
   "YELLO_2GB": "9.80",
   "YELLO_3GB": "14.00",
@@ -22,12 +43,7 @@ const PRICE_MAP: Record<string, string> = {
   "YELLO_6GB": "28.00",
   "YELLO_8GB": "37.50",
   "YELLO_10GB": "45.00",
-  "YELLO_15GB": "67.00",
   "YELLO_20GB": "85.00",
-  "YELLO_25GB": "105.00",
-  "YELLO_30GB": "130.00",
-  "YELLO_40GB": "170.00",
-  "YELLO_50GB": "210.00",
 
   // AirtelTigo (at)
   "at_1GB": "5.00",
@@ -64,6 +80,7 @@ export function applyCustomPricing(packages: DataPackage[]): DataPackage[] {
       return {
         ...pkg,
         price: customPrice,
+        oldPrice: OLD_PRICE_MAP[key]
       };
     }
 

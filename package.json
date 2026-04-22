@@ -9,11 +9,18 @@
   },
   "private": true,
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/jsonwebtoken": "^9.0.10",
     "prettier": "^3.8.1",
+    "tsx": "catalog:",
     "typescript": "~5.9.2"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cross-env": "^10.1.0",
+    "jsonwebtoken": "^9.0.3",
     "serverless-http": "^4.0.0"
   }
 }

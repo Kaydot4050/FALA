@@ -156,10 +156,11 @@ export default function Home() {
 
         <div className="flex flex-nowrap overflow-x-auto pb-8 gap-3 md:gap-6 snap-x no-scrollbar">
           {[
-            { network: 'YELLO', capacity: '10', price: '10.00', label: 'Hottest' },
-            { network: 'TELECEL', capacity: '5', price: '5.00', label: 'Flash' },
-            { network: 'at', capacity: '20', price: '20.00', label: 'Giant' },
-            { network: 'YELLO', capacity: '20', price: '20.00', label: 'Best Value' },
+            { network: 'YELLO',   capacity: '1',   price: '4.99',  oldPrice: '5.00',  label: 'Hottest' },
+            { network: 'TELECEL', capacity: '10',  price: '43.50', label: 'Flash' },
+            { network: 'at',      capacity: '2',   price: '9.50',  label: 'Giant' },
+            { network: 'YELLO',   capacity: '5',   price: '23.50', oldPrice: '24.00', label: 'Popular' },
+            { network: 'YELLO',   capacity: '2',   price: '9.49',  oldPrice: '9.80',  label: 'Steady' },
           ].map((btn, i) => (
             <div 
               key={i} 
@@ -183,7 +184,12 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-50">Instant</span>
-                    <span className="text-base md:text-2xl font-black text-primary">GHS {btn.price}</span>
+                    <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+                      {'oldPrice' in btn && (
+                        <span className="text-[10px] md:text-xs font-bold text-muted-foreground/30 line-through">₵{btn.oldPrice}</span>
+                      )}
+                      <span className="text-base md:text-2xl font-black text-primary">₵{btn.price}</span>
+                    </div>
                   </div>
                   <div className="h-8 w-8 md:h-12 md:w-12 rounded-xl bg-muted border border-border flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_15px_hsl(var(--primary)_/_0.4)] transition-all shrink-0">
                     <ArrowRight className="h-3 w-3 md:h-5 md:w-5" />

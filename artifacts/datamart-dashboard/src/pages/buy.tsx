@@ -209,13 +209,17 @@ export default function BuyData() {
 
                   <div className="mt-auto pt-4 border-t border-white/5">
                     <div className="flex flex-col items-center md:items-end md:flex-row md:justify-between gap-2">
-                      <div className="text-center md:text-left">
-                        <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Price</p>
-                        <p className="font-black text-sm md:text-2xl text-foreground">
-                          <span className="text-[10px] font-bold mr-0.5 text-muted-foreground">GHS</span>
-                          {Number(pkg.price).toFixed(2)}
+                        <p className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+                          {pkg.oldPrice && pkg.oldPrice !== pkg.price && (
+                            <span className="text-[10px] md:text-xs font-bold text-muted-foreground/40 line-through">
+                              GHS {Number(pkg.oldPrice).toFixed(2)}
+                            </span>
+                          )}
+                          <span className="font-black text-sm md:text-2xl text-foreground">
+                            <span className="text-[10px] font-bold mr-0.5 text-muted-foreground">GHS</span>
+                            {Number(pkg.price).toFixed(2)}
+                          </span>
                         </p>
-                      </div>
                       <div className="hidden md:flex h-10 w-10 rounded-[12px] bg-primary/20 items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-[0_0_15px_hsl(var(--primary)_/_0.3)]">
                          <ArrowRight className="h-4 w-4" />
                       </div>
