@@ -210,8 +210,13 @@ router.post("/paystack/webhook", async (req, res): Promise<void> => {
     .digest("hex");
 
   if (hash !== signature) {
-    logger.warn("Invalid Paystack webhook signature");
-    res.status(401).json({ error: "Invalid signature" });
+    logger.warn({ 
+      receivedSig: signature?.substring(0, 8), 
+      calculatedSig: hash.substring(0, 8),
+      bodyLength: JSON.stringify(req.body).length
+    }, "Paystack webhook signature mismatch - check your Secret Key in Netlify");
+    // We respond 200 anyway to prevent Paystack from retrying indefinitely if it's a config issue
+    res.status(200).json({ error: "Signature mismatch" });
     return;
   }
 
@@ -221,16 +226,22 @@ router.post("/paystack/webhook", async (req, res): Promise<void> => {
   if (event.event === "charge.success") {
     const reference = event.data.reference;
 
-    // 1. Update order to "paid" locally if it was pending
+    // 1. Fetch order from DB
     const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, reference)).limit(1);
-    
-    if (order && order.status === "pending") {
-      await db.update(ordersTable)
-        .set({ status: "paid", updatedAt: new Date() })
-        .where(eq(ordersTable.id, reference));
-      
-      // 2. Trigger fulfillment
-      await handleFulfillment(reference);
+
+    if (order) {
+      if (order.status === "pending" || order.status === "unpaid") {
+        logger.info({ reference }, "Webhook: Updating order to 'paid' and triggering fulfillment");
+        await db.update(ordersTable)
+          .set({ status: "paid", updatedAt: new Date() })
+          .where(eq(ordersTable.id, reference));
+        
+        await handleFulfillment(reference);
+      } else {
+        logger.info({ reference, currentStatus: order.status }, "Webhook: Order already processed, skipping");
+      }
+    } else {
+      logger.error({ reference }, "Webhook error: Transaction success received but Order ID not found in database");
     }
   }
 
