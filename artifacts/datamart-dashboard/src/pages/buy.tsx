@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
-export type NetworkId = "YELLO" | "TELECEL" | "at";
+export type NetworkId = "YELLO" | "TELECEL" | "at" | "AT_PREMIUM";
 
 const NETWORKS: {
   id: NetworkId;
@@ -191,9 +191,12 @@ export default function BuyData() {
               {packages.map((pkg, i) => (
                 <button
                   key={`${pkg.network}-${pkg.capacity}`}
-                  onClick={() => handlePackageSelect(pkg)}
+                  onClick={() => pkg.inStock && handlePackageSelect(pkg)}
                   style={{ animationDelay: `${i * 40}ms` }}
-                  className="group relative flex flex-col p-5 md:p-8 rounded-[20px] border border-border bg-card hover:bg-card/80 hover:border-primary/60 hover:-translate-y-3 hover:shadow-[0_20px_50px_-20px_hsl(var(--primary)_/_0.3)] transition-all duration-500 text-left overflow-hidden isolate active:scale-95 active:brightness-95"
+                  className={cn(
+                    "group relative flex flex-col p-5 md:p-8 rounded-[20px] border border-border bg-card hover:bg-card/80 hover:border-primary/60 hover:-translate-y-3 hover:shadow-[0_20px_50px_-20px_hsl(var(--primary)_/_0.3)] transition-all duration-500 text-left overflow-hidden isolate active:scale-95 active:brightness-95",
+                    !pkg.inStock && "opacity-60 grayscale cursor-not-allowed hover:translate-y-0 hover:shadow-none border-dashed"
+                  )}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-[-1]" />
                   
@@ -204,13 +207,19 @@ export default function BuyData() {
                       </span>
                       <span className="text-sm md:text-xl font-bold text-muted-foreground uppercase">GB</span>
                     </div>
-                    <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Non-Expiry</p>
+                    {!pkg.inStock ? (
+                      <p className="text-[10px] text-amber-500 font-black uppercase tracking-widest flex items-center justify-center md:justify-start gap-1">
+                        <ZapOff size={10} /> Out of Stock
+                      </p>
+                    ) : (
+                      <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Non-Expiry</p>
+                    )}
                   </div>
 
                   <div className="mt-auto pt-4 border-t border-white/5">
                     <div className="flex flex-col items-center md:items-end md:flex-row md:justify-between gap-2">
                         <p className="flex flex-col md:flex-row md:items-baseline md:gap-2">
-                          {pkg.oldPrice && pkg.oldPrice !== pkg.price && (
+                          {(pkg.showOldPrice !== false) && pkg.oldPrice && pkg.oldPrice !== pkg.price && (
                             <span className="text-[10px] md:text-xs font-bold text-muted-foreground/40 line-through">
                               GHS {Number(pkg.oldPrice).toFixed(2)}
                             </span>
@@ -220,7 +229,10 @@ export default function BuyData() {
                             {Number(pkg.price).toFixed(2)}
                           </span>
                         </p>
-                      <div className="hidden md:flex h-10 w-10 rounded-[12px] bg-primary/20 items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-[0_0_15px_hsl(var(--primary)_/_0.3)]">
+                      <div className={cn(
+                        "hidden md:flex h-10 w-10 rounded-[12px] items-center justify-center transition-all shadow-[0_0_15px_hsl(var(--primary)_/_0.3)]",
+                        pkg.inStock ? "bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white" : "bg-muted text-muted-foreground"
+                      )}>
                          <ArrowRight className="h-4 w-4" />
                       </div>
                     </div>

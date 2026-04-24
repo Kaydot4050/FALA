@@ -12,11 +12,15 @@ import statsRouter from "./stats";
 import withdrawalsRouter from "./withdrawals";
 import paystackRouter from "./paystack";
 import datamartWebhookRouter from "./datamart-webhook";
+import adminPackagesRouter from "./admin-packages";
+import adminCustomersRouter from "./admin-customers";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(packagesRouter);
+router.use(adminPackagesRouter);
+router.use(adminCustomersRouter);
 router.use(purchaseRouter);
 router.use(bulkPurchaseRouter);
 router.use(ordersRouter);

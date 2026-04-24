@@ -69,14 +69,14 @@ export function useDeliveryStatus() {
       }
 
       return {
-        message: "Deliveries are blazing fast! Your order should arrive within minutes.",
+        message: "Ultra fast deliveries! Your order should arrive within minutes.",
         status: "fast" as DeliveryPerformance,
         icon: Activity,
-        colorClass: "text-emerald-400",
-        bgClass: "bg-emerald-500/5",
-        borderClass: "border-emerald-500/20",
-        accentColor: "emerald-500",
-        dotColor: "bg-emerald-500"
+        colorClass: "text-yellow-400",
+        bgClass: "bg-yellow-500/10",
+        borderClass: "border-yellow-500/30",
+        accentColor: "yellow-500",
+        dotColor: "bg-yellow-400"
       };
     } catch (err) {
       console.error("Failed to parse delivery times:", err);

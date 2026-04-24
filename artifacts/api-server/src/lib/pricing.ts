@@ -7,6 +7,7 @@ export interface DataPackage {
   oldPrice?: string;
   network: string;
   inStock: boolean;
+  isHidden?: boolean;
 }
 
 /**

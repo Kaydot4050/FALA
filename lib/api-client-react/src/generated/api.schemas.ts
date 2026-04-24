@@ -18,6 +18,10 @@ export interface DataPackage {
   mb: number;
   network: string;
   price: number;
+  oldPrice?: number;
+  showOldPrice?: boolean;
+  inStock?: boolean;
+  isHidden?: boolean;
 }
 
 export type DataPackagesResponseData = {
@@ -278,6 +282,9 @@ export interface PurchaseRecord {
   /** @nullable */
   balanceAfter?: number | null;
   createdAt: string;
+  source: string;
+  customerName?: string;
+  costPrice?: string | null;
 }
 
 export interface PurchaseHistoryData {
@@ -315,6 +322,11 @@ export interface UsageStatsData {
   totalSpent: number;
   totalGB: number;
   successRate: number;
+  allTimeOrders?: number;
+  allTimeSpent?: number;
+  allTimeProfit?: number;
+  totalProfit?: number;
+  totalCustomers?: number;
   networkBreakdown?: NetworkStat[];
   recentActivity?: PurchaseRecord[];
 }

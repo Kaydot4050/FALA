@@ -13,7 +13,12 @@ const router: IRouter = Router();
  * Returns the Paystack authorization_url for the frontend to redirect to.
  */
 router.post("/paystack/initialize", async (req, res): Promise<void> => {
-  const { phoneNumber, network, capacity, amount } = req.body;
+  const { phoneNumber, network, capacity, amount, customerName, recipientName, source } = req.body;
+  const finalName = customerName || recipientName || "Valued Customer";
+  const finalSource = source || "web";
+  
+  console.log("DEBUG: Received customerName:", finalName, "Source:", finalSource);
+  logger.info({ body: req.body, customerName: finalName, source: finalSource }, "Paystack initialize request");
 
   if (!phoneNumber || !network || !capacity || !amount) {
     res.status(400).json({ error: "Missing required fields: phoneNumber, network, capacity, amount" });
@@ -27,13 +32,43 @@ router.post("/paystack/initialize", async (req, res): Promise<void> => {
   }
 
   try {
-    // 1. Create pending order in database
+    // 1a. Fetch cost price from DataMart
+    let datamartCostPrice: string | null = null;
+    try {
+      // Map frontend network names to DataMart API internal names
+      const netMap: Record<string, string> = {
+        "MTN": "YELLO",
+        "TELECEL": "TELECEL",
+        "AT": "at",
+        "AIRTELTIGO": "at"
+      };
+      const dmNet = netMap[network.toUpperCase()] || network;
+
+      const dmRes = await datamartFetch(`/data-packages`);
+      if (dmRes.ok) {
+        const dmData = await dmRes.json() as any;
+        if (dmData.status === "success" && dmData.data?.[dmNet]) {
+          const pkg = dmData.data[dmNet].find((p: any) => String(p.capacity) === String(capacity));
+          if (pkg) {
+             datamartCostPrice = String(pkg.price);
+             logger.info({ network, dmNet, capacity, cost: datamartCostPrice }, "Found cost price from DataMart");
+          }
+        }
+      }
+    } catch (e) {
+      logger.warn({ error: e, network, capacity }, "Failed to fetch cost price from DataMart, proceeding without it");
+    }
+
+    // 1b. Create pending order in database
     const [order] = await db.insert(ordersTable).values({
+      customerName: finalName,
       phoneNumber,
       network,
       capacity: String(capacity),
       amount: String(amount),
+      costPrice: datamartCostPrice,
       status: "pending",
+      source: finalSource,
     }).returning();
 
     // 2. Initialize Paystack transaction
@@ -58,7 +93,7 @@ router.post("/paystack/initialize", async (req, res): Promise<void> => {
       }),
     });
 
-    const paystackData = await paystackRes.json();
+    const paystackData = await paystackRes.json() as any;
 
     if (!paystackData.status) {
       logger.error({ paystackData }, "Paystack initialization failed");
@@ -122,7 +157,7 @@ async function handleFulfillment(orderId: string) {
       body: JSON.stringify(purchaseBody),
     });
 
-    const purchaseData = await upstream.json();
+    const purchaseData = await upstream.json() as any;
 
     if (upstream.status === 201 && purchaseData.data?.orderReference) {
       // 3. Mark as fulfilled
@@ -237,7 +272,7 @@ router.get("/paystack/verify/:reference", async (req, res): Promise<void> => {
         headers: { "Authorization": `Bearer ${secretKey}` }
       });
       
-      const paystackData = await paystackRes.json();
+      const paystackData = await paystackRes.json() as any;
       
       if (paystackData.status && paystackData.data.status === "success") {
         logger.info({ reference }, "Paystack API confirmed success, updating local status and triggering fulfillment");

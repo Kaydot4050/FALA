@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { datamartFetch } from "../lib/datamart";
 import { GetDataPackagesQueryParams } from "@workspace/api-zod";
 import { applyCustomPricing } from "../lib/pricing";
+import { db } from "@workspace/db";
+import { packageOverridesTable } from "@workspace/db/schema";
 
 const router: IRouter = Router();
 
@@ -9,6 +11,7 @@ router.get("/packages", async (req, res): Promise<void> => {
   try {
     const parsed = GetDataPackagesQueryParams.safeParse(req.query);
     const network = parsed.success ? parsed.data.network : undefined;
+    const isAdmin = req.query.admin === "true";
 
     const url = network ? `/data-packages?network=${network}` : "/data-packages";
 
@@ -19,18 +22,37 @@ router.get("/packages", async (req, res): Promise<void> => {
       throw new Error(`DataMart API error (${upstream.status}): ${errorText}`);
     }
 
-    const data = await upstream.json();
+    const data = await upstream.json() as any;
 
     if (data.status === "success" && data.data) {
       const rawPackages = data.data as Record<string, any[]>;
       const processedData: Record<string, any[]> = {};
 
+      // Fetch all overrides from DB
+      const overrides = await db.select().from(packageOverridesTable);
+      const overrideMap = new Map(overrides.map(o => [o.id, o]));
+
       for (const [net, pkgs] of Object.entries(rawPackages)) {
-        // Filter out AT_PREMIUM
         if (net === "AT_PREMIUM") continue;
         
-        // Apply Falaa Custom Pricing
-        processedData[net] = applyCustomPricing(pkgs);
+        const pricedPkgs = applyCustomPricing(pkgs);
+        
+        // Merge DB Overrides
+        processedData[net] = pricedPkgs.map(p => {
+          const key = `${p.network}_${p.capacity}${p.mb ? 'MB' : 'GB'}`;
+          const over = overrideMap.get(key);
+          if (over) {
+            return {
+              ...p,
+              price: over.customPrice || p.price,
+              oldPrice: over.customOldPrice || p.oldPrice,
+              showOldPrice: over.showOldPrice,
+              inStock: over.inStock,
+              isHidden: over.isHidden
+            };
+          }
+          return p;
+        }).filter(p => isAdmin || !p.isHidden);
       }
 
       data.data = processedData;

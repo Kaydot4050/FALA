@@ -11,15 +11,18 @@ function StatusIndicator() {
   
   if (!status) return null;
 
+  const isFast = status.status === 'fast';
+  
   return (
-    <div className="relative flex h-3 w-3 items-center justify-center">
+    <div className="relative flex h-4 w-4 items-center justify-center">
       <div className={cn(
-        "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-        status.dotColor
+        "absolute inline-flex h-full w-full rounded-full opacity-75",
+        isFast ? "animate-[ping_0.8s_cubic-bezier(0,0,0.2,1)_infinite] bg-yellow-400" : "animate-ping " + status.dotColor
       )} />
       <div className={cn(
-        "relative inline-flex h-2 w-2 rounded-full",
-        status.dotColor
+        "relative inline-flex h-2.5 w-2.5 rounded-full transition-all duration-500",
+        status.dotColor,
+        isFast && "scale-110"
       )} />
     </div>
   );

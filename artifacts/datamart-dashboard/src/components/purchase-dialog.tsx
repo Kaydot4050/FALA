@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { getBaseUrl } from "@workspace/api-client-react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { DataPackage } from "@workspace/api-client-react";
-import type { NetworkId } from "@/pages/home";
+import type { NetworkId } from "@/pages/buy";
 import { Loader2, CheckCircle2, ChevronRight, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -35,7 +36,7 @@ const NETWORK_LABELS: Record<NetworkId, string> = {
 };
 
 const purchaseSchema = z.object({
-  recipientName: z
+  customerName: z
     .string()
     .min(1, "Name is required"),
   phoneNumber: z
@@ -62,7 +63,7 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
   const form = useForm<FormValues>({
     resolver: zodResolver(purchaseSchema),
     defaultValues: { 
-      recipientName: "",
+      customerName: "",
       phoneNumber: "" 
     },
   });
@@ -80,15 +81,23 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
   }, [open]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!selectedPackage) return;
+    console.log("SUBMITTING ORDER:", values);
+    if (!selectedPackage) {
+      console.error("No package selected!");
+      return;
+    }
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/paystack/initialize", {
+      const baseUrl = getBaseUrl() || "";
+      const endpoint = "/api/paystack/initialize";
+      const fullUrl = baseUrl.startsWith("http") ? `${baseUrl}${endpoint}` : endpoint;
+      
+      const response = await fetch(fullUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientName: values.recipientName,
+          customerName: values.customerName,
           phoneNumber: values.phoneNumber,
           network,
           capacity: String(selectedPackage.capacity),
@@ -210,13 +219,13 @@ export function PurchaseDialog({ open, onOpenChange, selectedPackage, network }:
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="recipientName"
+                  name="customerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Recipient Name</FormLabel>
+                      <FormLabel>Customer Name</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g. Ama Serwaa"
+                          placeholder="Recipient Name (e.g. Ama Serwaa)"
                           type="text"
                           {...field}
                           className="text-lg py-6"

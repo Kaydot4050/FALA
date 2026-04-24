@@ -23,7 +23,7 @@ export default function Tracker() {
                <h2 className="text-sm md:text-3xl font-bold tracking-tight text-foreground line-clamp-2 md:line-clamp-none max-w-[120px] md:max-w-none leading-tight transition-colors">Delivery Progress</h2>
                <div className="h-0.5 md:h-1 w-8 md:w-12 bg-primary/40 rounded-full" />
              </div>
-             <p className="text-[9px] md:text-sm text-foreground/50 font-medium max-w-[100px] md:max-w-[280px] leading-relaxed line-clamp-2 md:line-clamp-none transition-colors">
+             <p className="text-xs md:text-lg text-foreground/60 font-medium max-w-[140px] md:max-w-[400px] leading-relaxed line-clamp-2 md:line-clamp-none transition-colors">
                Real-time monitoring of all active bundle dispatches.
              </p>
           </div>
@@ -108,8 +108,8 @@ export default function Tracker() {
           {/* Dynamic Delivery Alert */}
           {deliveryStatus && !tracker?.checkingNow?.summary?.toLowerCase().includes("searching") && (
             <div className={cn("border rounded-2xl p-4 md:p-6 flex items-start md:items-center gap-4 transition-all duration-500", deliveryStatus.bgClass, deliveryStatus.borderClass)}>
-              <div className={cn("p-2.5 rounded-xl", `bg-${deliveryStatus.accentColor}/10`, deliveryStatus.colorClass)}>
-                <deliveryStatus.icon className={cn("h-5 w-5", deliveryStatus.status === 'fast' && "animate-pulse")} />
+              <div className={cn("p-2.5 rounded-xl transition-all duration-700", `bg-${deliveryStatus.accentColor}/10`, deliveryStatus.colorClass, deliveryStatus.status === 'fast' && "scale-110")}>
+                <deliveryStatus.icon className={cn("h-5 w-5", deliveryStatus.status === 'fast' ? "animate-pulse-line" : "")} />
               </div>
               <p className={cn("text-sm md:text-lg font-medium leading-tight", deliveryStatus.colorClass)}>
                 {deliveryStatus.message}
@@ -180,7 +180,7 @@ function StatCard({ title, value, icon: Icon, color, bg }: { title: string, valu
 function RefreshIcon({ active }: { active?: boolean }) {
   return (
     <div className={cn("relative flex h-5 w-5 items-center justify-center rounded-full border", active ? "border-primary text-primary" : "border-muted-foreground text-muted-foreground")}>
-      <Activity className={cn("h-3 w-3", active && "animate-pulse")} />
+      <Activity className={cn("h-3 w-3", active && "animate-pulse-line")} />
     </div>
   );
 }
