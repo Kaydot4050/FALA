@@ -1,6 +1,6 @@
 [build]
   command = "PORT=3000 BASE_PATH=/ pnpm -r --if-present run build"
-  publish = "artifacts/datamart-dashboard/dist/public"
+  publish = "artifacts/admin-dashboard/dist/public"
 
 [functions]
   directory = "artifacts/api-server/netlify/functions"
