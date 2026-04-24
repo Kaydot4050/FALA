@@ -15,7 +15,7 @@ export default function Tracker() {
     <div className="w-full space-y-10 pb-20">
       {/* ── Glassmorphic Status Card ── */}
       <section className="flex items-center justify-center pt-6 md:pt-10 pb-4 animate-fade-in">
-        <div className="w-full max-w-4xl h-auto md:h-64 relative rounded-[24px] md:rounded-[40px] bg-card/60 backdrop-blur-3xl border border-border/50 shadow-2xl flex flex-row items-center justify-between p-5 md:px-16 overflow-hidden group">
+        <div className="w-full max-w-4xl h-auto md:h-48 relative rounded-[24px] md:rounded-[32px] bg-card/60 backdrop-blur-3xl border border-border/50 shadow-2xl flex flex-row items-center justify-between p-4 md:px-12 overflow-hidden group">
           
           {/* Info Side */}
           <div className="flex flex-col items-start text-left space-y-1 md:space-y-4">
@@ -48,7 +48,7 @@ export default function Tracker() {
             {/* Central Ring */}
             <div className="relative flex items-center justify-center">
               <div className={cn(
-                "h-16 w-16 md:h-40 md:w-40 rounded-full border-[3px] md:border-[5px] flex flex-col items-center justify-center transition-colors duration-500",
+                "h-14 w-14 md:h-32 md:w-32 rounded-full border-[3px] md:border-[5px] flex flex-col items-center justify-center transition-colors duration-500",
                 scanner?.active ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.1)]" : scanner?.waiting ? "border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "border-border/40"
               )}>
                 <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-foreground/90 transition-colors">Status</span>
@@ -108,8 +108,8 @@ export default function Tracker() {
           {/* Dynamic Delivery Alert */}
           {deliveryStatus && !tracker?.checkingNow?.summary?.toLowerCase().includes("searching") && (
             <div className={cn("border rounded-2xl p-4 md:p-6 flex items-start md:items-center gap-4 transition-all duration-500", deliveryStatus.bgClass, deliveryStatus.borderClass)}>
-              <div className={cn("p-2.5 rounded-xl transition-all duration-700", `bg-${deliveryStatus.accentColor}/10`, deliveryStatus.colorClass, deliveryStatus.status === 'fast' && "scale-110")}>
-                <deliveryStatus.icon className={cn("h-5 w-5", deliveryStatus.status === 'fast' ? "animate-pulse-line" : "")} />
+              <div className={cn("p-2.5 rounded-xl transition-all duration-700", `bg-${deliveryStatus.accentColor}/10`, deliveryStatus.colorClass, (deliveryStatus.status === 'fast' || deliveryStatus.status === 'ultra-fast') && "scale-110")}>
+                <deliveryStatus.icon className={cn("h-5 w-5", (deliveryStatus.status === 'fast' || deliveryStatus.status === 'ultra-fast') ? "animate-pulse-line" : "")} />
               </div>
               <p className={cn("text-sm md:text-lg font-medium leading-tight", deliveryStatus.colorClass)}>
                 {deliveryStatus.message}
@@ -162,15 +162,15 @@ function StatCard({ title, value, icon: Icon, color, bg }: { title: string, valu
   if (color.includes("red")) shadowGlow = "hover:shadow-[0_0_20px_rgba(239,68,68,0.15)] hover:border-red-500/30";
 
   return (
-    <div className={cn("group relative overflow-hidden rounded-[20px] border border-border bg-card p-3.5 md:p-5 transition-all duration-300 hover:-translate-y-2 shadow-sm animate-scale-in active:scale-95 active:brightness-95", shadowGlow)}>
+    <div className={cn("group relative overflow-hidden rounded-[16px] border border-border bg-card p-2.5 md:p-3.5 transition-all duration-300 hover:-translate-y-1 shadow-sm animate-scale-in active:scale-95 active:brightness-95", shadowGlow)}>
       <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/[0.02] dark:to-white/[0.02] pointer-events-none" />
-      <div className="relative flex items-center gap-3 md:gap-4 z-10">
-        <div className={cn("p-2.5 md:p-3.5 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 border border-transparent group-hover:border-current/10 shrink-0", bg, color)}>
-          <Icon className="h-5 w-5 md:h-6 md:w-6" />
+      <div className="relative flex items-center gap-2 md:gap-3 z-10">
+        <div className={cn("p-2 md:p-2.5 rounded-lg flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 border border-transparent group-hover:border-current/10 shrink-0", bg, color)}>
+          <Icon className="h-4 w-4 md:h-5 md:w-5" />
         </div>
         <div>
-          <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-0.5">{title}</p>
-          <p className="text-xl md:text-3xl font-extrabold tracking-tight group-hover:text-primary transition-colors">{value.toLocaleString()}</p>
+          <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0">{title}</p>
+          <p className="text-lg md:text-2xl font-black tracking-tight group-hover:text-primary transition-colors">{value.toLocaleString()}</p>
         </div>
       </div>
     </div>

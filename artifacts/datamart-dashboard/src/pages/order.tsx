@@ -112,18 +112,18 @@ export default function OrderStatus() {
   const order = orderRes?.data;
 
   return (
-    <div className="w-full space-y-10 pb-24 relative overflow-hidden">
+    <div className="w-full space-y-6 pb-20 relative overflow-hidden">
 
       <div className="relative z-10 w-full pt-4 md:pt-10 max-w-4xl mx-auto">
 
 
         <section className="animate-scale-in">
-          <div className="bg-card/40 backdrop-blur-3xl border border-border/40 rounded-[28px] p-5 md:p-8 shadow-sm space-y-8 relative overflow-hidden group hover:border-border/60 transition-colors">
+          <div className="bg-card/40 backdrop-blur-3xl border border-border/40 rounded-[24px] p-4 md:p-6 shadow-sm space-y-6 relative overflow-hidden group hover:border-border/60 transition-colors">
             <div className="space-y-6">
             <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 block">Search by</label>
             
             {/* Tab Switcher */}
-            <div className="grid grid-cols-3 gap-2 bg-muted/50 p-1.5 rounded-[20px] border border-border/40">
+            <div className="grid grid-cols-3 gap-2 bg-muted/50 p-1 rounded-[16px] border border-border/40">
               <TabButton 
                 active={searchMode === 'phone'} 
                 onClick={() => setSearchMode('phone')} 
@@ -158,14 +158,14 @@ export default function OrderStatus() {
                   }
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="bg-muted border-border/40 h-14 md:h-16 pl-14 text-base md:text-lg rounded-[20px] focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/50 transition-all shadow-inner text-foreground font-medium"
+                  className="bg-muted border-border/40 h-12 md:h-14 pl-14 text-base md:text-lg rounded-[16px] focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/50 transition-all shadow-inner text-foreground font-medium"
                 />
               </div>
 
               <Button 
                 type="submit" 
                 disabled={isSearching}
-                className="w-full h-14 md:h-16 bg-slate-950 hover:bg-slate-900 text-white font-black text-base md:text-lg rounded-[20px] transition-all active:scale-[0.98] border border-border/40 hover:border-primary/40 group relative overflow-hidden shadow-none"
+                className="w-full h-12 md:h-14 bg-slate-950 hover:bg-slate-900 text-white font-black text-base md:text-lg rounded-[16px] transition-all active:scale-[0.98] border border-border/40 hover:border-primary/40 group relative overflow-hidden shadow-none"
               >
                 {isSearching ? (
                   <RefreshCw className="h-6 w-6 animate-spin mr-2" />
@@ -211,7 +211,7 @@ export default function OrderStatus() {
 
 
                   <Link href={`/order/${order.orderReference || order.paystackReference}`}>
-                    <div className="bg-card border border-border hover:border-primary/30 p-5 rounded-[20px] group transition-all hover:shadow-xl cursor-pointer relative overflow-hidden h-full flex flex-col justify-between active:scale-95 active:brightness-95">
+                    <div className="bg-card border border-border hover:border-primary/30 p-4 rounded-[16px] group transition-all hover:shadow-xl cursor-pointer relative overflow-hidden h-full flex flex-col justify-between active:scale-95 active:brightness-95">
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       
                       <div className="flex items-center justify-between mb-4 relative z-10 w-[calc(100%-40px)]">
@@ -327,20 +327,20 @@ function OrderResultCard({ order, config }: { order: any, config: any }) {
   const cfg = config[order.orderStatus.toLowerCase()] || config.pending;
   
   return (
-    <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-sm transition-all hover:border-border/60 relative group">
-      <div className="p-5 md:p-8 border-b border-border bg-muted/10">
+    <div className="bg-card border border-border rounded-[16px] overflow-hidden shadow-sm transition-all hover:border-border/60 relative group">
+      <div className="p-3 md:p-4 border-b border-border bg-muted/10">
         <div className="flex flex-row justify-between items-center gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Tracking ID</p>
-            <p className="text-xl md:text-2xl font-mono font-black text-primary uppercase tracking-tight">{order.reference}</p>
+            <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mb-0">Tracking ID</p>
+            <p className="text-lg md:text-xl font-mono font-bold text-primary uppercase tracking-tight">{order.reference}</p>
           </div>
           <StatusBadge status={order.orderStatus} config={config} />
         </div>
       </div>
       
-      <div className="p-5 md:p-8 grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
+      <div className="p-3 md:p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
         <DetailItem label="Data Bundle" value={`${order.capacity}GB`} subValue={order.network} icon={Package} />
-        <DetailItem label="Recipient" value={order.phoneNumber} isMono />
+        <DetailItem label="Recipient" value={order.phoneNumber} />
         <DetailItem 
           label="Purchase Date" 
           value={order.createdAt ? format(new Date(order.createdAt), "MMM d, yyyy") : "Just now"} 
@@ -355,20 +355,20 @@ function OrderResultCard({ order, config }: { order: any, config: any }) {
 
 function DetailItem({ label, value, subValue, icon: Icon, isMono, isPrimary }: { label: string, value: string, subValue?: string, icon?: any, isMono?: boolean, isPrimary?: boolean }) {
   return (
-    <div className="space-y-1 md:space-y-1.5 group">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+    <div className="space-y-0.5 group">
+      <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
         {Icon && <Icon className="h-3 w-3 opacity-50" />}
         {label}
       </p>
       <div className="flex items-baseline gap-1.5">
         <p className={cn(
-          "text-lg md:text-xl font-extrabold tracking-tight", 
+          "text-base md:text-lg font-bold tracking-tight", 
           isMono && "font-mono", 
           isPrimary ? "text-primary" : "text-foreground"
         )}>
           {value}
         </p>
-        {subValue && <span className="text-[10px] md:text-sm font-medium text-muted-foreground">{subValue}</span>}
+        {subValue && <span className="text-[9px] md:text-xs font-normal text-muted-foreground">{subValue}</span>}
       </div>
     </div>
   );

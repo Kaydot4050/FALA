@@ -34,11 +34,19 @@ export default function Dashboard() {
   const { data: statsData, isLoading: statsLoading, error: statsError } = useGetUsageStats();
   const { data: balanceData, isLoading: balanceLoading } = useGetBalance();
   const { data: historyData } = useGetPurchaseHistory();
-  const recentOrders = Array.isArray(historyData?.data?.purchases) ? historyData.data.purchases : [];
+  const rawOrders = Array.isArray(historyData?.data?.purchases) ? historyData.data.purchases : [];
   const [timeFilter, setTimeFilter] = useState("today");
 
+  const todayOrders = useMemo(() => {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    return rawOrders.filter(o => new Date(o.createdAt) >= startOfDay);
+  }, [rawOrders]);
+
+  const displayOrders = timeFilter === 'today' ? todayOrders : rawOrders.slice(0, 10);
+
   const stats = useMemo(() => {
-    if (!statsData?.data) return { totalRevenue: 0, totalProfit: 0, totalOrders: 0, customers: 71 };
+    if (!statsData?.data) return { totalRevenue: 0, totalProfit: 0, totalOrders: 0, customers: 0, pendingSpent: 0 };
     const { totalSpent, totalOrders, totalProfit, totalCustomers } = statsData.data;
     const rev = totalSpent || 0;
     const prof = totalProfit || rev * 0.12;
@@ -151,7 +159,7 @@ export default function Dashboard() {
              <a href="/orders" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">View All</a>
           </CardHeader>
           <CardContent className="p-0">
-             {!recentOrders || recentOrders.length === 0 ? (
+             {!displayOrders || displayOrders.length === 0 ? (
                <div className="p-12 flex flex-col items-center justify-center h-64 text-center">
                  <div className="bg-muted h-12 w-12 rounded-2xl flex items-center justify-center mb-4 opacity-30">
                    <ShoppingCart size={24} />
@@ -160,8 +168,8 @@ export default function Dashboard() {
                  <p className="text-[10px] text-muted-foreground max-w-[200px] font-medium opacity-60">Orders will appear here once customers start buying</p>
                </div>
              ) : (
-               <div className="divide-y divide-border/20">
-                 {recentOrders.slice(0, 5).map((order: any) => {
+                <div className="divide-y divide-border/20 max-h-[500px] overflow-y-auto">
+                  {displayOrders.map((order: any) => {
                    const price = Number(order.price || 0);
                    let cost = order.costPrice ? Number(order.costPrice) : null;
                    if (cost === null) {
@@ -191,9 +199,9 @@ export default function Dashboard() {
                           order.network?.toLowerCase().includes("telecel") ? "bg-[#e21b22] text-white border-red-900" :
                           "bg-slate-700 text-white border-slate-600"
                         )}>
-                          {order.network?.toLowerCase().includes("mtn") ? "MTN" : 
-                           order.network?.toLowerCase().includes("at") ? "at" :
-                           order.network?.substring(0, 2).toUpperCase()}
+                           {order.network?.toLowerCase().includes("mtn") ? "MTN" : 
+                            order.network?.toLowerCase().includes("at") ? "at" :
+                            order.network?.substring(0, 2).toUpperCase()}
                         </div>
                       </div>
 
@@ -205,17 +213,18 @@ export default function Dashboard() {
                           </h4>
                           <StatusPill status={order.orderStatus} />
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold whitespace-nowrap overflow-hidden">
-                          <Phone size={10} className="shrink-0 opacity-40" />
-                          <span className="text-foreground">{order.customerName || 'Valued Customer'}</span>
-                          <span className="opacity-20 font-light">·</span>
-                          <span>{order.phoneNumber}</span>
-                          <span className="opacity-20 font-light">·</span>
-                          <span className="opacity-60">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
+                         <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold whitespace-nowrap overflow-hidden">
+                           <Phone size={10} className="shrink-0 opacity-40" />
+                           <span className="text-foreground">{order.customerName || 'Valued Customer'}</span>
+                           <span className="opacity-20 font-light">·</span>
+                           <span>{order.phoneNumber}</span>
+                           <span className="opacity-20 font-light">·</span>
+                           <span className="bg-muted/50 px-1 rounded text-primary font-mono">{order.orderReference}</span>
+                           <span className="opacity-20 font-light">·</span>
+                           <span className="opacity-60">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                         </div>
                       </div>
 
-                      {/* Pricing */}
                       <div className="text-right shrink-0">
                         <p className="font-black text-sm leading-none mb-1 tracking-tighter text-foreground">₵{price.toFixed(2)}</p>
                         <p className="text-[10px] font-black text-emerald-500 tracking-tight">

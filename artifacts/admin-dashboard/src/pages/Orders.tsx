@@ -22,7 +22,8 @@ import {
   Filter,
   ArrowRightLeft,
   ShoppingCart,
-  Usb
+  Usb,
+  RefreshCcw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
@@ -178,7 +179,7 @@ export default function Orders() {
               ) : (
                 filteredOrders.map((order) => (
                   <TableRow key={order.id} className="group border-border/20 hover:bg-white/[0.02] transition-colors">
-                    <TableCell className="font-mono text-xs font-bold text-muted-foreground uppercase px-4">{order.orderReference?.substring(0, 8)}</TableCell>
+                    <TableCell className="font-mono text-xs font-bold text-muted-foreground uppercase px-4">{order.orderReference}</TableCell>
                     <TableCell className="py-3 px-5">
                       <div className="flex items-center justify-center gap-3 text-center">
                         <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">

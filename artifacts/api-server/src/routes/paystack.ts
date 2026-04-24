@@ -3,7 +3,7 @@ import { createHmac } from "crypto";
 import { datamartFetch } from "../lib/datamart";
 import { logger } from "../lib/logger";
 import { db, ordersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -139,10 +139,19 @@ async function handleFulfillment(orderId: string) {
       return;
     }
 
-    if (order.status === "fulfilled") {
-      logger.info({ orderId }, "Order already fulfilled, skipping");
+    if (order.status === "fulfilled" || order.status === "processing") {
+      logger.info({ orderId, status: order.status }, "Order already being processed or fulfilled, skipping to prevent double purchase");
       return;
     }
+
+    // 2. Atomically mark as 'processing' to lock out other requests
+    await db.update(ordersTable)
+      .set({ status: "processing", updatedAt: new Date() })
+      .where(and(
+        eq(ordersTable.id, orderId),
+        ne(ordersTable.status, "fulfilled"),
+        ne(ordersTable.status, "processing")
+      ));
 
     // 2. Fulfill the order via DataMart
     const purchaseBody = {

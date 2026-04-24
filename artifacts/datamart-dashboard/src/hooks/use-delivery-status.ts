@@ -1,9 +1,9 @@
 import { useGetDeliveryTracker } from "@workspace/api-client-react";
 import { parse, differenceInMinutes } from "date-fns";
-import { Activity, Clock, AlertTriangle, Timer } from "lucide-react";
+import { Activity, Clock, AlertTriangle, Timer, Zap } from "lucide-react";
 import React from "react";
 
-export type DeliveryPerformance = "fast" | "moving" | "steady" | "slow";
+export type DeliveryPerformance = "ultra-fast" | "fast" | "moving" | "steady" | "slow";
 
 export function useDeliveryStatus() {
   const { data: trackerRes, isLoading } = useGetDeliveryTracker({
@@ -31,7 +31,7 @@ export function useDeliveryStatus() {
 
       if (diff >= 120) {
         return {
-          message: "Deliveries are slow. Expect your order within 2-4hrs.",
+          message: "Deliveries are currently slow. Expect your order in 2 to 4hours .",
           status: "slow" as DeliveryPerformance,
           icon: AlertTriangle,
           colorClass: "text-amber-500",
@@ -44,7 +44,7 @@ export function useDeliveryStatus() {
 
       if (diff >= 60) {
         return {
-          message: "Yello portal is processing orders steadily. Estimated delivery: 1-2 hours.",
+          message: "Portal is processing steadily. Estimated delivery time: 1 to 2 hours.",
           status: "steady" as DeliveryPerformance,
           icon: Timer,
           colorClass: "text-amber-400",
@@ -57,7 +57,7 @@ export function useDeliveryStatus() {
 
       if (diff >= 30) {
         return {
-          message: "✅ Deliveries are moving well. Expect your order within the hour.",
+          message: "Deliveries are moving well. Expect your order within the hour",
           status: "moving" as DeliveryPerformance,
           icon: Clock,
           colorClass: "text-emerald-400",
@@ -68,10 +68,23 @@ export function useDeliveryStatus() {
         };
       }
 
+      if (diff >= 5) {
+        return {
+          message: "Deliveries are blazing fast! Your order should arrive within minutes.",
+          status: "fast" as DeliveryPerformance,
+          icon: Activity,
+          colorClass: "text-emerald-400",
+          bgClass: "bg-emerald-500/5",
+          borderClass: "border-emerald-500/20",
+          accentColor: "emerald-500",
+          dotColor: "bg-emerald-400"
+        };
+      }
+
       return {
         message: "Ultra fast deliveries! Your order should arrive within minutes.",
-        status: "fast" as DeliveryPerformance,
-        icon: Activity,
+        status: "ultra-fast" as DeliveryPerformance,
+        icon: Zap,
         colorClass: "text-yellow-400",
         bgClass: "bg-yellow-500/10",
         borderClass: "border-yellow-500/30",

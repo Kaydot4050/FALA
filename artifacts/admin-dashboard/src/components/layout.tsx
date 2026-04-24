@@ -82,10 +82,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="p-4 space-y-2">
-          <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-amber-500 text-black font-black text-sm shadow-xl shadow-amber-500/10 hover:brightness-110 active:scale-[0.98] transition-all">
+          <a 
+            href="https://falaadeals.shop" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-amber-500 text-black font-black text-sm shadow-xl shadow-amber-500/10 hover:brightness-110 active:scale-[0.98] transition-all text-center justify-center"
+          >
             <Store size={18} />
             <span>View My Store</span>
-          </button>
+          </a>
           <button 
             onClick={() => {
               localStorage.removeItem("admin_auth");
