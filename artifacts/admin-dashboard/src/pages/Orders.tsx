@@ -26,7 +26,6 @@ import {
   RefreshCcw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
 
 export default function Orders() {
@@ -240,34 +239,9 @@ export default function Orders() {
                        {formatDate(order.createdAt)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 text-[9px] font-black uppercase tracking-tight border-border/50 hover:bg-primary hover:text-primary-foreground transition-all"
-                          onClick={async () => {
-                            if (!confirm(`Verify payment for order ${order.orderReference}?`)) return;
-                            try {
-                              const res = await fetch(`/api/paystack/verify/${order.id}`);
-                              const data = await res.json();
-                              if (data.status === 'success') {
-                                alert("Success! Order verified and processed.");
-                                window.location.reload();
-                              } else {
-                                alert(`Failed: ${data.error || 'Check Paystack dashboard'}`);
-                              }
-                            } catch (err) {
-                              alert("Network error. Is the server running?");
-                            }
-                          }}
-                        >
-                          <RefreshCcw size={10} className="mr-1" />
-                          Verify
-                        </Button>
-                        <button className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground group-hover:text-primary">
-                          <Eye size={14} />
-                        </button>
-                      </div>
+                      <button className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground group-hover:text-primary">
+                        <Eye size={14} />
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))
