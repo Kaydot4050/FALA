@@ -240,17 +240,24 @@ router.post("/paystack/webhook", async (req, res): Promise<void> => {
 
     if (order) {
       if (order.status === "pending" || order.status === "unpaid") {
-        logger.info({ reference }, "Webhook: Updating order to 'paid' and triggering fulfillment");
-        await db.update(ordersTable)
-          .set({ status: "paid", updatedAt: new Date() })
-          .where(eq(ordersTable.id, reference));
+        logger.info({ reference, orderId: order.id }, "Webhook: Payment confirmed. Updating local status to 'paid'");
         
-        await handleFulfillment(reference);
+        try {
+          await db.update(ordersTable)
+            .set({ status: "paid", updatedAt: new Date() })
+            .where(eq(ordersTable.id, reference));
+          
+          logger.info({ reference }, "Webhook: Status updated to 'paid'. Triggering fulfillment...");
+          await handleFulfillment(reference);
+        } catch (dbErr) {
+          logger.error({ dbErr, reference }, "Webhook: Failed to update order status in database. This might be a connection issue.");
+          // We don't return here because Paystack might retry, or we might want to try fulfillment anyway if possible
+        }
       } else {
-        logger.info({ reference, currentStatus: order.status }, "Webhook: Order already processed, skipping");
+        logger.info({ reference, currentStatus: order.status }, "Webhook: Order already processed or fulfilled. Ignoring to prevent double delivery.");
       }
     } else {
-      logger.error({ reference }, "Webhook error: Transaction success received but Order ID not found in database");
+      logger.error({ reference, event: event.event }, "Webhook CRITICAL: Received success for a transaction reference that does not exist in our database!");
     }
   }
 
