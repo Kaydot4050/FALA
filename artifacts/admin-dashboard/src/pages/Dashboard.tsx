@@ -46,7 +46,8 @@ export default function Dashboard() {
       totalRevenue: rev,
       totalProfit: prof,
       totalOrders: totalOrders || 0,
-      customers: totalCustomers || 0
+      customers: totalCustomers || 0,
+      pendingSpent: statsData.data.pendingSpent || 0
     };
   }, [statsData]);
 
@@ -132,7 +133,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-8 pt-4 border-t border-white/20">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Pending</p>
-              <p className="text-2xl font-black truncate">₵0.00</p>
+              <p className="text-2xl font-black truncate">₵{stats.pendingSpent.toFixed(2)}</p>
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Total Earnings</p>

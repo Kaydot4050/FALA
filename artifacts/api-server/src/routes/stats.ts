@@ -23,6 +23,10 @@ router.get("/stats", async (_req, res): Promise<void> => {
     const [totalSpentResult] = await (db.select({ value: sum(ordersTable.amount) })
       .from(ordersTable)
       .where(sql`${ordersTable.status} = 'fulfilled' AND ${ordersTable.createdAt} >= ${today}`) as any);
+
+    const [pendingSpentResult] = await (db.select({ value: sum(ordersTable.amount) })
+      .from(ordersTable)
+      .where(sql`${ordersTable.status} = 'pending' AND ${ordersTable.createdAt} >= ${today}`) as any);
     
     // Calculate precise profit
     const totalProfit = allSuccessful.reduce((acc, order) => {
@@ -96,6 +100,7 @@ router.get("/stats", async (_req, res): Promise<void> => {
         allTimeOrders: Number(allTimeOrdersResult?.value || 0),
         allTimeSpent: Number(allTimeSpentResult?.value || 0),
         allTimeProfit,
+        pendingSpent: Number(pendingSpentResult?.value || 0),
         successRate: totalOrders > 0 ? successOrders / totalOrders : 1.0, 
         networkBreakdown: networkStats.map((ns: any) => ({
           network: ns.network,
