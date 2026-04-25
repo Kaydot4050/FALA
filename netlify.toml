@@ -1,6 +1,6 @@
 [build]
   command = "pnpm build"
-  base = "artifacts/admin-dashboard"
+  base = "artifacts/datamart-dashboard"
   publish = "dist"
 
 [functions]
