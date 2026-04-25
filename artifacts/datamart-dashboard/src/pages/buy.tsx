@@ -187,7 +187,21 @@ export default function BuyData() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
+          ) : packages.length === 0 ? (
+            <div className="bg-amber-500/5 text-amber-500 p-12 rounded-[20px] border border-amber-500/10 text-center space-y-4">
+              <ZapOff className="h-12 w-12 mx-auto opacity-50" />
+              <div>
+                <p className="text-xl font-black">No Bundles Available</p>
+                <p className="text-sm font-medium opacity-60">There are no packages currently available for this network. Please try another network.</p>
+              </div>
+              <button 
+                onClick={() => refetch()}
+                className="mt-4 px-6 py-2 rounded-lg bg-amber-500 text-white font-black text-xs uppercase tracking-widest hover:bg-amber-600 transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
+          ) : (
               {packages.map((pkg, i) => (
                 <button
                   key={`${pkg.network}-${pkg.capacity}`}
