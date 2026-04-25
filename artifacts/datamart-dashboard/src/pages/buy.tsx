@@ -186,7 +186,6 @@ export default function BuyData() {
                 <div key={i} className="rounded-[20px] border border-border p-8 bg-muted/50 h-52 animate-pulse" />
               ))}
             </div>
-          ) : (
           ) : packages.length === 0 ? (
             <div className="bg-amber-500/5 text-amber-500 p-12 rounded-[20px] border border-amber-500/10 text-center space-y-4">
               <ZapOff className="h-12 w-12 mx-auto opacity-50" />
@@ -202,6 +201,7 @@ export default function BuyData() {
               </button>
             </div>
           ) : (
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-6">
               {packages.map((pkg, i) => (
                 <button
                   key={`${pkg.network}-${pkg.capacity}`}
