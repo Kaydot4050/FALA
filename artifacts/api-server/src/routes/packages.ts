@@ -7,6 +7,20 @@ import { packageOverridesTable } from "@workspace/db/schema";
 
 const router: IRouter = Router();
 
+router.get("/debug-packages", async (req, res): Promise<void> => {
+  try {
+    const upstream = await datamartFetch("/data-packages");
+    const data = await upstream.json() as any;
+    res.json({
+      url: "https://api.datamartgh.shop/api/developer/data-packages",
+      status: upstream.status,
+      vendorResponse: data
+    });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
 router.get("/packages", async (req, res): Promise<void> => {
   try {
     if (!process.env["DATAMART_API_KEY"]) {
