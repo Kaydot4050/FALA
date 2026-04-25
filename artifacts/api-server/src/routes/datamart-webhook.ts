@@ -21,12 +21,16 @@ router.post("/datamart/webhook", async (req, res): Promise<void> => {
 
   // Verify DataMart HMAC-SHA256 signature
   const signature = req.headers["x-datamart-signature"] as string;
+  const rawBody = (req as any).rawBody;
   const expected = createHmac("sha256", webhookSecret)
-    .update(JSON.stringify(req.body))
+    .update(rawBody || JSON.stringify(req.body))
     .digest("hex");
 
   if (signature !== expected) {
-    logger.warn("Invalid DataMart webhook signature");
+    logger.warn({
+      receivedSig: signature,
+      expectedSig: expected,
+    }, "Invalid DataMart webhook signature");
     res.status(401).json({ error: "Invalid signature" });
     return;
   }
