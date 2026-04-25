@@ -145,13 +145,21 @@ async function handleFulfillment(orderId: string) {
     }
 
     // 2. Atomically mark as 'processing' to lock out other requests
-    await db.update(ordersTable)
+    const updated = await db.update(ordersTable)
       .set({ status: "processing", updatedAt: new Date() })
       .where(and(
         eq(ordersTable.id, orderId),
         ne(ordersTable.status, "fulfilled"),
         ne(ordersTable.status, "processing")
-      ));
+      ))
+      .returning();
+
+    // If no row was updated, it means another process (like the webhook) 
+    // already picked up this order. Exit to prevent double-processing.
+    if (updated.length === 0) {
+      logger.info({ orderId }, "Order lock already acquired by another process, skipping");
+      return;
+    }
 
     // 2. Fulfill the order via DataMart
     const purchaseBody = {
@@ -168,7 +176,8 @@ async function handleFulfillment(orderId: string) {
 
     const purchaseData = await upstream.json() as any;
 
-    if (upstream.status === 201 && purchaseData.data?.orderReference) {
+    // Use upstream.ok to support any success status code (200-299)
+    if (upstream.ok && purchaseData.data?.orderReference) {
       // 3. Mark as fulfilled
       await db.update(ordersTable)
         .set({
@@ -183,8 +192,23 @@ async function handleFulfillment(orderId: string) {
         datamartRef: purchaseData.data.orderReference,
         phone: order.phoneNumber,
       }, "Order fulfilled successfully via DataMart");
+    } else if (upstream.status === 409 || purchaseData.code === "DUPLICATE_ORDER" || purchaseData.message?.toLowerCase().includes("similar order")) {
+      // Special Handling for Duplicate Orders:
+      // This happens if the webhook and the verification poll both trigger fulfillment.
+      // We should treat this as a success and use the existing reference if available.
+      const existingRef = purchaseData.data?.existingReference || order.orderReference;
+      
+      logger.info({ orderId: order.id, ref: existingRef }, "DataMart reported duplicate order - treating as success");
+      
+      await db.update(ordersTable)
+        .set({
+          status: "fulfilled",
+          orderReference: existingRef,
+          updatedAt: new Date(),
+        })
+        .where(eq(ordersTable.id, order.id));
     } else {
-      // 4. Mark as failed
+      // 4. Truly failed (e.g., insufficient balance, invalid number, etc.)
       await db.update(ordersTable)
         .set({ status: "failed", updatedAt: new Date() })
         .where(eq(ordersTable.id, order.id));
@@ -304,12 +328,17 @@ router.get("/paystack/verify/:reference", async (req, res): Promise<void> => {
       if (paystackData.status && paystackData.data.status === "success") {
         logger.info({ reference }, "Paystack API confirmed success, updating local status and triggering fulfillment");
         
-        // Update local status to paid
+        // Update local status to paid, but ONLY if it's still 'pending'.
+        // This prevents us from overwriting 'processing' or 'fulfilled' status
+        // which was causing the "double/triple delivery" bug.
         await db.update(ordersTable)
           .set({ status: "paid", updatedAt: new Date() })
-          .where(eq(ordersTable.id, reference));
+          .where(and(
+            eq(ordersTable.id, reference),
+            eq(ordersTable.status, "pending")
+          ));
         
-        // Trigger fulfillment
+        // Trigger fulfillment (handleFulfillment has its own internal lock as well)
         await handleFulfillment(reference);
 
         // Refetch order to get updated status for response

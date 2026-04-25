@@ -11,9 +11,6 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  Monitor,
-  Phone,
-  ArrowUpRight
 } from "lucide-react";
 import { 
   Table, 
@@ -119,74 +116,78 @@ export default function Products() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <div className="h-10 w-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Syncing Inventory...</p>
+        <RefreshCw className="h-8 w-8 text-primary animate-spin" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Syncing Inventory...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-10">
+    <div className="space-y-10 animate-fade-in pb-20">
       {/* ── Header ── */}
-      <div>
-        <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-          <Package className="text-primary" size={32} />
-          Catalog
-        </h1>
-        <p className="text-muted-foreground font-medium mt-1 text-sm">Manage your website bundles and pricing</p>
-      </div>
-
-      {/* ── Stats Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatsCard label="Total Packages" value={stats.total} icon={<Package size={16} />} />
-        <StatsCard label="Live Website" value={stats.active} icon={<CheckCircle2 size={16} />} color="text-emerald-500" />
-        <StatsCard label="Out of Stock" value={stats.oos} icon={<AlertCircle size={16} />} color="text-amber-500" />
-        <StatsCard label="Sync Health" value="100%" icon={<RefreshCw size={16} />} color="text-blue-500" />
-      </div>
-
-      <div className="space-y-6">
-        {/* ── Filter & Search Controls ── */}
-        <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-             {networks.map((net) => (
-              <button 
-                key={net}
-                onClick={() => setActiveTab(net)}
-                className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap border uppercase",
-                  activeTab === net
-                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                    : "bg-background/50 text-muted-foreground border-border/50 hover:bg-muted"
-                )}
-              >
-                {net === "YELLO" ? "MTN" : net === "at" ? "AirtelTigo" : net}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-            <Input 
-              placeholder="Search packages..." 
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tighter glow-text">Catalog</h1>
+          <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">Product Inventory</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" size={16} />
+            <input 
+              placeholder="Search bundles..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 h-10 rounded-full bg-background/50 border-border focus:ring-primary text-sm" 
+              className="w-full sm:w-64 glass rounded-xl py-3 pl-11 pr-4 text-xs font-medium focus:outline-none focus:border-primary/30 transition-all"
             />
           </div>
+          <button 
+            onClick={() => refetch()}
+            className="h-11 w-11 flex items-center justify-center glass rounded-xl text-slate-400 hover:text-primary transition-all"
+          >
+            <RefreshCw size={18} />
+          </button>
         </div>
+      </div>
 
-        {/* ── Products Table ── */}
-        <div className="overflow-hidden rounded-xl border border-border/30">
+      {/* ── Network Filters ── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {networks.map((net) => (
+          <button 
+            key={net}
+            onClick={() => setActiveTab(net)}
+            className={cn(
+              "px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
+              activeTab === net
+                ? "bg-primary text-primary-foreground border-primary glow-primary" 
+                : "bg-white/5 text-slate-500 border-white/5 hover:border-white/10"
+            )}
+          >
+            {net === "YELLO" ? "MTN" : net === "at" ? "AirtelTigo" : net}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Stats Grid ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <StatsCard label="Total Bundles" value={stats.total} icon={<Package size={14} />} />
+        <StatsCard label="Live Online" value={stats.active} icon={<CheckCircle2 size={14} />} color="text-primary" />
+        <StatsCard label="Stock Alert" value={stats.oos} icon={<AlertCircle size={14} />} color="text-red-400" />
+        <StatsCard label="API Health" value="100%" icon={<Zap size={14} />} color="text-emerald-400" />
+      </div>
+
+      {/* ── Table Section ── */}
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/30">
+            <TableHeader className="bg-white/5 border-b border-white/5">
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-6">Network</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-10">Package</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-5 text-center">Cost (₵)</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-5 text-center">Reference</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 text-center px-10">Status</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 text-center px-10">Visibility</TableHead>
-                <TableHead className="text-right py-4 px-6 uppercase text-xs font-black tracking-widest">Actions</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 px-8 text-slate-500">Bundle</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500 text-center">Retail (₵)</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500 text-center">Slashed (₵)</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500 text-center">Stock</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500 text-center">Visibility</TableHead>
+                <TableHead className="text-right py-6 px-8 text-[10px] uppercase font-black tracking-widest text-slate-500">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -195,108 +196,55 @@ export default function Products() {
                 const isEditing = editingId === pkgId;
 
                 return (
-                  <TableRow key={pkgId} className={cn(
-                    "group border-border/20 hover:bg-white/[0.02] transition-all",
-                    isEditing && "bg-primary/5 border-primary/20 shadow-inner"
-                  )}>
-                    {/* Network */}
-                    <TableCell className="px-6 py-3">
-                       <div className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black leading-none",
-                          pkg.network === "YELLO" ? "bg-[#facc15] text-black" : pkg.network === "at" ? "bg-[#003399] text-white" : "bg-[#e21b22] text-white"
+                  <TableRow key={pkgId} className="group border-white/5 hover:bg-white/[0.01] transition-all">
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "h-10 w-10 rounded-xl glass flex items-center justify-center font-black text-[10px] border border-white/10 group-hover:border-primary/20 transition-all",
+                          pkg.network === "YELLO" ? "text-amber-500" : pkg.network === "at" ? "text-blue-500" : "text-red-500"
                         )}>
                           {pkg.network === "YELLO" ? "MTN" : pkg.network === "at" ? "AT" : "T"}
                         </div>
-                    </TableCell>
-
-                    {/* Package Name */}
-                    <TableCell className="px-10 py-3">
-                      <div className="font-bold text-sm tracking-tight">{pkg.capacity}GB</div>
-                    </TableCell>
-
-                    {/* Price */}
-                    <TableCell className="px-5 text-center">
-                      {isEditing ? (
-                        <div className="relative inline-block">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-primary">₵</span>
-                          <Input 
-                            value={editPrice}
-                            onChange={(e) => setEditPrice(e.target.value)}
-                            className="h-8 w-24 pl-5 bg-background/50 text-center font-black border-primary/50 focus:border-primary shadow-inner"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                updateMutation.mutate({ id: pkgId, price: editPrice });
-                                setEditingId(null);
-                              }
-                              if (e.key === 'Escape') setEditingId(null);
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="font-black text-base">₵{pkg.price}</div>
-                      )}
-                    </TableCell>
-
-                    {/* Reference (Old Price) */}
-                    <TableCell className="text-center px-10">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="flex items-center gap-2">
-                          <Switch 
-                            checked={pkg.showOldPrice} 
-                            onCheckedChange={(val) => updateMutation.mutate({ ...pkg, showOldPrice: val, id: pkgId })}
-                            className="scale-50 data-[state=checked]:bg-blue-500"
-                          />
-                          {editingId === `${pkgId}_old` ? (
-                            <div className="flex items-center gap-1">
-                               <Input 
-                                 value={editOldPrice} 
-                                 onChange={(e) => setEditOldPrice(e.target.value)}
-                                 className="h-7 w-16 text-[10px] bg-slate-900 border-slate-700 font-bold px-1"
-                               />
-                               <Button 
-                                 size="icon" 
-                                 variant="ghost" 
-                                 className="h-6 w-6 text-emerald-500"
-                                 onClick={() => {
-                                   updateMutation.mutate({ ...pkg, oldPrice: editOldPrice, id: pkgId });
-                                   setEditingId(null);
-                                 }}
-                               >
-                                 <CheckCircle2 size={12} />
-                               </Button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className={cn(
-                                "text-[10px] font-bold transition-opacity",
-                                pkg.showOldPrice ? "text-slate-400 line-through" : "text-slate-600 opacity-50"
-                              )}>
-                                ₵{pkg.oldPrice || '0.00'}
-                              </span>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-4 text-slate-500 hover:text-white"
-                                onClick={() => {
-                                  setEditingId(`${pkgId}_old`);
-                                  setEditOldPrice(pkg.oldPrice || "");
-                                }}
-                              >
-                                <Edit2 size={10} />
-                              </Button>
-                            </div>
-                          )}
+                        <div>
+                          <p className="font-black text-sm tracking-tight">{pkg.capacity}GB</p>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">High Speed Data</p>
                         </div>
                       </div>
                     </TableCell>
 
-                    {/* Status */}
-                    <TableCell className="text-center px-10">
+                    <TableCell className="text-center">
+                      {isEditing ? (
+                        <input 
+                          value={editPrice}
+                          onChange={(e) => setEditPrice(e.target.value)}
+                          className="w-20 glass border-primary/40 rounded-lg py-1 px-2 text-center font-black text-xs text-primary focus:outline-none"
+                        />
+                      ) : (
+                        <p className="font-black text-sm tracking-tighter">₵{pkg.price}</p>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Switch 
+                          checked={pkg.showOldPrice} 
+                          onCheckedChange={(val) => updateMutation.mutate({ ...pkg, showOldPrice: val, id: pkgId })}
+                          className="scale-75 data-[state=checked]:bg-primary"
+                        />
+                        <span className={cn(
+                          "text-[10px] font-bold transition-opacity",
+                          pkg.showOldPrice ? "text-slate-400 line-through" : "text-slate-700"
+                        )}>
+                          ₵{pkg.oldPrice || '0.00'}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
                        <div className="flex items-center justify-center gap-3">
                          <span className={cn(
-                           "text-[10px] font-black uppercase",
-                           pkg.inStock ? "text-emerald-500" : "text-amber-500"
+                           "text-[10px] font-black uppercase tracking-widest",
+                           pkg.inStock ? "text-emerald-500" : "text-red-500"
                          )}>{pkg.inStock ? 'Active' : 'OOS'}</span>
                          <Switch 
                             checked={pkg.inStock} 
@@ -306,49 +254,41 @@ export default function Products() {
                        </div>
                     </TableCell>
 
-                    {/* Visibility */}
-                    <TableCell className="text-center px-10">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => updateMutation.mutate({ ...pkg, isHidden: !pkg.isHidden, id: pkgId })}
-                          className="h-8 w-8 rounded-full hover:bg-slate-800"
-                        >
-                          {pkg.isHidden ? <EyeOff size={16} className="text-amber-500" /> : <Eye size={16} className="text-emerald-500" />}
-                        </Button>
+                    <TableCell className="text-center">
+                         <button 
+                           onClick={() => updateMutation.mutate({ ...pkg, isHidden: !pkg.isHidden, id: pkgId })}
+                           className={cn(
+                             "h-8 w-8 rounded-xl glass border-white/5 flex items-center justify-center transition-all",
+                             pkg.isHidden ? "text-red-400" : "text-emerald-400"
+                           )}
+                         >
+                           {pkg.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                         </button>
                     </TableCell>
 
-                    {/* Actions Column */}
-                    <TableCell className="text-right px-6">
+                    <TableCell className="text-right px-8">
                        {isEditing ? (
-                         <div className="flex items-center justify-end gap-1">
-                            <Button 
-                              size="sm" 
-                              className="bg-emerald-600 hover:bg-emerald-700 h-8 px-4 rounded-lg font-black text-xs shadow-lg shadow-emerald-600/20"
+                         <div className="flex items-center justify-end gap-2">
+                            <button 
+                              className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-105"
                               onClick={() => {
                                 updateMutation.mutate({ ...pkg, price: editPrice, id: pkgId });
                                 setEditingId(null);
                               }}
                             >
                               SAVE
-                            </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-8 w-8 text-muted-foreground"
-                              onClick={() => setEditingId(null)}
-                            >
+                            </button>
+                            <button className="text-slate-500 hover:text-white" onClick={() => setEditingId(null)}>
                               <CloudOff size={14} />
-                            </Button>
+                            </button>
                          </div>
                        ) : (
-                         <Button 
-                           variant="ghost" 
-                           className="h-8 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"
+                         <button 
+                           className="text-[10px] font-black uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-all"
                            onClick={() => { setEditingId(pkgId); setEditPrice(pkg.price); }}
                          >
-                           Edit Price
-                         </Button>
+                           Edit Pricing
+                         </button>
                        )}
                     </TableCell>
                   </TableRow>
@@ -364,14 +304,14 @@ export default function Products() {
 
 function StatsCard({ label, value, icon, color }: { label: string, value: string | number, icon: React.ReactNode, color?: string }) {
   return (
-    <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-xl group hover:border-primary/30 transition-colors">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{label}</p>
-        <div className="h-8 w-8 rounded-lg bg-background/50 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+    <div className="glass-card p-6 group cursor-default relative overflow-hidden transition-all hover:border-primary/20">
+      <div className="flex items-center justify-between mb-3 relative z-10">
+        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-500">{label}</p>
+        <div className="text-slate-600 group-hover:text-primary transition-colors">
           {icon}
         </div>
       </div>
-      <p className={cn("text-3xl font-black tracking-tighter", color || "text-white")}>{value}</p>
+      <p className={cn("text-2xl font-black tracking-tighter glow-text", color || "text-white")}>{value}</p>
     </div>
   );
 }

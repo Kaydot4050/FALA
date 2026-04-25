@@ -8,10 +8,7 @@ const router = Router();
 // GET all customers (aggregated from orders)
 router.get("/admin/customers", async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    logger.info("Fetching Admin Customers for today...");
+    logger.info("Fetching Admin Customers (All Time)...");
     const customers = await db.select({
       phoneNumber: ordersTable.phoneNumber,
       customerName: max(ordersTable.customerName),
@@ -20,9 +17,12 @@ router.get("/admin/customers", async (req, res) => {
       lastOrderAt: max(ordersTable.createdAt),
     })
     .from(ordersTable)
-    .where(and(
+    .where(or(
       eq(ordersTable.status, "fulfilled"),
-      sql`${ordersTable.createdAt} >= ${today}`
+      eq(ordersTable.status, "success"),
+      eq(ordersTable.status, "complete"),
+      sql`${ordersTable.status} ILIKE '%success%'`,
+      sql`${ordersTable.status} ILIKE '%fulfil%'`
     ))
     .groupBy(ordersTable.phoneNumber)
     .orderBy(desc(max(ordersTable.createdAt)));

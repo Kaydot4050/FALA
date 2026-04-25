@@ -7,241 +7,229 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency, cn } from "@/lib/utils";
 import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
   Search, 
-  Eye, 
-  Monitor, 
-  Phone,
-  Filter,
-  ArrowRightLeft,
+  RefreshCcw,
   ShoppingCart,
+  Phone,
   Usb,
-  RefreshCcw
+  Monitor
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
+import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Orders() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  
-  const { data: historyData, isLoading } = useGetPurchaseHistory({
-    page, 
-    limit: 50
-  });
+  const { data: historyData, isLoading, refetch } = useGetPurchaseHistory();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeNetwork, setActiveNetwork] = useState<string>("ALL");
+  const [activeStatus, setActiveStatus] = useState<string>("ALL");
+  const queryClient = useQueryClient();
 
-  const rawOrders = historyData?.data?.purchases || [];
+  const orders = Array.isArray(historyData?.data?.purchases) ? historyData.data.purchases : [];
 
-  // Filter logic
-  const filteredOrders = useMemo(() => {
-    return rawOrders.filter(o => {
-      const s = search.toLowerCase();
-      const matchesSearch = !search || 
-        o.phoneNumber?.includes(search) || 
-        o.orderReference?.toLowerCase().includes(s) ||
-        o.customerName?.toLowerCase().includes(s) ||
-        o.network?.toLowerCase().includes(s) ||
-        o.price?.toString().includes(s) ||
-        o.orderStatus?.toLowerCase().includes(s) ||
-        o.capacity?.toString().includes(s) ||
-        formatDate(o.createdAt).toLowerCase().includes(s);
+  const { filteredOrders, stats } = useMemo(() => {
+    const list = orders.filter(o => {
+      const s = searchTerm.toLowerCase();
+      const status = o.orderStatus?.toLowerCase() || '';
       
-      const st = o.orderStatus?.toLowerCase() || '';
-      let matchesFilter = filter === 'all';
-      if (filter === 'completed') matchesFilter = st.includes('fulfil') || st.includes('success');
-      else if (filter === 'failed') matchesFilter = st.includes('fail') || st.includes('cancel');
-      else if (filter === 'pending') matchesFilter = st.includes('pending');
-      else if (filter === 'processing') matchesFilter = st.includes('processing');
+      const matchesSearch = 
+        o.phoneNumber.includes(searchTerm) || 
+        (o.orderReference && o.orderReference.toLowerCase().includes(s)) ||
+        (o.customerName && o.customerName.toLowerCase().includes(s));
       
-      return matchesSearch && matchesFilter;
-    });
-  }, [rawOrders, search, filter]);
+      const matchesNetwork = activeNetwork === "ALL" || 
+        (o.network && o.network.toUpperCase().includes(activeNetwork.toUpperCase()));
 
-  // Derived stats for the header
-  const stats = useMemo(() => {
-    const totalRevenue = filteredOrders.reduce((acc, o) => acc + (o.price || 0), 0);
-    const totalProfit = filteredOrders.reduce((acc, o) => {
-      let cost = o.costPrice ? Number(o.costPrice) : null;
-      if (cost === null) {
-        if (o.network?.toLowerCase().includes('mtn') || o.network?.toLowerCase().includes('yello')) {
-          cost = (o.capacity || 1) * 4;
-        } else {
-          cost = (o.price || 0) * 0.88;
-        }
-      }
-      return acc + ((o.price || 0) - cost);
+      const matchesStatus = activeStatus === "ALL" ||
+        (activeStatus === "SUCCESS" && (status.includes("fulfilled") || status.includes("success") || status.includes("complete"))) ||
+        (activeStatus === "FAILED" && (status.includes("fail") || status.includes("cancel"))) ||
+        (activeStatus === "PENDING" && (!status.includes("fulfilled") && !status.includes("success") && !status.includes("complete") && !status.includes("fail") && !status.includes("cancel")));
+
+      return matchesSearch && matchesNetwork && matchesStatus;
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const totalRevenue = list.reduce((acc, o) => acc + Number(o.price || 0), 0);
+    const completedCount = list.filter(o => 
+      o.orderStatus?.toLowerCase().includes('fulfil') || 
+      o.orderStatus?.toLowerCase().includes('success') ||
+      o.orderStatus?.toLowerCase().includes('complete')
+    ).length;
+    const pendingCount = list.filter(o => 
+      !o.orderStatus?.toLowerCase().includes('fulfil') && 
+      !o.orderStatus?.toLowerCase().includes('success') && 
+      !o.orderStatus?.toLowerCase().includes('complete') &&
+      !o.orderStatus?.toLowerCase().includes('fail') &&
+      !o.orderStatus?.toLowerCase().includes('cancel')
+    ).length;
+    
+    const totalProfit = list.reduce((acc, o) => {
+       const price = Number(o.price || 0);
+       let cost = o.costPrice ? Number(o.costPrice) : null;
+       if (cost === null) {
+          if (o.network?.toLowerCase().includes('mtn') || o.network?.toLowerCase().includes('yello')) {
+             cost = (o.capacity || 1) * 4;
+          } else {
+             cost = price * 0.88;
+          }
+       }
+       const isFulfilled = o.orderStatus?.toLowerCase().includes('fulfil') || 
+                           o.orderStatus?.toLowerCase().includes('success') ||
+                           o.orderStatus?.toLowerCase().includes('complete');
+       return acc + (isFulfilled ? (price - cost) : 0);
     }, 0);
-    const completed = filteredOrders.filter(o => o.orderStatus?.toLowerCase().includes('success') || o.orderStatus?.toLowerCase().includes('fulfill')).length;
-    const pending = filteredOrders.filter(o => o.orderStatus?.toLowerCase().includes('pending')).length;
-    return { totalRevenue, totalProfit, completed, pending };
-  }, [filteredOrders]);
+
+    return { 
+      filteredOrders: list, 
+      stats: { totalRevenue, totalProfit, completed: completedCount, pending: pendingCount } 
+    };
+  }, [orders, searchTerm, activeNetwork, activeStatus]);
+
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+      <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Syncing Transactions...</p>
+    </div>
+  );
 
   return (
-    <div className="space-y-8 animate-fade-in pb-10">
-      {/* ── Tabs Header ── */}
-      <div className="flex items-center gap-4">
-        <button className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
-          <Filter size={16} />
-          Orders View
-        </button>
-        <button className="bg-card border border-border px-6 py-2.5 rounded-xl font-bold text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center gap-2">
-          <ArrowRightLeft size={16} />
-          Transaction Log
-        </button>
+    <div className="space-y-10 animate-fade-in pb-20">
+      {/* ── Header ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tighter glow-text">Orders</h1>
+          <p className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-[0.2em]">Transaction Registry</p>
+        </div>
+        
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+          <div className="relative group w-full md:w-64">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" size={16} />
+            <input 
+              placeholder="Filter by phone or ref..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-11 pr-4 text-[11px] font-medium placeholder:text-slate-600 focus:outline-none focus:border-primary/30 transition-all"
+            />
+          </div>
+          <button 
+            onClick={() => refetch()}
+            className="h-10 px-6 flex items-center justify-center gap-2 glass rounded-xl text-slate-400 hover:text-primary transition-all font-black text-[10px] uppercase tracking-widest"
+          >
+            <RefreshCcw size={14} />
+            <span className="md:hidden">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatsCard label="Total Revenue" value={formatCurrency(stats.totalRevenue)} color="text-white" />
-        <StatsCard label="Total Profit" value={formatCurrency(stats.totalProfit)} color="text-emerald-500" />
-        <StatsCard label="Completed" value={stats.completed} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+        <StatsCard label="Revenue" value={formatCurrency(stats.totalRevenue)} />
+        <StatsCard label="Net Profit" value={formatCurrency(stats.totalProfit)} color="text-primary" />
+        <StatsCard label="Success" value={stats.completed} />
         <StatsCard label="Pending" value={stats.pending} />
       </div>
 
-      <div className="space-y-6">
-        {/* ── Filter Controls ── */}
-        <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-            {['All', 'Completed', 'Pending', 'Processing', 'Failed'].map((f) => (
-              <button 
-                key={f}
-                onClick={() => setFilter(f.toLowerCase())}
-                className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border",
-                  filter === f.toLowerCase() 
-                    ? "bg-primary text-primary-foreground border-primary" 
-                    : "bg-background/50 text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search anything..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 h-10 rounded-full bg-background/50 border-border focus:ring-primary text-sm shadow-inner" 
-            />
-          </div>
-        </div>
+      {/* ── Status Filters ── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+        {['ALL', 'SUCCESS', 'PENDING', 'FAILED'].map((stat) => (
+          <button 
+            key={stat}
+            onClick={() => setActiveStatus(stat)}
+            className={cn(
+              "px-6 md:px-8 py-2.5 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+              activeStatus === stat
+                ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(79,70,229,0.4)]" 
+                : "bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300"
+            )}
+          >
+            {stat}
+          </button>
+        ))}
+      </div>
 
-        {/* ── Orders Table ── */}
-        <div className="overflow-hidden rounded-xl border border-border/30">
+      {/* ── Table Section ── */}
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/30">
+            <TableHeader className="bg-white/5 border-b border-white/5">
               <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-4">Order</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-5 text-center">Customer</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-5">Product</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-4 text-center">Amount</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-4 text-center">Profit</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 text-center px-5">Status</TableHead>
-                <TableHead className="text-xs uppercase tracking-widest font-black py-2.5 px-4 text-center">Date/Source</TableHead>
-                <TableHead className="text-right py-4"></TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 px-8 text-slate-500">Customer</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500">Service</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500">Reference</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500">Amount</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-widest font-black py-6 text-slate-500">Status</TableHead>
+                <TableHead className="text-right py-6 px-8 text-[10px] uppercase font-black tracking-widest text-slate-500">Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i} className="border-border/30">
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-10 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-6 w-6 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : filteredOrders.length === 0 ? (
+              {filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-64 text-center">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <ShoppingCart className="h-10 w-10 opacity-20 mb-2" />
-                      <p className="font-bold">No orders found.</p>
-                      <p className="text-xs">Adjust your search or filter to see results.</p>
+                  <TableCell colSpan={6} className="h-64 text-center">
+                    <div className="flex flex-col items-center gap-2 opacity-30">
+                       <ShoppingCart size={40} />
+                       <p className="font-black text-xs uppercase tracking-widest">No matching orders</p>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredOrders.map((order) => (
-                  <TableRow key={order.id} className="group border-border/20 hover:bg-white/[0.02] transition-colors">
-                    <TableCell className="font-mono text-xs font-bold text-muted-foreground uppercase px-4">{order.orderReference}</TableCell>
-                    <TableCell className="py-3 px-5">
-                      <div className="flex items-center justify-center gap-3 text-center">
-                        <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
-                          <Phone size={14} />
+                filteredOrders.map((order: any) => (
+                  <TableRow key={order.id} className="group border-white/5 hover:bg-white/[0.01] transition-all">
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-xl glass border-white/10 flex items-center justify-center font-black text-xs text-primary/60 group-hover:text-primary transition-colors">
+                          {order.customerName?.substring(0, 1) || 'C'}
                         </div>
-                          <div className="text-left">
-                            <div className="font-black text-[13px] tracking-tight text-foreground uppercase mb-0.5">
-                              {order.customerName || "Valued Customer"}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground opacity-60">
-                              <span>{order.phoneNumber}</span>
-                              <span className="opacity-30">·</span>
-                              <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              <span className="opacity-30">·</span>
-                              {order.source === "api" ? (
-                                <Usb size={9} strokeWidth={3} />
-                              ) : (
-                                <Monitor size={9} strokeWidth={3} />
-                              )}
-                            </div>
+                        <div>
+                          <p className="font-black text-base tracking-tight">{order.customerName || 'Guest'}</p>
+                          <div className="flex items-center gap-2">
+                             <p className="text-sm text-slate-500 font-bold">{order.phoneNumber}</p>
+                             <span className="text-slate-700">·</span>
+                             {order.source === "api" ? <Usb size={10} className="text-primary/40" /> : <Monitor size={10} className="text-primary/40" />}
                           </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-5">
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black leading-none",
-                          (order.network?.toLowerCase().includes("mtn") || order.network?.toLowerCase().includes("ye")) ? "bg-[#facc15] text-black" : 
-                          order.network?.toLowerCase().includes("at") ? "bg-[#003399] text-white" :
-                          order.network?.toLowerCase().includes("telecel") ? "bg-[#e21b22] text-white" :
-                          order.network?.toLowerCase().includes("voda") ? "bg-[#e21b22] text-white" :
-                          "bg-slate-700 text-white"
-                        )}>
-                          {order.network?.toLowerCase().includes("mtn") ? "MTN" : 
-                           order.network?.toLowerCase().includes("telecel") ? "T" :
-                           order.network?.toLowerCase().includes("voda") ? "V" :
-                           order.network?.toLowerCase().includes("at") ? "AT" :
-                           order.network?.toUpperCase().substring(0, 2)}
                         </div>
-                        <span className="text-sm font-bold">{order.capacity}GB</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-bold text-base px-4 text-center">₵{order.price}</TableCell>
-                    <TableCell className="text-emerald-500 font-bold text-sm uppercase px-4 text-center">
-                      +{formatCurrency((order.price || 0) - (() => {
-                        if (order.costPrice) return Number(order.costPrice);
-                        if (order.network?.toLowerCase().includes('mtn') || order.network?.toLowerCase().includes('yello')) {
-                          return (order.capacity || 1) * 4;
-                        }
-                        return (order.price || 0) * 0.88;
-                      })())}
+                    <TableCell>
+                       <div className="flex items-center gap-3">
+                          <div className={cn(
+                             "h-9 w-9 rounded-full flex items-center justify-center shrink-0 border border-white/5 bg-white/5",
+                             (order.network?.toLowerCase().includes("mtn") || order.network?.toLowerCase().includes("ye")) ? "text-amber-500" : 
+                             order.network?.toLowerCase().includes("at") ? "text-blue-500" :
+                             "text-red-500"
+                          )}>
+                             <div className={cn(
+                               "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black border border-white/10",
+                               (order.network?.toLowerCase().includes("mtn") || order.network?.toLowerCase().includes("ye")) ? "bg-[#facc15] text-black" : 
+                               order.network?.toLowerCase().includes("at") ? "bg-[#003399] text-white" :
+                               "bg-[#e21b22] text-white"
+                             )}>
+                                {order.network?.toLowerCase().includes("mtn") ? "Y" : 
+                                 order.network?.toLowerCase().includes("at") ? "AT" :
+                                 order.network?.substring(0, 1).toUpperCase()}
+                             </div>
+                          </div>
+                          <span className="bg-white/5 px-2 py-0.5 rounded text-xs font-black text-slate-400">{order.capacity}GB</span>
+                       </div>
                     </TableCell>
-                    <TableCell className="py-3 text-center px-5">
+                    <TableCell>
+                      <code className="text-xs font-mono font-bold text-primary/60 tracking-tighter bg-primary/5 px-2 py-1 rounded">
+                        {order.orderReference}
+                      </code>
+                    </TableCell>
+                    <TableCell className="font-black text-base">₵{Number(order.price).toFixed(2)}</TableCell>
+                    <TableCell>
                       <StatusBadge status={order.orderStatus} />
                     </TableCell>
-                    <TableCell className="text-xs font-bold text-muted-foreground whitespace-nowrap px-4 text-center">
-                       {formatDate(order.createdAt)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <button className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground group-hover:text-primary">
-                        <Eye size={14} />
-                      </button>
+                    <TableCell className="text-right px-8">
+                       <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                          <p className="text-xs font-bold text-slate-400">
+                             {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </p>
+                          <p className="text-[11px] font-black uppercase text-primary/40 tracking-widest">
+                             {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          </p>
+                       </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -256,42 +244,37 @@ export default function Orders() {
 
 function StatsCard({ label, value, color = "text-foreground" }: { label: string, value: string | number, color?: string }) {
   return (
-    <Card className="bg-card/40 border-border/50 backdrop-blur-xl group hover:border-primary/30 transition-all cursor-default">
-      <CardContent className="p-6">
-        <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground mb-4">{label}</p>
-        <p className={cn("text-2xl font-black tracking-tight transition-transform group-hover:translate-x-1", color)}>
-          <span className={cn(color.includes("emerald") ? "" : "text-foreground")}>
-            {typeof value === 'string' && value.includes('GH') ? value.split('₵')[0] + '₵' : ''}
-          </span>
-          {typeof value === 'string' && value.includes('GH') ? value.split('₵')[1] : value}
-        </p>
-      </CardContent>
-    </Card>
+    <div className="glass-card p-4 md:p-6 group cursor-default relative overflow-hidden transition-all hover:border-primary/20">
+      <p className="text-[8px] md:text-[10px] uppercase tracking-widest font-black text-slate-500 mb-2 md:mb-4">{label}</p>
+      <p className={cn("text-xl md:text-3xl font-black tracking-tighter glow-text truncate", color)}>
+        {value}
+      </p>
+    </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase() || '';
-  if (s.includes("fulfilled") || s.includes("success")) {
+  if (s.includes("fulfilled") || s.includes("success") || s.includes("complete")) {
     return (
-      <div className="inline-flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-full">
-        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-        <span className="text-[10px] font-black uppercase tracking-tight">Completed</span>
+      <div className="inline-flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+        <div className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+        <span className="text-[9px] font-black uppercase tracking-tight">Success</span>
       </div>
     );
   }
   if (s.includes("fail") || s.includes("cancel")) {
     return (
-      <div className="inline-flex items-center gap-2 text-red-500 bg-red-500/10 px-3 py-1.5 rounded-full">
-        <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
-        <span className="text-[10px] font-black uppercase tracking-tight">Failed</span>
+      <div className="inline-flex items-center gap-1.5 text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
+        <div className="h-1 w-1 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
+        <span className="text-[9px] font-black uppercase tracking-tight">Failed</span>
       </div>
     );
   }
   return (
-    <div className="inline-flex items-center gap-2 text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-full">
-      <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-      <span className="text-[10px] font-black uppercase tracking-tight">{status}</span>
+    <div className="inline-flex items-center gap-1.5 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+      <div className="h-1 w-1 rounded-full bg-amber-500 animate-pulse shadow-[0_0_5px_rgba(245,158,11,0.5)]" />
+      <span className="text-[9px] font-black uppercase tracking-tight">Pending</span>
     </div>
   );
 }

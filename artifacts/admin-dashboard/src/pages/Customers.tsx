@@ -70,8 +70,11 @@ export default function Customers() {
     
     const today = new Date().toISOString().split('T')[0];
     const activeToday = customersData.filter(c => c.lastOrderAt.split('T')[0] === today).length;
+    
+    const returning = customersData.filter(c => c.totalOrders > 1).length;
+    const retention = total > 0 ? Math.round((returning / total) * 100) : 0;
 
-    return { total, topSpender, activeToday };
+    return { total, topSpender, activeToday, retention };
   }, [customersData]);
 
   const handleExport = () => {
@@ -131,22 +134,22 @@ export default function Customers() {
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <StatsCard label="Total Customers" value={stats.total} color="text-white" />
         <StatsCard label="Active Today" value={stats.activeToday} color="text-primary" />
         <StatsCard label="Top Spender" value={formatCurrency(stats.topSpender)} color="text-emerald-500" />
-        <StatsCard label="Retention" value="94%" />
+        <StatsCard label="Retention" value={`${stats.retention}%`} />
       </div>
 
       <div className="space-y-6">
         {/* ── Filter Controls ── */}
-        <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
             {['All', 'Gold', 'Silver', 'Bronze'].map((f) => (
               <button 
                 key={f}
                 className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap border bg-background/50 text-muted-foreground border-border hover:bg-muted"
+                  "px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap border bg-background/50 text-muted-foreground border-border hover:bg-muted"
                 )}
               >
                 {f}
@@ -155,18 +158,18 @@ export default function Customers() {
           </div>
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
+            <input 
               placeholder="Search customers..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-10 rounded-full bg-background/50 border-border focus:ring-primary text-sm shadow-inner" 
+              className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-11 pr-4 text-[11px] font-medium placeholder:text-slate-600 focus:outline-none focus:border-primary/30 transition-all" 
             />
           </div>
-          <div className="flex items-center gap-3 ml-auto">
-            <Button onClick={handleExport} variant="outline" className="h-10 rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 text-primary">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Button onClick={handleExport} variant="outline" className="flex-1 md:flex-none h-10 rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 text-primary text-[10px]">
               <Download size={14} /> EXPORT
             </Button>
-            <Button onClick={() => refetch()} variant="ghost" className="h-10 rounded-xl font-bold gap-2">
+            <Button onClick={() => refetch()} variant="ghost" className="flex-1 md:flex-none h-10 rounded-xl font-bold gap-2 text-[10px]">
               <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} /> REFRESH
             </Button>
           </div>
@@ -211,8 +214,8 @@ export default function Customers() {
                             <User size={14} />
                           </div>
                           <div>
-                            <div className="font-black text-[13px] tracking-tight text-foreground uppercase">{customer.customerName || 'Anonymous User'}</div>
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">Verified User</div>
+                            <div className="font-black text-[13px] tracking-tight text-foreground capitalize">{customer.customerName || 'Anonymous User'}</div>
+                            <div className="text-[10px] font-bold text-muted-foreground capitalize opacity-50">Verified User</div>
                           </div>
                         </div>
                       </TableCell>
@@ -262,9 +265,9 @@ export default function Customers() {
 function StatsCard({ label, value, color = "text-foreground" }: { label: string, value: string | number, color?: string }) {
   return (
     <Card className="bg-card/40 border-border/50 backdrop-blur-xl group hover:border-primary/30 transition-all cursor-default">
-      <CardContent className="p-6">
-        <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground mb-4">{label}</p>
-        <p className={cn("text-2xl font-black tracking-tight transition-transform group-hover:translate-x-1", color)}>
+      <CardContent className="p-4 md:p-6">
+        <p className="text-[8px] md:text-[10px] uppercase tracking-widest font-black text-muted-foreground mb-2 md:mb-4">{label}</p>
+        <p className={cn("text-lg md:text-2xl font-black tracking-tight transition-transform group-hover:translate-x-1 truncate", color)}>
           <span className={cn(color.includes("emerald") ? "" : "text-foreground")}>
             {typeof value === 'string' && value.includes('GH') ? value.split('₵')[0] + '₵' : ''}
           </span>

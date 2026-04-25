@@ -28,14 +28,10 @@ router.get("/purchase-history", async (req, res): Promise<void> => {
       logger.warn({ err }, "Failed to fetch upstream purchase history");
     }
 
-    // 2. Fetch local orders (Today only)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    // 2. Fetch local orders (Show all orders, newest first)
     const offset = (page - 1) * limit;
     const localOrders = await db.select()
       .from(ordersTable)
-      .where(sql`${ordersTable.createdAt} >= ${today}`)
       .orderBy(desc(ordersTable.createdAt))
       .limit(limit)
       .offset(offset);

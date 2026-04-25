@@ -41,35 +41,62 @@ export default function PaymentCallback() {
     let cancelled = false;
 
     const checkStatus = async () => {
+      if (cancelled) return;
+
       try {
         const res = await fetch(`/api/paystack/verify/${reference}`);
-        const data = await res.json();
+        
+        // If we get a server error (500), just retry instead of failing
+        if (!res.ok && res.status >= 500) {
+          console.warn("Server busy, retrying...");
+          timeoutId = setTimeout(checkStatus, 5000);
+          return;
+        }
 
+        const data = await res.json();
         if (cancelled) return;
 
-        if (data.status === "success") {
+        if (data.status === "success" && data.data) {
           setOrderData(data.data);
-          const orderStatus = data.data.orderStatus as OrderStatus;
+          const orderStatus = data.data.orderStatus;
 
           if (orderStatus === "fulfilled") {
             setStatus("fulfilled");
-            return; // Stop polling
-          } else if (orderStatus === "failed") {
+            return;
+          } 
+          
+          if (orderStatus === "failed") {
             setStatus("failed");
-            return; // Stop polling
-          } else {
-            // Still processing — keep polling
-            setStatus(orderStatus === "paid" ? "paid" : "pending");
-            setPollCount((c) => c + 1);
-            // Fast poll for first 2 min (every 3s), then slow (every 10s)
-            const delay = pollCount < 40 ? 3000 : 10000;
-            timeoutId = setTimeout(checkStatus, delay);
+            return;
           }
+
+          // If status is paid, processing, or pending, keep polling
+          setStatus(orderStatus === "paid" || orderStatus === "processing" ? "paid" : "pending");
+          
+          // Safety cap: Stop after ~10 minutes of polling
+          if (pollCount > 100) {
+            setStatus("failed");
+            return;
+          }
+
+          setPollCount((c) => c + 1);
+          const delay = pollCount < 40 ? 3000 : 8000;
+          timeoutId = setTimeout(checkStatus, delay);
         } else {
-          setStatus("failed");
+          // If the order isn't found yet, it might be database lag, retry a few times
+          if (pollCount < 5) {
+            setPollCount((c) => c + 1);
+            timeoutId = setTimeout(checkStatus, 3000);
+          } else {
+            setStatus("failed");
+          }
         }
-      } catch {
-        if (!cancelled) setStatus("failed");
+      } catch (err) {
+        console.error("Polling error:", err);
+        if (!cancelled) {
+          // On network error, don't fail immediately, just wait and retry
+          timeoutId = setTimeout(checkStatus, 5000);
+        }
       }
     };
 
