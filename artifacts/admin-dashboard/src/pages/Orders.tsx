@@ -16,9 +16,26 @@ import {
   Usb,
   Monitor
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { useQueryClient } from "@tanstack/react-query";
+
+async function verifyOrder(reference: string) {
+  try {
+    const res = await fetch(`/api/paystack/verify/${reference}`);
+    const data = await res.json();
+    if (data.status === "success") {
+      alert(`Order Verified: Status is now ${data.data.orderStatus}`);
+      return true;
+    } else {
+      alert(`Verification Failed: ${data.error || "Unknown error"}`);
+      return false;
+    }
+  } catch (err) {
+    alert("Network error while verifying order");
+    return false;
+  }
+}
 
 export default function Orders() {
   const { data: historyData, isLoading, refetch } = useGetPurchaseHistory();
@@ -221,7 +238,26 @@ export default function Orders() {
                     </TableCell>
                     <TableCell className="font-black text-base">₵{Number(order.price).toFixed(2)}</TableCell>
                     <TableCell>
-                      <StatusBadge status={order.orderStatus} />
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={order.orderStatus} />
+                        {(!order.orderStatus || 
+                          (!order.orderStatus.toLowerCase().includes("fulfilled") && 
+                           !order.orderStatus.toLowerCase().includes("success") && 
+                           !order.orderStatus.toLowerCase().includes("complete") && 
+                           !order.orderStatus.toLowerCase().includes("fail") && 
+                           !order.orderStatus.toLowerCase().includes("cancel"))) && (
+                          <button 
+                            onClick={async () => {
+                              const success = await verifyOrder(order.id);
+                              if (success) refetch();
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                          >
+                            <RefreshCcw size={10} className="animate-pulse" />
+                            Verify
+                          </button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right px-8">
                        <div className="flex items-center justify-end gap-2 whitespace-nowrap">

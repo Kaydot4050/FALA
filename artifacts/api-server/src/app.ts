@@ -12,6 +12,20 @@ app.use((req, res, next) => {
     req.url = req.url.slice(netlifyPrefix.length) || "/";
   }
 
+  // Enhanced logging for webhooks to debug "stuck at pending" issues
+  if (req.url.toLowerCase().includes("webhook")) {
+    logger.info({ 
+      method: req.method, 
+      url: req.url,
+      headers: {
+        "x-paystack-signature": req.headers["x-paystack-signature"] ? "PRESENT" : "MISSING",
+        "content-type": req.headers["content-type"]
+      },
+      hasBody: !!req.body,
+      bodyType: typeof req.body
+    }, "Webhook Request Captured");
+  }
+
   logger.info({ 
     method: req.method, 
     url: req.url?.split("?")[0],

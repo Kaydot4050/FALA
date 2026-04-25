@@ -224,6 +224,10 @@ async function handleFulfillment(orderId: string) {
   }
 }
 
+router.get("/paystack/webhook", (req, res) => {
+  res.send("Paystack Webhook endpoint is reachable via GET. Use POST for actual webhooks.");
+});
+
 /**
  * POST /paystack/webhook
  * Receives payment notifications from Paystack.
@@ -232,6 +236,7 @@ async function handleFulfillment(orderId: string) {
 router.post("/paystack/webhook", async (req, res): Promise<void> => {
   const secretKey = process.env["PAYSTACK_SECRET_KEY"];
   if (!secretKey) {
+    logger.error("Webhook Error: PAYSTACK_SECRET_KEY is not set in environment variables.");
     res.status(500).json({ error: "Paystack not configured" });
     return;
   }
@@ -245,11 +250,12 @@ router.post("/paystack/webhook", async (req, res): Promise<void> => {
 
   if (hash !== signature) {
     logger.warn({ 
-      receivedSig: signature?.substring(0, 8), 
-      calculatedSig: hash.substring(0, 8),
-      bodyLength: JSON.stringify(req.body).length
-    }, "Paystack webhook signature mismatch - check your Secret Key in Netlify");
-    // We respond 200 anyway to prevent Paystack from retrying indefinitely if it's a config issue
+      receivedSig: signature?.substring(0, 10), 
+      calculatedSig: hash.substring(0, 10),
+      bodyLength: JSON.stringify(req.body).length,
+      bodyPreview: JSON.stringify(req.body).substring(0, 100),
+      hasRawBody: !!rawBody
+    }, "Paystack webhook signature mismatch - Check PAYSTACK_SECRET_KEY in Netlify");
     res.status(200).json({ error: "Signature mismatch" });
     return;
   }
