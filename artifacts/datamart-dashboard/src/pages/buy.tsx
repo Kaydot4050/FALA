@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
-export type NetworkId = "YELLO" | "TELECEL" | "at" | "AT_PREMIUM";
+export type NetworkId = "YELLO" | "TELECEL" | "AT_PREMIUM";
 
 const NETWORKS: {
   id: NetworkId;
@@ -28,7 +28,7 @@ const NETWORKS: {
 }[] = [
   { id: "YELLO",   name: "MTN",       sub: "Non-Expiry",  gradient: "from-[#FFCC00] to-[#FF9500]", glow: "shadow-[0_0_30px_rgba(255,204,0,0.15)]", trace: "#FFCC00" },
   { id: "TELECEL",  name: "Telecel",   sub: "Instant",     gradient: "from-[#E60000] to-[#FF4444]", glow: "shadow-[0_0_30px_rgba(230,0,0,0.15)]", trace: "#E60000" },
-  { id: "at",       name: "AirtelTigo", sub: "Standard",   gradient: "from-[#0033A0] to-[#EF3D42]", glow: "shadow-[0_0_30px_rgba(239,61,66,0.15)]", trace: "#EF3D42" },
+  { id: "AT_PREMIUM", name: "AirtelTigo", sub: "Standard",   gradient: "from-[#0033A0] to-[#EF3D42]", glow: "shadow-[0_0_30px_rgba(239,61,66,0.15)]", trace: "#EF3D42" },
 ];
 
 const STEPS = [

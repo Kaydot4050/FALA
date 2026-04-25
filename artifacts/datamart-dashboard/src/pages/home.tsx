@@ -60,8 +60,8 @@ export default function Home() {
 
   const trendingBundles = [
     { ...getPkg('YELLO', '1'),   label: 'Hottest' },
-    { ...getPkg('TELECEL', '10'), label: 'Flash' },
-    { ...getPkg('at', '2'),      label: 'Giant' },
+    { ...getPkg('TELECEL', '10'),  label: 'Flash' },
+    { ...getPkg('AT_PREMIUM', '2'), label: 'Giant' },
     { ...getPkg('YELLO', '5'),   label: 'Popular' },
     { ...getPkg('YELLO', '2'),   label: 'Steady' },
   ];

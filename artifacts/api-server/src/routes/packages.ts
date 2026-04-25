@@ -7,17 +7,20 @@ import { packageOverridesTable } from "@workspace/db/schema";
 
 const router: IRouter = Router();
 
-let packageCache: { data: any, timestamp: number } | null = null;
+const packageCache = new Map<string, { data: any, timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 router.get("/packages", async (req, res): Promise<void> => {
   try {
     const isAdmin = req.query.admin === "true";
+    const cacheKey = JSON.stringify(req.query);
 
-    // Use cache only for non-admin requests to ensure users get fresh but cached data
-    // Admin always gets fresh data or we can still cache it but for simplicity:
-    if (!isAdmin && packageCache && (Date.now() - packageCache.timestamp < CACHE_TTL)) {
-      return void res.json(packageCache.data);
+    // Use cache only for non-admin requests
+    if (!isAdmin) {
+      const cached = packageCache.get(cacheKey);
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return void res.json(cached.data);
+      }
     }
 
     const parsed = GetDataPackagesQueryParams.safeParse(req.query);
@@ -37,16 +40,12 @@ router.get("/packages", async (req, res): Promise<void> => {
       const rawPackages = data.data as Record<string, any[]>;
       const processedData: Record<string, any[]> = {};
 
-      // Fetch all overrides from DB
       const overrides = await db.select().from(packageOverridesTable);
       const overrideMap = new Map(overrides.map(o => [o.id, o]));
 
       for (const [net, pkgs] of Object.entries(rawPackages)) {
-        if (net === "AT_PREMIUM") continue;
-        
         const pricedPkgs = applyCustomPricing(pkgs);
         
-        // Merge DB Overrides
         processedData[net] = pricedPkgs.map(p => {
           const key = `${p.network}_${p.capacity}${p.mb ? 'MB' : 'GB'}`;
           const over = overrideMap.get(key);
@@ -67,7 +66,7 @@ router.get("/packages", async (req, res): Promise<void> => {
       data.data = processedData;
       
       if (!isAdmin) {
-        packageCache = { data, timestamp: Date.now() };
+        packageCache.set(cacheKey, { data, timestamp: Date.now() });
       }
     }
 
