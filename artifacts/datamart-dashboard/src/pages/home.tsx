@@ -43,9 +43,28 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { NetworkLogo } from "@/components/network-logo";
 import type { NetworkId } from "./buy";
+import { useGetDataPackages } from "@workspace/api-client-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { data: packagesRes, isLoading } = useGetDataPackages();
+  
+  const allPackages = (packagesRes?.data as Record<string, any[]>) || {};
+  
+  // Helper to find a specific package or fallback
+  const getPkg = (net: string, cap: string) => {
+    const list = allPackages[net] || [];
+    const found = list.find(p => String(p.capacity) === cap);
+    return found || list[0] || { capacity: cap, price: "0.00", oldPrice: null };
+  };
+
+  const trendingBundles = [
+    { ...getPkg('YELLO', '1'),   label: 'Hottest' },
+    { ...getPkg('TELECEL', '10'), label: 'Flash' },
+    { ...getPkg('at', '2'),      label: 'Giant' },
+    { ...getPkg('YELLO', '5'),   label: 'Popular' },
+    { ...getPkg('YELLO', '2'),   label: 'Steady' },
+  ];
 
   return (
     <div className="flex flex-col gap-11 md:gap-16 pb-24">
@@ -155,49 +174,49 @@ export default function Home() {
         </div>
 
         <div className="flex flex-nowrap overflow-x-auto pb-8 gap-3 md:gap-6 snap-x no-scrollbar">
-          {[
-            { network: 'YELLO',   capacity: '1',   price: '4.99',  oldPrice: '5.00',  label: 'Hottest' },
-            { network: 'TELECEL', capacity: '10',  price: '43.50', label: 'Flash' },
-            { network: 'at',      capacity: '2',   price: '9.50',  label: 'Giant' },
-            { network: 'YELLO',   capacity: '5',   price: '23.50', oldPrice: '24.00', label: 'Popular' },
-            { network: 'YELLO',   capacity: '2',   price: '9.49',  oldPrice: '9.80',  label: 'Steady' },
-          ].map((btn, i) => (
-            <div 
-              key={i} 
-              className="min-w-[150px] md:min-w-[270px] snap-start p-4 md:p-6 rounded-[20px] bg-card border border-border hover:border-primary/40 transition-all duration-500 group relative cursor-pointer hover:bg-muted/80 hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] active:scale-95 active:brightness-90 overflow-hidden isolate"
-              onClick={() => setLocation('/buy')}
-            >
-              {/* Card Glow Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-[-1]" />
-              
-              <div className="absolute top-4 right-4 md:top-6 md:right-6 px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary/20 text-primary text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-primary/30 shadow-[0_0_15px_hsl(var(--primary)_/_0.2)]">
-                {btn.label}
-              </div>
-              <div className="mb-4 md:mb-8 text-left group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
-                <NetworkLogo network={btn.network as NetworkId} size={40} />
-              </div>
-              <div className="space-y-3 md:space-y-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl md:text-5xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">{btn.capacity}</span>
-                  <span className="text-xs md:text-xl font-bold text-muted-foreground uppercase opacity-40">GB</span>
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="min-w-[150px] md:min-w-[270px] h-[200px] rounded-[20px] bg-muted animate-pulse" />
+            ))
+          ) : (
+            trendingBundles.map((btn: any, i) => (
+              <div 
+                key={i} 
+                className="min-w-[150px] md:min-w-[270px] snap-start p-4 md:p-6 rounded-[20px] bg-card border border-border hover:border-primary/40 transition-all duration-500 group relative cursor-pointer hover:bg-muted/80 hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] active:scale-95 active:brightness-90 overflow-hidden isolate"
+                onClick={() => setLocation('/buy')}
+              >
+                {/* Card Glow Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-[-1]" />
+                
+                <div className="absolute top-4 right-4 md:top-6 md:right-6 px-2 md:px-3 py-0.5 md:py-1 rounded-full bg-primary/20 text-primary text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-primary/30 shadow-[0_0_15px_hsl(var(--primary)_/_0.2)]">
+                  {btn.label}
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-50">Instant</span>
-                    <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
-                      {'oldPrice' in btn && (
-                        <span className="text-[10px] md:text-xs font-bold text-muted-foreground/30 line-through">₵{btn.oldPrice}</span>
-                      )}
-                      <span className="text-base md:text-2xl font-black text-primary">₵{btn.price}</span>
+                <div className="mb-4 md:mb-8 text-left group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+                  <NetworkLogo network={(btn.network || 'YELLO') as NetworkId} size={40} />
+                </div>
+                <div className="space-y-3 md:space-y-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl md:text-5xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">{btn.capacity}</span>
+                    <span className="text-xs md:text-xl font-bold text-muted-foreground uppercase opacity-40">GB</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-50">Instant</span>
+                      <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+                        {btn.oldPrice && btn.oldPrice !== btn.price && (
+                          <span className="text-[10px] md:text-xs font-bold text-muted-foreground/30 line-through">₵{btn.oldPrice}</span>
+                        )}
+                        <span className="text-base md:text-2xl font-black text-primary">₵{btn.price}</span>
+                      </div>
+                    </div>
+                    <div className="h-8 w-8 md:h-12 md:w-12 rounded-xl bg-muted border border-border flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_15px_hsl(var(--primary)_/_0.4)] transition-all shrink-0">
+                      <ArrowRight className="h-3 w-3 md:h-5 md:w-5" />
                     </div>
                   </div>
-                  <div className="h-8 w-8 md:h-12 md:w-12 rounded-xl bg-muted border border-border flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_15px_hsl(var(--primary)_/_0.4)] transition-all shrink-0">
-                    <ArrowRight className="h-3 w-3 md:h-5 md:w-5" />
-                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </AnimatedSection>
 

@@ -50,19 +50,22 @@ export default function Orders() {
       return matchesSearch && matchesNetwork && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    const totalRevenue = list.reduce((acc, o) => acc + Number(o.price || 0), 0);
-    const completedCount = list.filter(o => 
-      o.orderStatus?.toLowerCase().includes('fulfil') || 
-      o.orderStatus?.toLowerCase().includes('success') ||
-      o.orderStatus?.toLowerCase().includes('complete')
-    ).length;
-    const pendingCount = list.filter(o => 
-      !o.orderStatus?.toLowerCase().includes('fulfil') && 
-      !o.orderStatus?.toLowerCase().includes('success') && 
-      !o.orderStatus?.toLowerCase().includes('complete') &&
-      !o.orderStatus?.toLowerCase().includes('fail') &&
-      !o.orderStatus?.toLowerCase().includes('cancel')
-    ).length;
+    const totalRevenue = list.reduce((acc, o) => {
+      const status = o.orderStatus?.toLowerCase() || '';
+      const isCompleted = status.includes("fulfilled") || status.includes("success") || status.includes("complete");
+      return acc + (isCompleted ? Number(o.price || 0) : 0);
+    }, 0);
+
+    const completedCount = list.filter(o => {
+      const status = o.orderStatus?.toLowerCase() || '';
+      return status.includes("fulfilled") || status.includes("success") || status.includes("complete");
+    }).length;
+
+    const pendingCount = list.filter(o => {
+      const status = o.orderStatus?.toLowerCase() || '';
+      return !status.includes("fulfilled") && !status.includes("success") && !status.includes("complete") && 
+             !status.includes("fail") && !status.includes("cancel");
+    }).length;
     
     const totalProfit = list.reduce((acc, o) => {
        const price = Number(o.price || 0);
@@ -74,9 +77,8 @@ export default function Orders() {
              cost = price * 0.88;
           }
        }
-       const isFulfilled = o.orderStatus?.toLowerCase().includes('fulfil') || 
-                           o.orderStatus?.toLowerCase().includes('success') ||
-                           o.orderStatus?.toLowerCase().includes('complete');
+       const status = o.orderStatus?.toLowerCase() || '';
+       const isFulfilled = status.includes("fulfilled") || status.includes("success") || status.includes("complete");
        return acc + (isFulfilled ? (price - cost) : 0);
     }, 0);
 

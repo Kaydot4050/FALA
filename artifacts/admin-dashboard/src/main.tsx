@@ -5,6 +5,8 @@ import "./index.css";
 
 // Configure API base URL automatically
 const isProduction = import.meta.env.PROD;
-setBaseUrl(import.meta.env.VITE_API_URL || (isProduction ? "" : "http://localhost:5005"));
+// Ensure we NEVER hit localhost in production to avoid PNA prompts
+const defaultUrl = isProduction ? "" : "http://localhost:5005";
+setBaseUrl(import.meta.env.VITE_API_URL || defaultUrl);
 
 createRoot(document.getElementById("root")!).render(<App />);
