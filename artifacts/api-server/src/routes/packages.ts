@@ -9,6 +9,9 @@ const router: IRouter = Router();
 
 router.get("/packages", async (req, res): Promise<void> => {
   try {
+    if (!process.env["DATAMART_API_KEY"]) {
+      throw new Error("Configuration Error: DATAMART_API_KEY is missing in environment variables.");
+    }
     const parsed = GetDataPackagesQueryParams.safeParse(req.query);
     const network = parsed.success ? parsed.data.network : undefined;
     const isAdmin = req.query.admin === "true";
