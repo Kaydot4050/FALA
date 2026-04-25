@@ -46,21 +46,21 @@ const OLD_PRICE_MAP: Record<string, string> = {
   "YELLO_10GB": "45.00",
   "YELLO_20GB": "85.00",
 
-  // AirtelTigo (at)
-  "at_1GB": "5.00",
-  "at_2GB": "9.50",
-  "at_3GB": "14.50",
-  "at_4GB": "18.50",
-  "at_5GB": "23.00",
-  "at_6GB": "27.50",
-  "at_8GB": "35.50",
-  "at_10GB": "43.50",
-  "at_12GB": "50.00",
-  "at_15GB": "62.50",
-  "at_25GB": "99.00",
-  "at_30GB": "120.00",
-  "at_40GB": "159.00",
-  "at_50GB": "200.00",
+  // AirtelTigo (AT_PREMIUM)
+  "AT_PREMIUM_1GB": "5.00",
+  "AT_PREMIUM_2GB": "9.50",
+  "AT_PREMIUM_3GB": "14.50",
+  "AT_PREMIUM_4GB": "18.50",
+  "AT_PREMIUM_5GB": "23.00",
+  "AT_PREMIUM_6GB": "27.50",
+  "AT_PREMIUM_8GB": "35.50",
+  "AT_PREMIUM_10GB": "43.50",
+  "AT_PREMIUM_12GB": "50.00",
+  "AT_PREMIUM_15GB": "62.50",
+  "AT_PREMIUM_25GB": "99.00",
+  "AT_PREMIUM_30GB": "120.00",
+  "AT_PREMIUM_40GB": "159.00",
+  "AT_PREMIUM_50GB": "200.00",
 
   // Telecel
   "TELECEL_10GB": "43.50",
@@ -69,6 +69,8 @@ const OLD_PRICE_MAP: Record<string, string> = {
   "TELECEL_25GB": "98.00",
   "TELECEL_30GB": "122.00",
   "TELECEL_45GB": "155.00",
+  "TELECEL_2GB": "9.49", // Added missing
+  "TELECEL_1GB": "4.99", // Added missing
 };
 
 export function applyCustomPricing(packages: DataPackage[]): DataPackage[] {
@@ -87,7 +89,7 @@ export function applyCustomPricing(packages: DataPackage[]): DataPackage[] {
 
     // If no custom price found, we can optionally apply a default markup or keep original
     // For now, keeping original but logging a warning if it's a known network
-    if (["YELLO", "at", "TELECEL"].includes(pkg.network)) {
+    if (["YELLO", "AT_PREMIUM", "TELECEL"].includes(pkg.network)) {
        logger.debug(`No custom price for ${key}, using original: ${pkg.price}`);
     }
 

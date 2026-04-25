@@ -40,8 +40,15 @@ router.get("/packages", async (req, res): Promise<void> => {
       const rawPackages = data.data as Record<string, any[]>;
       const processedData: Record<string, any[]> = {};
 
-      const overrides = await db.select().from(packageOverridesTable);
-      const overrideMap = new Map(overrides.map(o => [o.id, o]));
+      // Fetch overrides with a safety try-catch
+      let overrideMap = new Map();
+      try {
+        const overrides = await db.select().from(packageOverridesTable);
+        overrideMap = new Map(overrides.map(o => [o.id, o]));
+      } catch (dbError) {
+        console.error("Database overrides fetch failed, using defaults:", dbError);
+        // Continue with empty map if DB is down
+      }
 
       for (const [net, pkgs] of Object.entries(rawPackages)) {
         const pricedPkgs = applyCustomPricing(pkgs);
