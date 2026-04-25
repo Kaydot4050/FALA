@@ -7,12 +7,21 @@ import { packageOverridesTable } from "@workspace/db/schema";
 
 const router: IRouter = Router();
 
+let packageCache: { data: any, timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 router.get("/packages", async (req, res): Promise<void> => {
   try {
-    const parsed = GetDataPackagesQueryParams.safeParse(req.query);
-    const network = parsed.success ? parsed.data.network : undefined;
     const isAdmin = req.query.admin === "true";
 
+    // Use cache only for non-admin requests to ensure users get fresh but cached data
+    // Admin always gets fresh data or we can still cache it but for simplicity:
+    if (!isAdmin && packageCache && (Date.now() - packageCache.timestamp < CACHE_TTL)) {
+      return void res.json(packageCache.data);
+    }
+
+    const parsed = GetDataPackagesQueryParams.safeParse(req.query);
+    const network = parsed.success ? parsed.data.network : undefined;
     const url = network ? `/data-packages?network=${network}` : "/data-packages";
 
     const upstream = await datamartFetch(url);
@@ -56,6 +65,10 @@ router.get("/packages", async (req, res): Promise<void> => {
       }
 
       data.data = processedData;
+      
+      if (!isAdmin) {
+        packageCache = { data, timestamp: Date.now() };
+      }
     }
 
     res.status(upstream.status).json(data);
