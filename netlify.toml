@@ -1,4 +1,7 @@
-# Build settings should be configured in the Netlify UI (Base Directory) for monorepo support
+[build]
+  command = "pnpm build"
+  base = "artifacts/admin-dashboard"
+  publish = "dist"
 
 [functions]
   directory = "artifacts/api-server/netlify/functions"
