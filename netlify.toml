@@ -1,7 +1,6 @@
 [build]
-  command = "pnpm build"
-  base = "artifacts/datamart-dashboard"
-  publish = "dist"
+  command = "pnpm install && pnpm --filter @workspace/datamart-dashboard build"
+  publish = "artifacts/datamart-dashboard/dist"
 
 [functions]
   directory = "artifacts/api-server/netlify/functions"
