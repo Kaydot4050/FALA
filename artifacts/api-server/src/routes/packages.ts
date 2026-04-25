@@ -79,11 +79,16 @@ router.get("/packages", async (req, res): Promise<void> => {
 
     res.status(upstream.status).json(data);
   } catch (error) {
+    const isTimeout = error instanceof Error && error.name === "AbortError";
     console.error("Bundle fetch failed:", error);
-    res.status(504).json({
+    
+    res.status(isTimeout ? 504 : 502).json({
       status: "error",
-      message: "Gateway Timeout: The vendor API took too long to respond.",
-      details: error instanceof Error ? error.message : "Unknown error"
+      message: isTimeout 
+        ? "Gateway Timeout: The vendor API took too long to respond (9s limit)." 
+        : "Bad Gateway: Failed to fetch bundles from the vendor API.",
+      details: error instanceof Error ? error.message : "Unknown error",
+      hint: "Check if DATAMART_API_KEY is correctly set in Netlify environment variables."
     });
   }
 });

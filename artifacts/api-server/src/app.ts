@@ -6,7 +6,17 @@ import { logger } from "./lib/logger";
 const app: Express = express();
 
 app.use((req, res, next) => {
-  logger.info({ method: req.method, url: req.url?.split("?")[0] }, "Incoming Request");
+  // Strip Netlify function path prefix if present
+  const netlifyPrefix = "/.netlify/functions/api";
+  if (req.url.startsWith(netlifyPrefix)) {
+    req.url = req.url.slice(netlifyPrefix.length) || "/";
+  }
+
+  logger.info({ 
+    method: req.method, 
+    url: req.url?.split("?")[0],
+    originalUrl: req.originalUrl 
+  }, "Incoming Request");
   next();
 });
 

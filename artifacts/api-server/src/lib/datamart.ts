@@ -26,7 +26,7 @@ export async function datamartFetch(
 
   // Add 15 second timeout to prevent hanging
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 9000);
 
   try {
     const response = await fetch(url, {
