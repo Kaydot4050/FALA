@@ -5,12 +5,7 @@
 [build.environment]
   PNPM_FLAGS = "--no-frozen-lockfile"
   NODE_VERSION = "22"
-  # IMPORTANT: Set these variables in the Netlify UI (Environment Variables)
-  # DATAMART_API_KEY
-  # DATABASE_URL
-  # PAYSTACK_SECRET_KEY
-  # PAYSTACK_PUBLIC_KEY
-  # DATAMART_WEBHOOK_SECRET
+  # IMPORTANT: Set all Environment Variables in the Netlify Dashboard UI.
 
 [functions]
   directory = "artifacts/api-server/netlify/functions"

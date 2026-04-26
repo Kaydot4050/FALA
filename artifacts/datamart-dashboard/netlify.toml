@@ -5,11 +5,7 @@
 [build.environment]
   PNPM_FLAGS = "--no-frozen-lockfile"
   NODE_VERSION = "22"
-  DATAMART_API_KEY = "6914cd63913675d19ef6de56b2b35162577a4dc568f9ecf70b4830cabb8f903e"
-  DATABASE_URL = "postgresql://neondb_owner:npg_zPdLkof4hb1G@ep-misty-fog-amez4iza-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-  PAYSTACK_SECRET_KEY = "sk_live_a65f2fe37dcbc481da95a844bf39d6a38b976dee"
-  PAYSTACK_PUBLIC_KEY = "pk_live_4e506a9aee26ee613914f65f6a280d2d1b9b50dc"
-  DATAMART_WEBHOOK_SECRET = "40866f0061cf2c41ab515621c17571d0433e99d2dbd23b3383f45bfb098273e0"
+  # IMPORTANT: Set all Environment Variables in the Netlify Dashboard UI.
 
 [functions]
   directory = "../../artifacts/api-server/netlify/functions"
