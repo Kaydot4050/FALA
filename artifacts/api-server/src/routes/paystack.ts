@@ -3,7 +3,8 @@ import { createHmac } from "crypto";
 import { datamartFetch } from "../lib/datamart";
 import { logger } from "../lib/logger";
 import { db, ordersTable } from "@workspace/db";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { PaymentService } from "../services/payment-service";
 
 const router: IRouter = Router();
 
@@ -122,108 +123,6 @@ router.post("/paystack/initialize", async (req, res): Promise<void> => {
   }
 });
 
-/**
- * Shared function to handle order fulfillment via DataMart.
- * Can be triggered by Webhook OR by manual Verification fallback.
- */
-async function handleFulfillment(orderId: string) {
-  try {
-    // 1. Find the order
-    const [order] = await db.select()
-      .from(ordersTable)
-      .where(eq(ordersTable.id, orderId))
-      .limit(1);
-
-    if (!order) {
-      logger.warn({ orderId }, "Order not found for fulfillment");
-      return;
-    }
-
-    if (order.status === "fulfilled" || order.status === "processing") {
-      logger.info({ orderId, status: order.status }, "Order already being processed or fulfilled, skipping to prevent double purchase");
-      return;
-    }
-
-    // 2. Atomically mark as 'processing' to lock out other requests
-    const updated = await db.update(ordersTable)
-      .set({ status: "processing", updatedAt: new Date() })
-      .where(and(
-        eq(ordersTable.id, orderId),
-        ne(ordersTable.status, "fulfilled"),
-        ne(ordersTable.status, "processing")
-      ))
-      .returning();
-
-    // If no row was updated, it means another process (like the webhook) 
-    // already picked up this order. Exit to prevent double-processing.
-    if (updated.length === 0) {
-      logger.info({ orderId }, "Order lock already acquired by another process, skipping");
-      return;
-    }
-
-    // 2. Fulfill the order via DataMart
-    const purchaseBody = {
-      phoneNumber: order.phoneNumber,
-      network: order.network,
-      capacity: order.capacity,
-      gateway: "wallet",
-    };
-
-    const upstream = await datamartFetch("/purchase", {
-      method: "POST",
-      body: JSON.stringify(purchaseBody),
-    });
-
-    const purchaseData = await upstream.json() as any;
-
-    // Use upstream.ok to support any success status code (200-299)
-    if (upstream.ok && purchaseData.data?.orderReference) {
-      // 3. Mark as fulfilled
-      await db.update(ordersTable)
-        .set({
-          status: "fulfilled",
-          orderReference: purchaseData.data.orderReference,
-          updatedAt: new Date(),
-        })
-        .where(eq(ordersTable.id, order.id));
-
-      logger.info({
-        orderId: order.id,
-        datamartRef: purchaseData.data.orderReference,
-        phone: order.phoneNumber,
-      }, "Order fulfilled successfully via DataMart");
-    } else if (upstream.status === 409 || purchaseData.code === "DUPLICATE_ORDER" || purchaseData.message?.toLowerCase().includes("similar order")) {
-      // Special Handling for Duplicate Orders:
-      // This happens if the webhook and the verification poll both trigger fulfillment.
-      // We should treat this as a success and use the existing reference if available.
-      const existingRef = purchaseData.data?.existingReference || order.orderReference;
-      
-      logger.info({ orderId: order.id, ref: existingRef }, "DataMart reported duplicate order - treating as success");
-      
-      await db.update(ordersTable)
-        .set({
-          status: "fulfilled",
-          orderReference: existingRef,
-          updatedAt: new Date(),
-        })
-        .where(eq(ordersTable.id, order.id));
-    } else {
-      // 4. Truly failed (e.g., insufficient balance, invalid number, etc.)
-      await db.update(ordersTable)
-        .set({ status: "failed", updatedAt: new Date() })
-        .where(eq(ordersTable.id, order.id));
-
-      logger.error({
-        orderId: order.id,
-        datamartStatus: upstream.status,
-        datamartResponse: purchaseData,
-      }, "DataMart fulfillment failed");
-    }
-  } catch (error) {
-    logger.error({ error, orderId }, "Error processing order fulfillment");
-  }
-}
-
 router.get("/paystack/webhook", (req, res) => {
   res.send("Paystack Webhook endpoint is reachable via GET. Use POST for actual webhooks.");
 });
@@ -265,31 +164,10 @@ router.post("/paystack/webhook", async (req, res): Promise<void> => {
 
   if (event.event === "charge.success") {
     const reference = event.data.reference;
-
-    // 1. Fetch order from DB
-    const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, reference)).limit(1);
-
-    if (order) {
-      if (order.status === "pending" || order.status === "unpaid") {
-        logger.info({ reference, orderId: order.id }, "Webhook: Payment confirmed. Updating local status to 'paid'");
-        
-        try {
-          await db.update(ordersTable)
-            .set({ status: "paid", updatedAt: new Date() })
-            .where(eq(ordersTable.id, reference));
-          
-          logger.info({ reference }, "Webhook: Status updated to 'paid'. Triggering fulfillment...");
-          await handleFulfillment(reference);
-        } catch (dbErr) {
-          logger.error({ dbErr, reference }, "Webhook: Failed to update order status in database. This might be a connection issue.");
-          // We don't return here because Paystack might retry, or we might want to try fulfillment anyway if possible
-        }
-      } else {
-        logger.info({ reference, currentStatus: order.status }, "Webhook: Order already processed or fulfilled. Ignoring to prevent double delivery.");
-      }
-    } else {
-      logger.error({ reference, event: event.event }, "Webhook CRITICAL: Received success for a transaction reference that does not exist in our database!");
-    }
+    logger.info({ reference }, "Webhook: Payment success event received. Triggering authoritative verification...");
+    
+    // We trigger verifyAndFulfill which handles the direct API check and fulfillment
+    await PaymentService.verifyAndFulfill(reference, "webhook");
   }
 
   // Always respond 200 to Paystack
@@ -311,48 +189,16 @@ router.get("/paystack/verify/:reference", async (req, res): Promise<void> => {
   const secretKey = process.env["PAYSTACK_SECRET_KEY"];
 
   try {
-    // 1. Check local DB first
-    let [order] = await db.select()
-      .from(ordersTable)
-      .where(eq(ordersTable.id, reference))
-      .limit(1);
+    // Attempt immediate verification and fulfillment
+    // This is the "fast-track" for frontend UX
+    const result = await PaymentService.verifyAndFulfill(reference, "frontend");
+
+    // Fetch latest order state for response
+    const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, reference)).limit(1);
 
     if (!order) {
       res.status(404).json({ error: "Order not found" });
       return;
-    }
-
-    // 2. If status is still 'pending', pull status from Paystack API
-    if (order.status === "pending" && secretKey) {
-      logger.info({ reference }, "Local status pending, polling Paystack API for verification");
-      
-      const paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-        headers: { "Authorization": `Bearer ${secretKey}` }
-      });
-      
-      const paystackData = await paystackRes.json() as any;
-      
-      if (paystackData.status && paystackData.data.status === "success") {
-        logger.info({ reference }, "Paystack API confirmed success, updating local status and triggering fulfillment");
-        
-        // Update local status to paid, but ONLY if it's still 'pending'.
-        // This prevents us from overwriting 'processing' or 'fulfilled' status
-        // which was causing the "double/triple delivery" bug.
-        await db.update(ordersTable)
-          .set({ status: "paid", updatedAt: new Date() })
-          .where(and(
-            eq(ordersTable.id, reference),
-            eq(ordersTable.status, "pending")
-          ));
-        
-        // Trigger fulfillment (handleFulfillment has its own internal lock as well)
-        await handleFulfillment(reference);
-
-        // Refetch order to get updated status for response
-        [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, reference)).limit(1);
-      } else {
-        logger.debug({ reference, paystackStatus: paystackData.data?.status }, "Paystack API verify check: not successful yet");
-      }
     }
 
     res.json({
@@ -365,10 +211,11 @@ router.get("/paystack/verify/:reference", async (req, res): Promise<void> => {
         network: order.network,
         capacity: order.capacity,
         amount: order.amount,
+        verified: result.success
       },
     });
   } catch (error) {
-    logger.error({ error, reference }, "Error verifying payment");
+    logger.error({ error, reference }, "Error verifying payment via frontend route");
     res.status(500).json({ error: "Internal server error" });
   }
 });

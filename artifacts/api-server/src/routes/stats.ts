@@ -17,12 +17,12 @@ router.get("/stats", async (_req, res): Promise<void> => {
       costPrice: ordersTable.costPrice,
       network: ordersTable.network,
       capacity: ordersTable.capacity,
-    }).from(ordersTable).where(sql`${ordersTable.status} = 'fulfilled' AND ${ordersTable.createdAt} >= ${today}`);
+    }).from(ordersTable).where(sql`${ordersTable.status} = 'completed' AND ${ordersTable.createdAt} >= ${today}`);
 
-    const [totalOrdersResult] = await db.select({ value: count() }).from(ordersTable).where(sql`${ordersTable.status} = 'fulfilled' AND ${ordersTable.createdAt} >= ${today}`);
+    const [totalOrdersResult] = await db.select({ value: count() }).from(ordersTable).where(sql`${ordersTable.status} = 'completed' AND ${ordersTable.createdAt} >= ${today}`);
     const [totalSpentResult] = await (db.select({ value: sum(ordersTable.amount) })
       .from(ordersTable)
-      .where(sql`${ordersTable.status} = 'fulfilled' AND ${ordersTable.createdAt} >= ${today}`) as any);
+      .where(sql`${ordersTable.status} = 'completed' AND ${ordersTable.createdAt} >= ${today}`) as any);
 
     const [pendingSpentResult] = await (db.select({ value: sum(ordersTable.amount) })
       .from(ordersTable)
@@ -46,16 +46,16 @@ router.get("/stats", async (_req, res): Promise<void> => {
     }, 0);
 
     // All-time stats
-    const [allTimeOrdersResult] = await db.select({ value: count() }).from(ordersTable).where(eq(ordersTable.status, 'fulfilled'));
+    const [allTimeOrdersResult] = await db.select({ value: count() }).from(ordersTable).where(eq(ordersTable.status, 'completed'));
     const [allTimeSpentResult] = await (db.select({ value: sum(ordersTable.amount) })
       .from(ordersTable)
-      .where(eq(ordersTable.status, 'fulfilled')) as any);
+      .where(eq(ordersTable.status, 'completed')) as any);
     const allSuccessfulAllTime = await db.select({
       amount: ordersTable.amount,
       costPrice: ordersTable.costPrice,
       network: ordersTable.network,
       capacity: ordersTable.capacity
-    }).from(ordersTable).where(eq(ordersTable.status, 'fulfilled'));
+    }).from(ordersTable).where(eq(ordersTable.status, 'completed'));
 
     const allTimeProfit = allSuccessfulAllTime.reduce((acc, order) => {
       const price = Number(order.amount);
@@ -80,13 +80,13 @@ router.get("/stats", async (_req, res): Promise<void> => {
       network: ordersTable.network,
       totalOrders: count(),
       totalSpent: sum(ordersTable.amount),
-    }).from(ordersTable).where(eq(ordersTable.status, 'fulfilled')).groupBy(ordersTable.network) as any);
+    }).from(ordersTable).where(eq(ordersTable.status, 'completed')).groupBy(ordersTable.network) as any);
 
     // Heuristic: Sum of capacities for totalGB
     const totalGB = totalOrders * 2;
 
     // Count unique customers
-    const [customerCountResult] = await db.select({ value: count(sql`DISTINCT ${ordersTable.phoneNumber}`) }).from(ordersTable).where(eq(ordersTable.status, 'fulfilled'));
+    const [customerCountResult] = await db.select({ value: count(sql`DISTINCT ${ordersTable.phoneNumber}`) }).from(ordersTable).where(eq(ordersTable.status, 'completed'));
     const totalCustomers = Number(customerCountResult?.value || 0);
 
     res.json({

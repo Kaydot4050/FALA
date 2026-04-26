@@ -47,7 +47,7 @@ router.get("/order/:reference", async (req, res): Promise<void> => {
         network: local.network,
         capacity: local.capacity,
         price: parseFloat(local.amount.toString()),
-        orderStatus: local.status === 'paid' ? 'processing' : local.status,
+        orderStatus: local.status,
         createdAt: local.createdAt.toISOString()
       });
       return;

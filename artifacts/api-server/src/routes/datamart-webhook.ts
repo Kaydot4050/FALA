@@ -44,9 +44,9 @@ router.post("/datamart/webhook", async (req, res): Promise<void> => {
     try {
       // Try to find the order by DataMart reference and update its status
       const statusMap: Record<string, string> = {
-        "order.completed": "fulfilled",
+        "order.completed": "completed",
         "order.failed": "failed",
-        "order.processing": "paid",
+        "order.processing": "processing",
         "order.created": "pending",
       };
 

@@ -57,9 +57,10 @@ export default function PurchaseHistory() {
                 </tr>
               ) : (
                 purchases.map((p) => {
-                  const isCompleted = p.orderStatus === "COMPLETED" || p.orderStatus === "DELIVERED";
-                  const isFailed = p.orderStatus === "FAILED";
-                  const isPending = p.orderStatus === "PENDING" || p.orderStatus === "PROCESSING";
+                  const status = p.orderStatus?.toLowerCase() || "";
+                  const isCompleted = status === "completed" || status === "delivered" || status === "success" || status === "fulfilled";
+                  const isFailed = status === "failed" || status === "cancel";
+                  const isPending = status === "pending" || status === "processing";
 
                   return (
                     <tr key={p.id} className="hover:bg-muted/30 transition-colors">

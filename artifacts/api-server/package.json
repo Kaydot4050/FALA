@@ -18,12 +18,14 @@
     "drizzle-orm": "catalog:",
     "express": "^5",
     "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0",
     "pino": "^9",
     "pino-http": "^10",
     "serverless-http": "^4.0.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@netlify/functions": "^5.2.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",

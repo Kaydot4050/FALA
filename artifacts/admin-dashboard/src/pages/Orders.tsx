@@ -43,9 +43,9 @@ export default function Orders() {
         (o.network && o.network.toUpperCase().includes(activeNetwork.toUpperCase()));
 
       const matchesStatus = activeStatus === "ALL" ||
-        (activeStatus === "SUCCESS" && (status.includes("fulfilled") || status.includes("success") || status.includes("complete"))) ||
-        (activeStatus === "FAILED" && (status.includes("fail") || status.includes("cancel"))) ||
-        (activeStatus === "PENDING" && (!status.includes("fulfilled") && !status.includes("success") && !status.includes("complete") && !status.includes("fail") && !status.includes("cancel")));
+        (activeStatus === "SUCCESS" && (status === "completed" || status === "fulfilled" || status === "success")) ||
+        (activeStatus === "FAILED" && (status === "failed" || status === "cancel")) ||
+        (activeStatus === "PENDING" && (status === "pending" || status === "processing" || status === "unpaid"));
 
       return matchesSearch && matchesNetwork && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -58,13 +58,12 @@ export default function Orders() {
 
     const completedCount = list.filter(o => {
       const status = o.orderStatus?.toLowerCase() || '';
-      return status.includes("fulfilled") || status.includes("success") || status.includes("complete");
+      return status === "completed" || status === "fulfilled" || status === "success";
     }).length;
 
     const pendingCount = list.filter(o => {
       const status = o.orderStatus?.toLowerCase() || '';
-      return !status.includes("fulfilled") && !status.includes("success") && !status.includes("complete") && 
-             !status.includes("fail") && !status.includes("cancel");
+      return status === "pending" || status === "processing" || status === "unpaid";
     }).length;
     
     const totalProfit = list.reduce((acc, o) => {
@@ -78,7 +77,7 @@ export default function Orders() {
           }
        }
        const status = o.orderStatus?.toLowerCase() || '';
-       const isFulfilled = status.includes("fulfilled") || status.includes("success") || status.includes("complete");
+       const isFulfilled = status === "completed" || status === "fulfilled" || status === "success";
        return acc + (isFulfilled ? (price - cost) : 0);
     }, 0);
 
@@ -257,7 +256,7 @@ function StatsCard({ label, value, color = "text-foreground" }: { label: string,
 
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase() || '';
-  if (s.includes("fulfilled") || s.includes("success") || s.includes("complete")) {
+  if (s === "completed" || s === "fulfilled" || s === "success") {
     return (
       <div className="inline-flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
         <div className="h-1 w-1 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
@@ -265,7 +264,15 @@ function StatusBadge({ status }: { status: string }) {
       </div>
     );
   }
-  if (s.includes("fail") || s.includes("cancel")) {
+  if (s === "processing") {
+    return (
+      <div className="inline-flex items-center gap-1.5 text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-bounce shadow-[0_0_5px_rgba(59,130,246,0.5)]" />
+        <span className="text-[9px] font-black uppercase tracking-tight">Processing</span>
+      </div>
+    );
+  }
+  if (s === "failed" || s === "cancel") {
     return (
       <div className="inline-flex items-center gap-1.5 text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
         <div className="h-1 w-1 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
