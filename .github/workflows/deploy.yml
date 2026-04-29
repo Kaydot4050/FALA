@@ -29,7 +29,21 @@ jobs:
 
       # 1. Build the Backend API Server
       - name: Build API Server
-        run: pnpm --filter @workspace/api-server run build
+        run: |
+          pnpm --filter @workspace/api-server run build
+          # Clean package.json for Namecheap (removes pnpm workspace: dependencies)
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('./artifacts/api-server/package.json', 'utf8'));
+            if (pkg.dependencies) {
+              Object.keys(pkg.dependencies).forEach(key => {
+                if (pkg.dependencies[key].startsWith('workspace:')) {
+                  delete pkg.dependencies[key];
+                }
+              });
+            }
+            fs.writeFileSync('./artifacts/api-server/package.json', JSON.stringify(pkg, null, 2));
+          "
 
       # 2. Build the Frontend Dashboard
       # Assuming your API server will be hosted at https://api.falaadeals.shop
