@@ -34,15 +34,20 @@ jobs:
           # Clean package.json for Namecheap (removes pnpm workspace: dependencies)
           node -e "
             const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('./artifacts/api-server/package.json', 'utf8'));
+            const path = './artifacts/api-server/package.json';
+            const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+            console.log('Cleaning package.json dependencies...');
             if (pkg.dependencies) {
-              Object.keys(pkg.dependencies).forEach(key => {
-                if (pkg.dependencies[key].startsWith('workspace:')) {
+              for (const key in pkg.dependencies) {
+                if (pkg.dependencies[key].includes('workspace:')) {
+                  console.log('Removing workspace dependency:', key);
                   delete pkg.dependencies[key];
                 }
-              });
+              }
             }
-            fs.writeFileSync('./artifacts/api-server/package.json', JSON.stringify(pkg, null, 2));
+            if (pkg.devDependencies) delete pkg.devDependencies;
+            fs.writeFileSync(path, JSON.stringify(pkg, null, 2));
+            console.log('Cleaned package.json saved.');
           "
 
       # 2. Build the Frontend Dashboard
