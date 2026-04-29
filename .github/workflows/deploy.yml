@@ -39,8 +39,9 @@ jobs:
             console.log('Cleaning package.json dependencies...');
             if (pkg.dependencies) {
               for (const key in pkg.dependencies) {
-                if (pkg.dependencies[key].includes('workspace:')) {
-                  console.log('Removing workspace dependency:', key);
+                const val = pkg.dependencies[key];
+                if (val.includes('workspace:') || val.includes('catalog:')) {
+                  console.log('Removing pnpm dependency:', key);
                   delete pkg.dependencies[key];
                 }
               }
