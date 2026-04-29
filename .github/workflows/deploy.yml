@@ -47,6 +47,8 @@ jobs:
               }
             }
             if (pkg.devDependencies) delete pkg.devDependencies;
+            console.log('Final package.json content:');
+            console.log(JSON.stringify(pkg, null, 2));
             fs.writeFileSync(path, JSON.stringify(pkg, null, 2));
             console.log('Cleaned package.json saved.');
           "
