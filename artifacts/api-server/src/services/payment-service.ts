@@ -1,7 +1,7 @@
 import { db, ordersTable, orderEventsTable } from "@workspace/db";
-import { eq, and, ne, sql } from "drizzle-orm";
-import { datamartFetch } from "../lib/datamart";
+import { eq, and, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { SupplierService } from "./supplier-service";
 
 export type PaymentStatus = "pending" | "processing" | "completed" | "failed";
 
@@ -22,49 +22,47 @@ export class PaymentService {
         return { success: false, message: "Order not found" };
       }
 
-      // 2. Check if already completed or processing
+      // 2. Idempotency Check: Already completed?
       if (order.status === "completed") {
-        logger.info({ orderId, source }, `${logPrefix} Order already completed, skipping`);
+        logger.info({ orderId, source }, `${logPrefix} Order already completed, skipping fulfillment`);
         return { success: true, message: "Order already completed", status: "completed" };
       }
 
-      if (order.status === "processing" && source !== "reconciler") {
-        // If it's already processing by another trigger, we wait/skip
-        // Reconciler is allowed to retry "stuck" processing orders
-        logger.info({ orderId, source }, `${logPrefix} Order is already being processed by another channel`);
-        return { success: true, message: "Order is processing", status: "processing" };
+      // 3. Strict Fulfillment Lock Check
+      if (order.fulfillmentStarted) {
+        logger.info({ orderId, source }, `${logPrefix} Fulfillment already started/processing by another channel`);
+        return { success: true, message: "Fulfillment in progress", status: order.status };
       }
 
-      // 3. Atomically acquire lock (transition to 'processing')
-      // For reconciler, we only pick it up if it's been 'processing' for too long, 
-      // but here we just ensure we transition it if it's 'pending'.
-      // If it's already 'processing' and source is 'reconciler', we continue but we should log it.
-      
-      const updateCondition = source === "reconciler" 
-        ? eq(ordersTable.id, orderId) // Reconciler can override to retry
-        : and(
-            eq(ordersTable.id, orderId), 
-            sql`${ordersTable.status} != 'completed'`, 
-            sql`${ordersTable.status} != 'processing'`
-          );
-
+      // 4. Atomic Lock Acquisition
+      // We use a single update statement with a strict WHERE clause to ensure only one process wins
       const [lockedOrder] = await db.update(ordersTable)
         .set({ 
           status: "processing", 
+          fulfillmentStarted: true,
           updatedAt: new Date(),
-          auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ timestamp: new Date().toISOString(), event: `Transition to processing via ${source}` }])}::jsonb` as any
+          auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ 
+            timestamp: new Date().toISOString(), 
+            event: `Lock acquired via ${source}`,
+            source 
+          }])}::jsonb` as any
         })
-        .where(updateCondition)
+        .where(and(
+          eq(ordersTable.id, orderId),
+          eq(ordersTable.status, "pending"), // Only transition from pending
+          eq(ordersTable.fulfillmentStarted, false) // Double-check lock
+        ))
         .returning();
 
       if (!lockedOrder) {
-        logger.info({ orderId, source }, `${logPrefix} Could not acquire lock, likely already processed`);
-        return { success: true, message: "Order processed by another channel", status: "completed" };
+        // If we couldn't lock, it means another process just won the race
+        logger.info({ orderId, source }, `${logPrefix} Could not acquire lock, already being processed`);
+        return { success: true, message: "Fulfillment locked by another process", status: "processing" };
       }
 
       await this.recordEvent(orderId, "verification_started", { source });
 
-      // 4. Verify payment with Paystack
+      // 5. Verify payment with Paystack
       const secretKey = process.env["PAYSTACK_SECRET_KEY"];
       if (!secretKey) {
         throw new Error("PAYSTACK_SECRET_KEY not configured");
@@ -82,18 +80,23 @@ export class PaymentService {
         
         await this.recordEvent(orderId, "verification_failed", { paystackData });
         
-        // If it's not success, we revert to pending (unless it's a hard failure like 'abandoned' or 'failed')
-        const finalStatus = (paystackStatus === "failed" || paystackStatus === "reversed") ? "failed" : "pending";
+        // If it's a definitive failure, mark as failed. Otherwise, keep as processing or revert if safe.
+        // For security, if Paystack says it's not success, we STOP.
+        const isDefinitiveFailure = paystackStatus === "failed" || paystackStatus === "reversed";
         
         await db.update(ordersTable)
           .set({ 
-            status: finalStatus, 
+            status: isDefinitiveFailure ? "failed" : "pending",
+            fulfillmentStarted: false, // Release lock if it wasn't a real payment
             updatedAt: new Date(),
-            auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ timestamp: new Date().toISOString(), event: `Verification failed (${paystackStatus}), reverted to ${finalStatus}` }])}::jsonb` as any
+            auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ 
+              timestamp: new Date().toISOString(), 
+              event: `Verification failed (${paystackStatus}), lock released` 
+            }])}::jsonb` as any
           })
           .where(eq(ordersTable.id, orderId));
 
-        return { success: false, message: `Payment not confirmed: ${paystackStatus}`, status: finalStatus };
+        return { success: false, message: `Payment not confirmed: ${paystackStatus}`, status: isDefinitiveFailure ? "failed" : "pending" };
       }
 
       // Verify amount (Paystack uses kobo/pesewas)
@@ -117,61 +120,62 @@ export class PaymentService {
 
       await this.recordEvent(orderId, "payment_verified", { paystackRef: paystackData.data.reference });
 
-      // 5. Fulfill Order via DataMart
-      logger.info({ orderId, phone: order.phoneNumber }, `${logPrefix} Triggering fulfillment via DataMart`);
+      // 6. Fulfill Order via SupplierService
+      logger.info({ orderId, phone: order.phoneNumber }, `${logPrefix} Triggering fulfillment via SupplierService`);
       
-      const purchaseBody = {
-        phoneNumber: order.phoneNumber,
-        network: order.network,
-        capacity: order.capacity,
-        gateway: "wallet",
-      };
+      const fulfillment = await SupplierService.fulfill(orderId);
 
-      const dmRes = await datamartFetch("/purchase", {
-        method: "POST",
-        body: JSON.stringify(purchaseBody),
-      });
-
-      const dmData = await dmRes.json() as any;
-      const isDuplicate = dmRes.status === 409 || dmData.code === "DUPLICATE_ORDER" || dmData.message?.toLowerCase().includes("similar order");
-
-      if (dmRes.ok || isDuplicate) {
-        const orderRef = dmData.data?.orderReference || dmData.data?.existingReference || "ALREADY_FULFILLED";
+      if (fulfillment.success) {
+        const finalStatus = (fulfillment as any).isOnHold ? "on_hold" : "completed";
         
         await db.update(ordersTable)
           .set({
-            status: "completed",
-            orderReference: orderRef,
+            status: finalStatus,
+            orderReference: fulfillment.orderReference,
+            duplicateDetectionFlag: fulfillment.isDuplicate,
             updatedAt: new Date(),
-            auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ timestamp: new Date().toISOString(), event: isDuplicate ? "Fulfillment confirmed (duplicate)" : "Fulfillment successful" }])}::jsonb` as any
+            auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ 
+              timestamp: new Date().toISOString(), 
+              event: (fulfillment as any).isOnHold 
+                ? "Fulfillment ON HOLD by supplier (potential duplicate)" 
+                : (fulfillment.isDuplicate ? "Fulfillment confirmed (duplicate)" : "Fulfillment successful"),
+              ref: fulfillment.orderReference
+            }])}::jsonb` as any
           })
           .where(eq(ordersTable.id, orderId));
 
-        await this.recordEvent(orderId, "completion", { orderReference: orderRef, isDuplicate });
+        await this.recordEvent(orderId, (fulfillment as any).isOnHold ? "on_hold" : "completion", { 
+          orderReference: fulfillment.orderReference, 
+          isDuplicate: fulfillment.isDuplicate 
+        });
         
-        logger.info({ orderId, orderRef }, `${logPrefix} Order completed successfully`);
-        return { success: true, message: "Order completed", status: "completed" };
+        logger.info({ orderId, orderRef: fulfillment.orderReference, finalStatus }, `${logPrefix} Order processed with status: ${finalStatus}`);
+        return { success: true, message: `Order ${finalStatus}`, status: finalStatus };
       } else {
-        // Fulfillment failed
-        logger.error({ orderId, dmStatus: dmRes.status, dmData }, `${logPrefix} DataMart fulfillment failed`);
+        // Fulfillment failed at supplier
+        logger.error({ orderId, error: fulfillment.error }, `${logPrefix} Supplier fulfillment failed`);
         
-        await this.recordEvent(orderId, "delivery_failed", { dmStatus: dmRes.status, dmData });
+        await this.recordEvent(orderId, "delivery_failed", { error: fulfillment.error });
 
+        // We keep fulfillmentStarted = true to prevent automatic retries by the same mechanism
+        // Manual intervention or a specialized reconciler would be needed to reset.
         await db.update(ordersTable)
           .set({ 
             status: "failed", 
             updatedAt: new Date(),
-            auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ timestamp: new Date().toISOString(), event: "Fulfillment failed at DataMart" }])}::jsonb` as any
+            auditLogs: sql`${ordersTable.auditLogs} || ${JSON.stringify([{ 
+              timestamp: new Date().toISOString(), 
+              event: `Fulfillment failed: ${fulfillment.error}` 
+            }])}::jsonb` as any
           })
           .where(eq(ordersTable.id, orderId));
 
-        return { success: false, message: "Fulfillment failed", status: "failed" };
+        return { success: false, message: fulfillment.error || "Fulfillment failed", status: "failed" };
       }
 
     } catch (error) {
       logger.error({ orderId, error: (error as Error).message }, `${logPrefix} Critical error in verifyAndFulfill`);
       
-      // Attempt to record failure
       try {
         await this.recordEvent(orderId, "system_error", { error: (error as Error).message });
       } catch (e) {}

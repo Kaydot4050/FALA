@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Users, 
@@ -15,7 +16,8 @@ import {
   Mail,
   Filter,
   ArrowRightLeft,
-  Download
+  Download,
+  MessageSquare
 } from "lucide-react";
 import { 
   Table, 
@@ -42,7 +44,17 @@ interface Customer {
 }
 
 export default function Customers() {
+  const [activeTab, setActiveTab] = useState<'customers' | 'insights' | 'suggestions'>('customers');
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Fetch Suggestions
+  const { data: suggestions = [], isLoading: isLoadingSuggestions, refetch: refetchSuggestions } = useQuery({
+    queryKey: ["admin-suggestions"],
+    queryFn: async () => {
+      const res = await customFetch<any>("/api/admin/suggestions");
+      return res.data || [];
+    }
+  });
 
   // Fetch Customers
   const { data: customersData, isLoading, refetch } = useQuery({
@@ -110,6 +122,29 @@ export default function Customers() {
     return { label: 'BRONZE', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20', icon: Award };
   };
 
+  const handleDeleteSuggestion = async (id: number) => {
+    try {
+      await customFetch(`/api/admin/suggestions/${id}`, { method: 'DELETE' });
+      toast.success("Suggestion deleted");
+      refetchSuggestions();
+    } catch (error) {
+      toast.error("Failed to delete suggestion");
+    }
+  };
+
+  const handleUpdateStatus = async (id: number, status: string) => {
+    try {
+      await customFetch(`/api/admin/suggestions/${id}`, { 
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+      toast.success(`Marked as ${status}`);
+      refetchSuggestions();
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-8 flex flex-col items-center justify-center min-h-[400px] gap-4">
@@ -122,14 +157,36 @@ export default function Customers() {
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       {/* ── Tabs Header ── */}
-      <div className="flex items-center gap-4">
-        <button className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 flex items-center gap-2">
+      <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <button 
+          onClick={() => setActiveTab('customers')}
+          className={cn(
+            "px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap",
+            activeTab === 'customers' ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-card border border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
           <Users size={16} />
           Customers View
         </button>
-        <button className="bg-card border border-border px-6 py-2.5 rounded-xl font-bold text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center gap-2">
+        <button 
+          onClick={() => setActiveTab('insights')}
+          className={cn(
+            "px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap",
+            activeTab === 'insights' ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-card border border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
           <ArrowRightLeft size={16} />
           Audience Insights
+        </button>
+        <button 
+          onClick={() => setActiveTab('suggestions')}
+          className={cn(
+            "px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap",
+            activeTab === 'suggestions' ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-card border border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
+          <MessageSquare size={16} />
+          Customer Suggestions
         </button>
       </div>
 
@@ -141,125 +198,177 @@ export default function Customers() {
         <StatsCard label="Retention" value={`${stats.retention}%`} />
       </div>
 
-      <div className="space-y-6">
-        {/* ── Filter Controls ── */}
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-            {['All', 'Gold', 'Silver', 'Bronze'].map((f) => (
-              <button 
-                key={f}
-                className={cn(
-                  "px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap border bg-background/50 text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                {f}
-              </button>
-            ))}
+      {activeTab === 'customers' && (
+        <div className="space-y-6">
+          {/* ── Filter Controls ── */}
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+              {['All', 'Gold', 'Silver', 'Bronze'].map((f) => (
+                <button 
+                  key={f}
+                  className={cn(
+                    "px-6 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap border bg-background/50 text-muted-foreground border-border hover:bg-muted"
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input 
+                placeholder="Search customers..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-11 pr-4 text-[11px] font-medium placeholder:text-slate-600 focus:outline-none focus:border-primary/30 transition-all" 
+              />
+            </div>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <Button onClick={handleExport} variant="outline" className="flex-1 md:flex-none h-10 rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 text-primary text-[10px]">
+                <Download size={14} /> EXPORT
+              </Button>
+              <Button onClick={() => refetch()} variant="ghost" className="flex-1 md:flex-none h-10 rounded-xl font-bold gap-2 text-[10px]">
+                <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} /> REFRESH
+              </Button>
+            </div>
           </div>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input 
-              placeholder="Search customers..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-11 pr-4 text-[11px] font-medium placeholder:text-slate-600 focus:outline-none focus:border-primary/30 transition-all" 
-            />
-          </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button onClick={handleExport} variant="outline" className="flex-1 md:flex-none h-10 rounded-xl font-bold gap-2 border-primary/20 hover:bg-primary/5 text-primary text-[10px]">
-              <Download size={14} /> EXPORT
-            </Button>
-            <Button onClick={() => refetch()} variant="ghost" className="flex-1 md:flex-none h-10 rounded-xl font-bold gap-2 text-[10px]">
-              <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} /> REFRESH
-            </Button>
-          </div>
-        </div>
 
-        {/* ── Table Container ── */}
-        <div className="overflow-hidden rounded-xl border border-border/30">
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-muted/30">
-              <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer Alias</TableHead>
-                <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Number</TableHead>
-                <TableHead className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tier</TableHead>
-                <TableHead className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">Order Count</TableHead>
-                <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Value</TableHead>
-                <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Last Seen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCustomers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 opacity-30">
-                      <Users size={48} />
-                      <p className="font-black text-sm uppercase tracking-tighter">No customers matching your search</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCustomers.map((customer, i) => {
-                  const tier = getTier(customer.totalOrders);
-                  const TierIcon = tier.icon;
-                  
-                  return (
-                    <TableRow key={customer.phoneNumber} className="group border-border/20 hover:bg-white/[0.02] transition-colors">
-                      <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                            <User size={14} />
-                          </div>
-                          <div>
-                            <div className="font-black text-[13px] tracking-tight text-foreground capitalize">{customer.customerName || 'Anonymous User'}</div>
-                            <div className="text-[10px] font-bold text-muted-foreground capitalize opacity-50">Verified User</div>
-                          </div>
+          {/* ── Table Container ── */}
+          <div className="overflow-hidden rounded-xl border border-border/30">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer Alias</TableHead>
+                    <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Number</TableHead>
+                    <TableHead className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tier</TableHead>
+                    <TableHead className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">Order Count</TableHead>
+                    <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Value</TableHead>
+                    <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Last Seen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-64 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 opacity-30">
+                          <Users size={48} />
+                          <p className="font-black text-sm uppercase tracking-tighter">No customers matching your search</p>
                         </div>
-                      </TableCell>
-                      
-                      <TableCell className="px-6 py-4 font-mono text-xs tracking-wider text-slate-300 font-bold">
-                        {customer.phoneNumber}
-                      </TableCell>
-                      
-                      <TableCell className="px-6 py-4 text-center">
-                        <div className={cn(
-                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black border tracking-wider",
-                          tier.color
-                        )}>
-                          <TierIcon size={10} />
-                          {tier.label}
-                        </div>
-                      </TableCell>
-                      
-                      <TableCell className="px-6 py-4 text-center">
-                        <div className="flex flex-col items-center">
-                           <span className="text-sm font-black text-foreground">{customer.totalOrders}</span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="px-6 py-4 text-right">
-                        <div className="flex flex-col items-end">
-                           <span className="text-sm font-black text-emerald-500">₵{customer.totalSpent}</span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="px-6 py-4 text-right text-xs font-bold text-muted-foreground whitespace-nowrap">
-                         {formatDate(customer.lastOrderAt)}
                       </TableCell>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                  ) : (
+                    filteredCustomers.map((customer) => {
+                      const tier = getTier(customer.totalOrders);
+                      const TierIcon = tier.icon;
+                      return (
+                        <TableRow key={customer.phoneNumber} className="group border-border/20 hover:bg-white/[0.02] transition-colors">
+                          <TableCell className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                <User size={14} />
+                              </div>
+                              <div>
+                                <div className="font-black text-[13px] tracking-tight text-foreground capitalize">{customer.customerName || 'Anonymous User'}</div>
+                                <div className="text-[10px] font-bold text-muted-foreground capitalize opacity-50">Verified User</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 font-mono text-xs tracking-wider text-slate-300 font-bold">
+                            {customer.phoneNumber}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-center">
+                            <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black border tracking-wider", tier.color)}>
+                              <TierIcon size={10} />
+                              {tier.label}
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-center text-sm font-black text-foreground">
+                            {customer.totalOrders}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right text-sm font-black text-emerald-500">
+                            ₵{customer.totalSpent}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right text-xs font-bold text-muted-foreground whitespace-nowrap">
+                            {formatDate(customer.lastOrderAt)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'suggestions' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {isLoadingSuggestions ? (
+            <div className="col-span-full h-64 flex flex-col items-center justify-center gap-4 opacity-30">
+              <RefreshCw className="h-12 w-12 animate-spin" />
+              <p className="font-black text-sm uppercase tracking-tighter">Loading suggestions...</p>
+            </div>
+          ) : suggestions.length === 0 ? (
+            <div className="col-span-full h-64 flex flex-col items-center justify-center gap-4 opacity-30">
+              <MessageSquare size={48} />
+              <p className="font-black text-sm uppercase tracking-tighter">No suggestions yet</p>
+            </div>
+          ) : (
+            suggestions.map((s: any) => (
+              <Card key={s.id} className="bg-card/40 border-border/50 backdrop-blur-xl group hover:border-primary/30 transition-all overflow-hidden relative">
+                <div className={cn(
+                  "absolute top-0 left-0 w-1 h-full",
+                  s.status === 'New' ? "bg-primary" : s.status === 'Reviewed' ? "bg-emerald-500" : "bg-amber-500"
+                )} />
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400">
+                        <User size={18} />
+                      </div>
+                      <div>
+                        <div className="font-black text-sm text-white">{s.name}</div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{formatDate(s.createdAt)}</div>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter border",
+                      s.status === 'New' ? "bg-primary/10 text-primary border-primary/20" : 
+                      s.status === 'Reviewed' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : 
+                      "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    )}>
+                      {s.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-300 font-medium leading-relaxed italic">
+                    "{s.text}"
+                  </p>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button onClick={() => handleDeleteSuggestion(s.id)} variant="ghost" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase hover:bg-white/5">Delete</Button>
+                    {s.status !== 'Reviewed' && (
+                      <Button onClick={() => handleUpdateStatus(s.id, 'Reviewed')} variant="outline" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase border-primary/20 text-primary hover:bg-primary/5">Mark Reviewed</Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === 'insights' && (
+        <div className="bg-card/30 border border-border/30 rounded-3xl p-12 text-center space-y-4">
+          <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6">
+            <TrendingUp size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-white">Audience Insights coming soon</h2>
+          <p className="text-muted-foreground max-w-sm mx-auto text-sm">We're building advanced analytics to help you understand your customers' buying patterns better.</p>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
 }
 
 function StatsCard({ label, value, color = "text-foreground" }: { label: string, value: string | number, color?: string }) {

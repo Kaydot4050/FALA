@@ -58,7 +58,7 @@ export default function Status() {
            </div>
            <div className="flex items-center justify-between py-3 border-b border-border">
               <span className="text-sm font-medium text-muted-foreground">API Base URL</span>
-              <span className="text-xs font-mono">http://localhost:5005</span>
+              <span className="text-xs font-mono">http://localhost:5006</span>
            </div>
            <div className="flex items-center justify-between py-3">
               <span className="text-sm font-medium text-muted-foreground">Frontend Port</span>

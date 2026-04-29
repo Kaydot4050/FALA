@@ -18,16 +18,17 @@ export interface DataPackage {
   mb: number;
   network: string;
   price: number;
-  oldPrice?: number;
-  showOldPrice?: boolean;
-  inStock?: boolean;
-  isHidden?: boolean;
+  inStock: boolean;
+  /** @nullable */
+  oldPrice?: number | null;
+  showOldPrice: boolean;
 }
 
 export type DataPackagesResponseData = {
   YELLO?: DataPackage[];
   TELECEL?: DataPackage[];
   AT_PREMIUM?: DataPackage[];
+  at?: DataPackage[];
 };
 
 export interface DataPackagesResponse {
@@ -43,6 +44,7 @@ export const PurchaseRequestNetwork = {
   YELLO: "YELLO",
   TELECEL: "TELECEL",
   AT_PREMIUM: "AT_PREMIUM",
+  at: "at",
 } as const;
 
 export interface PurchaseRequest {
@@ -197,6 +199,7 @@ export const BulkOrderItemNetwork = {
   YELLO: "YELLO",
   TELECEL: "TELECEL",
   AT_PREMIUM: "AT_PREMIUM",
+  at: "at",
 } as const;
 
 export interface BulkOrderItem {
@@ -277,14 +280,13 @@ export interface PurchaseRecord {
   price: number;
   orderStatus: string;
   orderReference: string;
+  customerName?: string;
+  costPrice?: number;
   /** @nullable */
   balanceBefore?: number | null;
   /** @nullable */
   balanceAfter?: number | null;
   createdAt: string;
-  source: string;
-  customerName?: string;
-  costPrice?: string | null;
 }
 
 export interface PurchaseHistoryData {
@@ -322,11 +324,8 @@ export interface UsageStatsData {
   totalSpent: number;
   totalGB: number;
   successRate: number;
-  allTimeOrders?: number;
-  allTimeSpent?: number;
-  allTimeProfit?: number;
-  totalProfit?: number;
-  totalCustomers?: number;
+  pendingSpent: number;
+  allTimeSpent: number;
   networkBreakdown?: NetworkStat[];
   recentActivity?: PurchaseRecord[];
 }
@@ -392,6 +391,138 @@ export interface WithdrawalStatusResponse {
   data?: WithdrawalStatusData;
 }
 
+export type PopupType = (typeof PopupType)[keyof typeof PopupType];
+
+export const PopupType = {
+  promotional: "promotional",
+  notice: "notice",
+  warning: "warning",
+  update: "update",
+  maintenance: "maintenance",
+} as const;
+
+export type PopupTrigger = (typeof PopupTrigger)[keyof typeof PopupTrigger];
+
+export const PopupTrigger = {
+  load: "load",
+  delay: "delay",
+  scroll: "scroll",
+  exit: "exit",
+} as const;
+
+export type PopupFrequency =
+  (typeof PopupFrequency)[keyof typeof PopupFrequency];
+
+export const PopupFrequency = {
+  once: "once",
+  every_visit: "every_visit",
+  once_per_day: "once_per_day",
+} as const;
+
+export type PopupSettings = { [key: string]: unknown };
+
+export interface Popup {
+  id?: string;
+  type?: PopupType;
+  title?: string;
+  message?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  priority?: number;
+  startTime?: string;
+  endTime?: string;
+  pages?: string | string[];
+  trigger?: PopupTrigger;
+  triggerValue?: number;
+  frequency?: PopupFrequency;
+  settings?: PopupSettings;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type PopupRequestType =
+  (typeof PopupRequestType)[keyof typeof PopupRequestType];
+
+export const PopupRequestType = {
+  promotional: "promotional",
+  notice: "notice",
+  warning: "warning",
+  update: "update",
+  maintenance: "maintenance",
+} as const;
+
+export type PopupRequestTrigger =
+  (typeof PopupRequestTrigger)[keyof typeof PopupRequestTrigger];
+
+export const PopupRequestTrigger = {
+  load: "load",
+  delay: "delay",
+  scroll: "scroll",
+  exit: "exit",
+} as const;
+
+export type PopupRequestFrequency =
+  (typeof PopupRequestFrequency)[keyof typeof PopupRequestFrequency];
+
+export const PopupRequestFrequency = {
+  once: "once",
+  every_visit: "every_visit",
+  once_per_day: "once_per_day",
+} as const;
+
+export type PopupRequestSettings = { [key: string]: unknown };
+
+export interface PopupRequest {
+  type?: PopupRequestType;
+  title?: string;
+  message?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  priority?: number;
+  startTime?: string;
+  endTime?: string;
+  pages?: string | string[];
+  trigger?: PopupRequestTrigger;
+  triggerValue?: number;
+  frequency?: PopupRequestFrequency;
+  settings?: PopupRequestSettings;
+}
+
+export interface PopupResponse {
+  status?: string;
+  data?: Popup;
+}
+
+export type AdminPopupAnalytics = {
+  impressions?: number;
+  clicks?: number;
+  dismissals?: number;
+};
+
+export type AdminPopup = Popup & {
+  analytics?: AdminPopupAnalytics;
+};
+
+export type PopupAnalyticsRequestEvent =
+  (typeof PopupAnalyticsRequestEvent)[keyof typeof PopupAnalyticsRequestEvent];
+
+export const PopupAnalyticsRequestEvent = {
+  impression: "impression",
+  click: "click",
+  dismiss: "dismiss",
+} as const;
+
+export type PopupAnalyticsRequestMetadata = { [key: string]: unknown };
+
+export interface PopupAnalyticsRequest {
+  event: PopupAnalyticsRequestEvent;
+  metadata?: PopupAnalyticsRequestMetadata;
+}
+
 export type GetDataPackagesParams = {
   network?: GetDataPackagesNetwork;
 };
@@ -403,6 +534,7 @@ export const GetDataPackagesNetwork = {
   YELLO: "YELLO",
   TELECEL: "TELECEL",
   AT_PREMIUM: "AT_PREMIUM",
+  at: "at",
 } as const;
 
 export type GetTransactionsParams = {
@@ -413,4 +545,14 @@ export type GetTransactionsParams = {
 export type GetPurchaseHistoryParams = {
   page?: number;
   limit?: number;
+};
+
+export type GetActivePopups200 = {
+  status?: string;
+  data?: Popup[];
+};
+
+export type GetAdminPopups200 = {
+  status?: string;
+  data?: AdminPopup[];
 };

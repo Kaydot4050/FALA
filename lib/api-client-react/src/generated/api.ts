@@ -24,11 +24,16 @@ import type {
   DataPackagesResponse,
   DeliveryTrackerResponse,
   ErrorResponse,
+  GetActivePopups200,
+  GetAdminPopups200,
   GetDataPackagesParams,
   GetPurchaseHistoryParams,
   GetTransactionsParams,
   HealthStatus,
   OrderStatusResponse,
+  PopupAnalyticsRequest,
+  PopupRequest,
+  PopupResponse,
   PurchaseErrorResponse,
   PurchaseHistoryResponse,
   PurchaseRequest,
@@ -1176,3 +1181,500 @@ export function useGetWithdrawalStatus<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Returns all active popups based on status and scheduling
+ * @summary Get active popups
+ */
+export const getGetActivePopupsUrl = () => {
+  return `/api/popups/active`;
+};
+
+export const getActivePopups = async (
+  options?: RequestInit,
+): Promise<GetActivePopups200> => {
+  return customFetch<GetActivePopups200>(getGetActivePopupsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetActivePopupsQueryKey = () => {
+  return [`/api/popups/active`] as const;
+};
+
+export const getGetActivePopupsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getActivePopups>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: Partial<UseQueryOptions<
+    Awaited<ReturnType<typeof getActivePopups>>,
+    TError,
+    TData
+  >>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetActivePopupsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getActivePopups>>> = ({
+    signal,
+  }) => getActivePopups({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getActivePopups>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetActivePopupsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getActivePopups>>
+>;
+export type GetActivePopupsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get active popups
+ */
+
+export function useGetActivePopups<
+  TData = Awaited<ReturnType<typeof getActivePopups>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: Partial<UseQueryOptions<
+    Awaited<ReturnType<typeof getActivePopups>>,
+    TError,
+    TData
+  >>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetActivePopupsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Record impression, click, or dismissal
+ * @summary Track popup event
+ */
+export const getTrackPopupEventUrl = (id: string) => {
+  return `/api/popups/${id}/track`;
+};
+
+export const trackPopupEvent = async (
+  id: string,
+  popupAnalyticsRequest: PopupAnalyticsRequest,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getTrackPopupEventUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(popupAnalyticsRequest),
+  });
+};
+
+export const getTrackPopupEventMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trackPopupEvent>>,
+    TError,
+    { id: string; data: BodyType<PopupAnalyticsRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof trackPopupEvent>>,
+  TError,
+  { id: string; data: BodyType<PopupAnalyticsRequest> },
+  TContext
+> => {
+  const mutationKey = ["trackPopupEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof trackPopupEvent>>,
+    { id: string; data: BodyType<PopupAnalyticsRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return trackPopupEvent(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TrackPopupEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof trackPopupEvent>>
+>;
+export type TrackPopupEventMutationBody = BodyType<PopupAnalyticsRequest>;
+export type TrackPopupEventMutationError = ErrorType<void>;
+
+/**
+ * @summary Track popup event
+ */
+export const useTrackPopupEvent = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trackPopupEvent>>,
+    TError,
+    { id: string; data: BodyType<PopupAnalyticsRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof trackPopupEvent>>,
+  TError,
+  { id: string; data: BodyType<PopupAnalyticsRequest> },
+  TContext
+> => {
+  return useMutation(getTrackPopupEventMutationOptions(options));
+};
+
+/**
+ * Returns all popups with analytics summary
+ * @summary Get all popups (Admin)
+ */
+export const getGetAdminPopupsUrl = () => {
+  return `/api/admin/popups`;
+};
+
+export const getAdminPopups = async (
+  options?: RequestInit,
+): Promise<GetAdminPopups200> => {
+  return customFetch<GetAdminPopups200>(getGetAdminPopupsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAdminPopupsQueryKey = () => {
+  return [`/api/admin/popups`] as const;
+};
+
+export const getGetAdminPopupsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminPopups>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminPopups>>,
+    TError,
+    TData
+  >>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminPopupsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminPopups>>> = ({
+    signal,
+  }) => getAdminPopups({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminPopups>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAdminPopupsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminPopups>>
+>;
+export type GetAdminPopupsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all popups (Admin)
+ */
+
+export function useGetAdminPopups<
+  TData = Awaited<ReturnType<typeof getAdminPopups>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminPopups>>,
+    TError,
+    TData
+  >>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAdminPopupsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create popup
+ */
+export const getCreatePopupUrl = () => {
+  return `/api/admin/popups`;
+};
+
+export const createPopup = async (
+  popupRequest: PopupRequest,
+  options?: RequestInit,
+): Promise<PopupResponse> => {
+  return customFetch<PopupResponse>(getCreatePopupUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(popupRequest),
+  });
+};
+
+export const getCreatePopupMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPopup>>,
+    TError,
+    { data: BodyType<PopupRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPopup>>,
+  TError,
+  { data: BodyType<PopupRequest> },
+  TContext
+> => {
+  const mutationKey = ["createPopup"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPopup>>,
+    { data: BodyType<PopupRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPopup(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePopupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPopup>>
+>;
+export type CreatePopupMutationBody = BodyType<PopupRequest>;
+export type CreatePopupMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create popup
+ */
+export const useCreatePopup = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPopup>>,
+    TError,
+    { data: BodyType<PopupRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPopup>>,
+  TError,
+  { data: BodyType<PopupRequest> },
+  TContext
+> => {
+  return useMutation(getCreatePopupMutationOptions(options));
+};
+
+/**
+ * @summary Update popup
+ */
+export const getUpdatePopupUrl = (id: string) => {
+  return `/api/admin/popups/${id}`;
+};
+
+export const updatePopup = async (
+  id: string,
+  popupRequest: PopupRequest,
+  options?: RequestInit,
+): Promise<PopupResponse> => {
+  return customFetch<PopupResponse>(getUpdatePopupUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(popupRequest),
+  });
+};
+
+export const getUpdatePopupMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePopup>>,
+    TError,
+    { id: string; data: BodyType<PopupRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updatePopup>>,
+  TError,
+  { id: string; data: BodyType<PopupRequest> },
+  TContext
+> => {
+  const mutationKey = ["updatePopup"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updatePopup>>,
+    { id: string; data: BodyType<PopupRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updatePopup(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdatePopupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updatePopup>>
+>;
+export type UpdatePopupMutationBody = BodyType<PopupRequest>;
+export type UpdatePopupMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update popup
+ */
+export const useUpdatePopup = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePopup>>,
+    TError,
+    { id: string; data: BodyType<PopupRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updatePopup>>,
+  TError,
+  { id: string; data: BodyType<PopupRequest> },
+  TContext
+> => {
+  return useMutation(getUpdatePopupMutationOptions(options));
+};
+
+/**
+ * @summary Delete popup
+ */
+export const getDeletePopupUrl = (id: string) => {
+  return `/api/admin/popups/${id}`;
+};
+
+export const deletePopup = async (
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeletePopupUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeletePopupMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePopup>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deletePopup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deletePopup"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deletePopup>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deletePopup(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeletePopupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deletePopup>>
+>;
+
+export type DeletePopupMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete popup
+ */
+export const useDeletePopup = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePopup>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deletePopup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeletePopupMutationOptions(options));
+};

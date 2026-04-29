@@ -58,3 +58,20 @@ node_modules/
 dist/
 **/dist/
 
+# Scratch and Backups
+scratch/
+pnpm-lock.yaml.*
+orval_log.txt
+error.log
+*.log
+scratch-*.js
+scratch-*.ts
+test-*.ts
+test-*.js
+test-*.cjs
+**/scratch-*.js
+**/scratch-*.ts
+**/test-*.ts
+**/test-*.js
+**/test-*.cjs
+

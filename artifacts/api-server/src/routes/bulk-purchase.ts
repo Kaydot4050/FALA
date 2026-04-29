@@ -17,6 +17,12 @@ router.post("/bulk-purchase", async (req, res): Promise<void> => {
   });
 
   const data = await upstream.json();
+  
+  logger.info({ 
+    orderCount: parsed.data.orders.length,
+    status: upstream.status 
+  }, "Bulk purchase triggered via API");
+
   res.status(upstream.status).json(data);
 });
 

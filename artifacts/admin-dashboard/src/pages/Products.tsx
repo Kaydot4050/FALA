@@ -61,9 +61,8 @@ export default function Products() {
   // Mutation to update package
   const updateMutation = useMutation({
     mutationFn: async (updated: Partial<DataPackage> & { id: string }) => {
-      const parts = updated.id.split("_");
-      const network = parts[0];
-      const capacity = parts[1]?.replace("GB", "").replace("MB", "");
+      const network = updated.network;
+      const capacity = updated.capacity;
 
       return await customFetch("/api/admin/packages/overrides", {
         method: "POST",
@@ -90,7 +89,7 @@ export default function Products() {
     }
   });
 
-  const networks = useMemo(() => ["YELLO", "at", "TELECEL"], []);
+  const networks = useMemo(() => ["YELLO", "AT_PREMIUM", "TELECEL"], []);
   
   const filteredPackages = useMemo(() => {
     if (!packagesData) return [];
@@ -163,7 +162,7 @@ export default function Products() {
                 : "bg-white/5 text-slate-500 border-white/5 hover:border-white/10"
             )}
           >
-            {net === "YELLO" ? "MTN" : net === "at" ? "AirtelTigo" : net}
+            {net === "YELLO" ? "MTN" : net === "AT_PREMIUM" ? "AirtelTigo" : net}
           </button>
         ))}
       </div>
@@ -201,9 +200,9 @@ export default function Products() {
                       <div className="flex items-center gap-4">
                         <div className={cn(
                           "h-10 w-10 rounded-xl glass flex items-center justify-center font-black text-[10px] border border-white/10 group-hover:border-primary/20 transition-all",
-                          pkg.network === "YELLO" ? "text-amber-500" : pkg.network === "at" ? "text-blue-500" : "text-red-500"
+                          pkg.network === "YELLO" ? "text-amber-500" : pkg.network === "AT_PREMIUM" ? "text-blue-500" : "text-red-500"
                         )}>
-                          {pkg.network === "YELLO" ? "MTN" : pkg.network === "at" ? "AT" : "T"}
+                          {pkg.network === "YELLO" ? "MTN" : pkg.network === "AT_PREMIUM" ? "AT" : "T"}
                         </div>
                         <div>
                           <p className="font-black text-sm tracking-tight">{pkg.capacity}GB</p>
@@ -231,12 +230,20 @@ export default function Products() {
                           onCheckedChange={(val) => updateMutation.mutate({ ...pkg, showOldPrice: val, id: pkgId })}
                           className="scale-75 data-[state=checked]:bg-primary"
                         />
-                        <span className={cn(
-                          "text-[10px] font-bold transition-opacity",
-                          pkg.showOldPrice ? "text-slate-400 line-through" : "text-slate-700"
-                        )}>
-                          ₵{pkg.oldPrice || '0.00'}
-                        </span>
+                        {isEditing ? (
+                          <input 
+                            value={editOldPrice}
+                            onChange={(e) => setEditOldPrice(e.target.value)}
+                            className="w-16 glass border-primary/40 rounded-lg py-1 px-2 text-center font-black text-xs text-slate-400 focus:outline-none"
+                          />
+                        ) : (
+                          <span className={cn(
+                            "text-[10px] font-bold transition-opacity",
+                            pkg.showOldPrice ? "text-slate-400 line-through" : "text-slate-700"
+                          )}>
+                            ₵{pkg.oldPrice || '0.00'}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
 
@@ -272,7 +279,7 @@ export default function Products() {
                             <button 
                               className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-105"
                               onClick={() => {
-                                updateMutation.mutate({ ...pkg, price: editPrice, id: pkgId });
+                                updateMutation.mutate({ ...pkg, price: editPrice, oldPrice: editOldPrice, id: pkgId });
                                 setEditingId(null);
                               }}
                             >
@@ -285,7 +292,11 @@ export default function Products() {
                        ) : (
                          <button 
                            className="text-[10px] font-black uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-all"
-                           onClick={() => { setEditingId(pkgId); setEditPrice(pkg.price); }}
+                           onClick={() => { 
+                             setEditingId(pkgId); 
+                             setEditPrice(pkg.price); 
+                             setEditOldPrice(pkg.oldPrice || ""); 
+                           }}
                          >
                            Edit Pricing
                          </button>

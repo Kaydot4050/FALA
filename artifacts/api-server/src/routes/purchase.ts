@@ -25,6 +25,14 @@ router.post("/purchase", async (req, res): Promise<void> => {
   });
 
   const data = await upstream.json();
+  
+  // Log manual purchase for tracking
+  logger.info({ 
+    body, 
+    status: upstream.status, 
+    data 
+  }, "Manual purchase triggered via API");
+
   res.status(upstream.status).json(data);
 });
 

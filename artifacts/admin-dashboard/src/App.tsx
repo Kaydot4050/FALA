@@ -10,6 +10,8 @@ import Products from "@/pages/Products";
 import Customers from "@/pages/Customers";
 import Wallet from "@/pages/Wallet";
 import Status from "@/pages/Status";
+import Popups from "@/pages/Popups";
+import Suggestions from "@/pages/Suggestions";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
@@ -35,6 +37,8 @@ function Router() {
         <Route path="/customers" component={Customers} />
         <Route path="/wallet" component={Wallet} />
         <Route path="/status" component={Status} />
+        <Route path="/popups" component={Popups} />
+        <Route path="/suggestions" component={Suggestions} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

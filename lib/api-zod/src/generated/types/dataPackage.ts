@@ -11,4 +11,8 @@ export interface DataPackage {
   mb: number;
   network: string;
   price: number;
+  inStock: boolean;
+  /** @nullable */
+  oldPrice?: number | null;
+  showOldPrice: boolean;
 }

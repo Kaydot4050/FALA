@@ -13,4 +13,5 @@ export const BulkOrderItemNetwork = {
   YELLO: "YELLO",
   TELECEL: "TELECEL",
   AT_PREMIUM: "AT_PREMIUM",
+  at: "at",
 } as const;
