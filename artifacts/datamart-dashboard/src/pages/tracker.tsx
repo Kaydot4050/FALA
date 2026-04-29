@@ -140,7 +140,7 @@ export default function Tracker() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm md:text-base font-medium text-primary/90">
-                    <span className="font-bold text-primary">Checking now:</span> {tracker.checkingNow.summary}
+                    <span className="font-bold text-primary">Checking now:</span> {tracker.checkingNow.summary.replace(/^Checking now:\s*/i, '')}
                   </p>
                 </div>
               </div>

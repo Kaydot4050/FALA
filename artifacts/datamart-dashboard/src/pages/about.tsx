@@ -126,16 +126,35 @@ export default function About() {
         <div className="space-y-6">
           <h2 className="font-black text-xl md:text-2xl tracking-tight">Why Choose Us?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {WHY_CHOOSE.map(({ icon: Icon, color, title, desc }, i) => (
+            {WHY_CHOOSE.map(({ color, title, desc }, i) => (
               <div
                 key={title}
                 className="group relative flex flex-col items-start gap-5 bg-card border border-border rounded-[24px] p-6 md:p-8 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 overflow-hidden isolate active:scale-95 active:brightness-95"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-[-1]" />
-                <span className={cn("flex items-center justify-center w-14 h-14 rounded-2xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-black/5", color)}>
-                  <Icon className="w-6 h-6" />
-                </span>
+                
+                {/* Custom High-Fidelity Icons */}
+                <div className={cn("flex items-center justify-center w-16 h-16 rounded-2xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg", color)}>
+                  {title === "Fast Delivery" ? (
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-pulse">
+                      <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>
+                    </svg>
+                  ) : title === "Secure Payments" ? (
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>
+                      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>
+                      <circle cx="12" cy="10" r="1" fill="currentColor"/>
+                      <circle cx="16" cy="10" r="1" fill="currentColor"/>
+                      <circle cx="8" cy="10" r="1" fill="currentColor"/>
+                    </svg>
+                  )}
+                </div>
+
                 <div className="relative z-10">
                   <p className="font-black text-lg md:text-xl mb-2 group-hover:text-primary transition-colors tracking-tight">{title}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed opacity-80">{desc}</p>

@@ -74,13 +74,14 @@ export default function PaymentCallback() {
           setStatus(orderStatus === "paid" || orderStatus === "processing" ? "paid" : "pending");
           
           // Safety cap: Stop after ~10 minutes of polling
-          if (pollCount > 100) {
+          if (pollCount > 150) {
             setStatus("failed");
             return;
           }
 
           setPollCount((c) => c + 1);
-          const delay = pollCount < 40 ? 3000 : 8000;
+          // Faster polling for the first minute (1.5s), then slow down (5s)
+          const delay = pollCount < 40 ? 1500 : 5000;
           timeoutId = setTimeout(checkStatus, delay);
         } else {
           // If the order isn't found yet, it might be database lag, retry a few times
@@ -125,12 +126,12 @@ export default function PaymentCallback() {
             </div>
             <div>
               <h2 className="text-2xl font-bold">
-                {status === "paid" ? "Payment Confirmed!" : "Processing Payment..."}
+                {status === "paid" ? "Payment Confirmed!" : "Verifying Payment..."}
               </h2>
               <p className="text-muted-foreground mt-2">
                 {status === "paid"
-                  ? "Your data bundle is being delivered now. Please wait..."
-                  : "Verifying your payment with Paystack..."}
+                  ? "We've received your payment. Your data bundle is being delivered instantly. Please stay on this page."
+                  : "We're just confirming your transaction with Paystack. This usually takes a few seconds."}
               </p>
             </div>
             {orderData && (

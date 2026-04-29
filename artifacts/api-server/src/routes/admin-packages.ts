@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { packageOverridesTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { packageCache } from "./packages";
 
 const router: IRouter = Router();
 
@@ -59,6 +60,10 @@ router.post("/admin/packages/overrides", async (req, res): Promise<void> => {
       });
 
     logger.info({ id }, "DB Upsert Successful");
+    
+    // Clear cache so changes reflect immediately on customer site
+    packageCache.clear();
+    
     res.json({ status: "success", message: "Package updated successfully" });
   } catch (error) {
     logger.error({ error }, "Failed to update override:");

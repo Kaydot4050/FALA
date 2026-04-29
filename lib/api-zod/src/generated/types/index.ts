@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./adminPopup";
+export * from "./adminPopupAnalytics";
 export * from "./balanceData";
 export * from "./balanceDataUser";
 export * from "./balanceResponse";
@@ -30,6 +32,8 @@ export * from "./deliveryTrackerDataScanner";
 export * from "./deliveryTrackerDataYourOrders";
 export * from "./deliveryTrackerResponse";
 export * from "./errorResponse";
+export * from "./getActivePopups200";
+export * from "./getAdminPopups200";
 export * from "./getDataPackagesNetwork";
 export * from "./getDataPackagesParams";
 export * from "./getPurchaseHistoryParams";
@@ -38,6 +42,20 @@ export * from "./healthStatus";
 export * from "./networkStat";
 export * from "./orderData";
 export * from "./orderStatusResponse";
+export * from "./popup";
+export * from "./popupAnalyticsRequest";
+export * from "./popupAnalyticsRequestEvent";
+export * from "./popupAnalyticsRequestMetadata";
+export * from "./popupFrequency";
+export * from "./popupRequest";
+export * from "./popupRequestFrequency";
+export * from "./popupRequestSettings";
+export * from "./popupRequestTrigger";
+export * from "./popupRequestType";
+export * from "./popupResponse";
+export * from "./popupSettings";
+export * from "./popupTrigger";
+export * from "./popupType";
 export * from "./purchaseData";
 export * from "./purchaseErrorResponse";
 export * from "./purchaseHistoryData";

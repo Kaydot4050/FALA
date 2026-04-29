@@ -5,6 +5,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useGetBalance } from "@workspace/api-client-react";
 import { useState } from "react";
 import { useDeliveryStatus } from "@/hooks/use-delivery-status";
+import { PopupManager } from "./popup-manager";
 
 function StatusIndicator() {
   const { status } = useDeliveryStatus();
@@ -104,6 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground">
+      <PopupManager />
       
       {/* Top promo strip */}
       <div className="bg-gradient-to-r from-primary via-primary/80 to-primary/40 text-white text-center text-[11px] font-semibold py-2 px-4 tracking-wide shadow-lg">
@@ -115,10 +117,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex h-16 items-center justify-between px-6 md:px-8 rounded-none md:rounded-[20px] bg-background/40 backdrop-blur-3xl border-b md:border border-white/10 shadow-2xl transition-all duration-500">
             
             {/* ── Brand Section ── */}
-            <Link href="/" className="flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 group">
-              <div className="flex flex-col leading-none">
-                <span className="font-black text-xl tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">Falaa Deals</span>
-              </div>
+            <Link href="/" className="flex items-center transition-transform hover:scale-105 active:scale-95 group">
+              <img 
+                src="/logo.png" 
+                alt="Falaa Deals" 
+                className="h-7 md:h-8 w-auto invert dark:invert-0 transition-all duration-300" 
+              />
             </Link>
 
             {/* ── Central Navigation ── */}
@@ -156,104 +160,89 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-border/30 bg-card/50 mt-auto pb-24 md:pb-0">
-        <div className="container max-w-6xl mx-auto px-4 py-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {/* Brand col */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2.5">
-                <img 
-                  src="https://cdn.phototourl.com/free/2026-04-20-4d5c9f4d-7c33-42c2-a8fb-bb1157504954.png" 
-                  alt="Falaa Deals" 
-                  style={{ width: 32, height: 'auto' }}
-                  className="rounded-lg"
+      <footer className="mt-auto pt-20 pb-24 md:pb-12 px-6 border-t border-white/5 bg-black">
+        <div className="container max-w-6xl mx-auto">
+          {/* Top Row: Brand, Nav, Socials */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 pb-12">
+            {/* Logo/Brand */}
+            <Link href="/" className="flex items-center group">
+              <img 
+                src="/logo.png" 
+                alt="FalaaDeals" 
+                className="h-6 md:h-8 w-auto brightness-200 transition-all group-hover:scale-105" 
+              />
+            </Link>
+
+            {/* Navigation */}
+            <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+              {[
+                { href: "/", label: "About" },
+                { href: "/buy", label: "Buy" },
+                { href: "/tracker", label: "Delivery" },
+                { href: "/order", label: "Track" },
+                { href: "/about", label: "Privacy" },
+                { href: "/about", label: "Terms" },
+              ].map(({ href, label }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="text-sm font-bold text-slate-500 hover:text-white transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Socials */}
+            <div className="flex items-center gap-4">
+              {[
+                { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>, label: "WhatsApp", href: "https://wa.me/233593829640" },
+                { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>, label: "Telegram", href: "#" },
+                { icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>, label: "GitHub", href: "#" },
+              ].map(({ icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:border-white/20 transition-all hover:bg-white/5"
+                >
+                  {icon}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Brand Color Selection */}
+          <div className="flex flex-col items-center gap-4 pb-12">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">Custom Theme</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {[
+                { name: 'Indigo',  value: '230 100% 65%' },
+                { name: 'Cyan',    value: '190 100% 50%' },
+                { name: 'Emerald', value: '150 100% 50%' },
+                { name: 'Amber',   value: '40 100% 60%' },
+                { name: 'Crimson', value: '350 100% 60%' },
+                { name: 'Rose',    value: '330 100% 65%' },
+                { name: 'Violet',  value: '270 100% 65%' },
+                { name: 'Lime',    value: '80 100% 50%' },
+                { name: 'Orange',  value: '25 100% 55%' },
+                { name: 'Sky',     value: '200 100% 60%' }
+              ].map((color) => (
+                <ColorCircle 
+                  key={color.name} 
+                  color={color.value} 
+                  name={color.name}
                 />
-                <span className="font-extrabold text-sm">Falaa Deals</span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Ghana's most reliable data bundle service. Instant delivery across all major networks at unbeatable prices.
-              </p>
-              <a
-                href="https://wa.me/233593829640"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold px-4 py-2 rounded-full transition-colors"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                Chat on WhatsApp
-              </a>
+              ))}
             </div>
+          </div>
 
-            {/* Quick links */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Quick Links</h3>
-              <ul className="space-y-2">
-                {[
-                  { href: "/",        label: "Buy Data" },
-                  { href: "/order",   label: "Track Order" },
-                  { href: "/tracker", label: "Live Status" },
-                  { href: "/about",   label: "About Us" },
-                ].map(({ href, label }) => (
-                  <li key={label}>
-                    <Link
-                      href={href}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors font-medium"
-                    >
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Brand Color & Contact */}
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h3 className="font-bold text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Brand Color</h3>
-                <div className="flex flex-wrap gap-2.5">
-                  {[
-                    { name: 'Indigo',  value: '230 100% 65%' },
-                    { name: 'Cyan',    value: '190 100% 50%' },
-                    { name: 'Emerald', value: '150 100% 50%' },
-                    { name: 'Amber',   value: '40 100% 60%' },
-                    { name: 'Crimson', value: '350 100% 60%' },
-                    { name: 'Rose',    value: '330 100% 65%' },
-                    { name: 'Violet',  value: '270 100% 65%' },
-                    { name: 'Lime',    value: '80 100% 50%' },
-                    { name: 'Orange',  value: '25 100% 55%' },
-                    { name: 'Sky',     value: '200 100% 60%' }
-                  ].map((color) => (
-                    <ColorCircle 
-                      key={color.name} 
-                      color={color.value} 
-                      name={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-border/30 space-y-3">
-                <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Partnership</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Contact us to become a reseller and earn commissions.
-                </p>
-                <div className="flex flex-col gap-3">
-                  <a
-                    href="https://wa.me/233593829640"
-                    target="_blank"
-                    rel="noopener noreferrer"  
-                    className="text-xs text-primary hover:underline font-semibold"
-                  >
-                    Contact us to get started →
-                  </a>
-                  <p className="text-[10px] text-muted-foreground">
-                    &copy; {new Date().getFullYear()} Falaa Deals. All rights reserved.
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* Bottom Row: Copyright */}
+          <div className="pt-12 border-t border-white/5 text-center">
+            <p className="text-sm font-bold text-slate-600 tracking-tight">
+              &copy; {new Date().getFullYear()} FalaaDeals. Ghana's premier data service, built for speed and reliability.
+            </p>
           </div>
         </div>
       </footer>

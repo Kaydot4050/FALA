@@ -13,6 +13,8 @@ export interface UsageStatsData {
   totalSpent: number;
   totalGB: number;
   successRate: number;
+  pendingSpent: number;
+  allTimeSpent: number;
   networkBreakdown?: NetworkStat[];
   recentActivity?: PurchaseRecord[];
 }

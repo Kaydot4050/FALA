@@ -14,6 +14,8 @@ export interface PurchaseRecord {
   price: number;
   orderStatus: string;
   orderReference: string;
+  customerName?: string;
+  costPrice?: number;
   /** @nullable */
   balanceBefore?: number | null;
   /** @nullable */

@@ -11,4 +11,5 @@ export type DataPackagesResponseData = {
   YELLO?: DataPackage[];
   TELECEL?: DataPackage[];
   AT_PREMIUM?: DataPackage[];
+  at?: DataPackage[];
 };

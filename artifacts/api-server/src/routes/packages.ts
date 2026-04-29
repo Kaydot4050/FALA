@@ -7,7 +7,7 @@ import { packageOverridesTable } from "@workspace/db/schema";
 
 const router: IRouter = Router();
 
-const packageCache = new Map<string, { data: any, timestamp: number }>();
+export const packageCache = new Map<string, { data: any, timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 router.get("/packages", async (req, res): Promise<void> => {

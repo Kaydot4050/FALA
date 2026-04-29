@@ -14,6 +14,8 @@ import paystackRouter from "./paystack";
 import datamartWebhookRouter from "./datamart-webhook";
 import adminPackagesRouter from "./admin-packages";
 import adminCustomersRouter from "./admin-customers";
+import popupsRouter from "./popups";
+import suggestionsRouter from "./suggestions";
 
 const router: IRouter = Router();
 
@@ -32,5 +34,7 @@ router.use(statsRouter);
 router.use(withdrawalsRouter);
 router.use(paystackRouter);
 router.use(datamartWebhookRouter);
+router.use(popupsRouter);
+router.use(suggestionsRouter);
 
 export default router;

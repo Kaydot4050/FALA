@@ -20,7 +20,7 @@ export const HealthCheckResponse = zod.object({
  * @summary Get available data packages
  */
 export const GetDataPackagesQueryParams = zod.object({
-  network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM"]).optional(),
+  network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM", "at"]).optional(),
 });
 
 export const GetDataPackagesResponse = zod.object({
@@ -34,6 +34,9 @@ export const GetDataPackagesResponse = zod.object({
           mb: zod.number(),
           network: zod.string(),
           price: zod.number(),
+          inStock: zod.boolean(),
+          oldPrice: zod.number().nullish(),
+          showOldPrice: zod.boolean(),
         }),
       )
       .optional(),
@@ -44,6 +47,9 @@ export const GetDataPackagesResponse = zod.object({
           mb: zod.number(),
           network: zod.string(),
           price: zod.number(),
+          inStock: zod.boolean(),
+          oldPrice: zod.number().nullish(),
+          showOldPrice: zod.boolean(),
         }),
       )
       .optional(),
@@ -54,6 +60,22 @@ export const GetDataPackagesResponse = zod.object({
           mb: zod.number(),
           network: zod.string(),
           price: zod.number(),
+          inStock: zod.boolean(),
+          oldPrice: zod.number().nullish(),
+          showOldPrice: zod.boolean(),
+        }),
+      )
+      .optional(),
+    at: zod
+      .array(
+        zod.object({
+          capacity: zod.number(),
+          mb: zod.number(),
+          network: zod.string(),
+          price: zod.number(),
+          inStock: zod.boolean(),
+          oldPrice: zod.number().nullish(),
+          showOldPrice: zod.boolean(),
         }),
       )
       .optional(),
@@ -68,10 +90,9 @@ export const purchaseDataBodyGatewayDefault = `wallet`;
 
 export const PurchaseDataBody = zod.object({
   phoneNumber: zod.string(),
-  network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM"]),
+  network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM", "at"]),
   capacity: zod.string(),
   gateway: zod.string().default(purchaseDataBodyGatewayDefault),
-  email: zod.string().email().optional(),
 });
 
 export const PurchaseDataResponse = zod.object({
@@ -249,7 +270,7 @@ export const BulkPurchaseBody = zod.object({
     .array(
       zod.object({
         phoneNumber: zod.string(),
-        network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM"]),
+        network: zod.enum(["YELLO", "TELECEL", "AT_PREMIUM", "at"]),
         capacity: zod.string(),
         ref: zod.string().nullish(),
       }),
@@ -317,6 +338,8 @@ export const GetPurchaseHistoryResponse = zod.object({
           price: zod.number(),
           orderStatus: zod.string(),
           orderReference: zod.string(),
+          customerName: zod.string().optional(),
+          costPrice: zod.number().optional(),
           balanceBefore: zod.number().nullish(),
           balanceAfter: zod.number().nullish(),
           createdAt: zod.string(),
@@ -358,6 +381,8 @@ export const GetUsageStatsResponse = zod.object({
       totalSpent: zod.number(),
       totalGB: zod.number(),
       successRate: zod.number(),
+      pendingSpent: zod.number(),
+      allTimeSpent: zod.number(),
       networkBreakdown: zod
         .array(
           zod.object({
@@ -378,6 +403,8 @@ export const GetUsageStatsResponse = zod.object({
             price: zod.number(),
             orderStatus: zod.string(),
             orderReference: zod.string(),
+            customerName: zod.string().optional(),
+            costPrice: zod.number().optional(),
             balanceBefore: zod.number().nullish(),
             balanceAfter: zod.number().nullish(),
             createdAt: zod.string(),
@@ -437,4 +464,212 @@ export const GetWithdrawalStatusResponse = zod.object({
       updatedAt: zod.string().optional(),
     })
     .optional(),
+});
+
+/**
+ * Returns all active popups based on status and scheduling
+ * @summary Get active popups
+ */
+export const GetActivePopupsResponse = zod.object({
+  status: zod.string().optional(),
+  data: zod
+    .array(
+      zod.object({
+        id: zod.string().uuid().optional(),
+        type: zod
+          .enum(["promotional", "notice", "warning", "update", "maintenance"])
+          .optional(),
+        title: zod.string().optional(),
+        message: zod.string().optional(),
+        buttonText: zod.string().optional(),
+        buttonLink: zod.string().optional(),
+        imageUrl: zod.string().optional(),
+        isActive: zod.boolean().optional(),
+        priority: zod.number().optional(),
+        startTime: zod.coerce.date().optional(),
+        endTime: zod.coerce.date().optional(),
+        pages: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+        trigger: zod.enum(["load", "delay", "scroll", "exit"]).optional(),
+        triggerValue: zod.number().optional(),
+        frequency: zod.enum(["once", "every_visit", "once_per_day"]).optional(),
+        settings: zod.object({}).passthrough().optional(),
+        createdAt: zod.coerce.date().optional(),
+        updatedAt: zod.coerce.date().optional(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * Record impression, click, or dismissal
+ * @summary Track popup event
+ */
+export const TrackPopupEventParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const TrackPopupEventBody = zod.object({
+  event: zod.enum(["impression", "click", "dismiss"]),
+  metadata: zod.object({}).passthrough().optional(),
+});
+
+/**
+ * Returns all popups with analytics summary
+ * @summary Get all popups (Admin)
+ */
+export const GetAdminPopupsResponse = zod.object({
+  status: zod.string().optional(),
+  data: zod
+    .array(
+      zod
+        .object({
+          id: zod.string().uuid().optional(),
+          type: zod
+            .enum(["promotional", "notice", "warning", "update", "maintenance"])
+            .optional(),
+          title: zod.string().optional(),
+          message: zod.string().optional(),
+          buttonText: zod.string().optional(),
+          buttonLink: zod.string().optional(),
+          imageUrl: zod.string().optional(),
+          isActive: zod.boolean().optional(),
+          priority: zod.number().optional(),
+          startTime: zod.coerce.date().optional(),
+          endTime: zod.coerce.date().optional(),
+          pages: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+          trigger: zod.enum(["load", "delay", "scroll", "exit"]).optional(),
+          triggerValue: zod.number().optional(),
+          frequency: zod
+            .enum(["once", "every_visit", "once_per_day"])
+            .optional(),
+          settings: zod.object({}).passthrough().optional(),
+          createdAt: zod.coerce.date().optional(),
+          updatedAt: zod.coerce.date().optional(),
+        })
+        .and(
+          zod.object({
+            analytics: zod
+              .object({
+                impressions: zod.number().optional(),
+                clicks: zod.number().optional(),
+                dismissals: zod.number().optional(),
+              })
+              .optional(),
+          }),
+        ),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Create popup
+ */
+export const CreatePopupBody = zod.object({
+  type: zod
+    .enum(["promotional", "notice", "warning", "update", "maintenance"])
+    .optional(),
+  title: zod.string().optional(),
+  message: zod.string().optional(),
+  buttonText: zod.string().optional(),
+  buttonLink: zod.string().optional(),
+  imageUrl: zod.string().optional(),
+  isActive: zod.boolean().optional(),
+  priority: zod.number().optional(),
+  startTime: zod.coerce.date().optional(),
+  endTime: zod.coerce.date().optional(),
+  pages: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+  trigger: zod.enum(["load", "delay", "scroll", "exit"]).optional(),
+  triggerValue: zod.number().optional(),
+  frequency: zod.enum(["once", "every_visit", "once_per_day"]).optional(),
+  settings: zod.object({}).passthrough().optional(),
+});
+
+export const CreatePopupResponse = zod.object({
+  status: zod.string().optional(),
+  data: zod
+    .object({
+      id: zod.string().uuid().optional(),
+      type: zod
+        .enum(["promotional", "notice", "warning", "update", "maintenance"])
+        .optional(),
+      title: zod.string().optional(),
+      message: zod.string().optional(),
+      buttonText: zod.string().optional(),
+      buttonLink: zod.string().optional(),
+      imageUrl: zod.string().optional(),
+      isActive: zod.boolean().optional(),
+      priority: zod.number().optional(),
+      startTime: zod.coerce.date().optional(),
+      endTime: zod.coerce.date().optional(),
+      pages: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+      trigger: zod.enum(["load", "delay", "scroll", "exit"]).optional(),
+      triggerValue: zod.number().optional(),
+      frequency: zod.enum(["once", "every_visit", "once_per_day"]).optional(),
+      settings: zod.object({}).passthrough().optional(),
+      createdAt: zod.coerce.date().optional(),
+      updatedAt: zod.coerce.date().optional(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Update popup
+ */
+export const UpdatePopupParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdatePopupBody = zod.object({
+  type: zod
+    .enum(["promotional", "notice", "warning", "update", "maintenance"])
+    .optional(),
+  title: zod.string().optional(),
+  message: zod.string().optional(),
+  buttonText: zod.string().optional(),
+  buttonLink: zod.string().optional(),
+  imageUrl: zod.string().optional(),
+  isActive: zod.boolean().optional(),
+  priority: zod.number().optional(),
+  startTime: zod.coerce.date().optional(),
+  endTime: zod.coerce.date().optional(),
+  pages: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+  trigger: zod.enum(["load", "delay", "scroll", "exit"]).optional(),
+  triggerValue: zod.number().optional(),
+  frequency: zod.enum(["once", "every_visit", "once_per_day"]).optional(),
+  settings: zod.object({}).passthrough().optional(),
+});
+
+export const UpdatePopupResponse = zod.object({
+  status: zod.string().optional(),
+  data: zod
+    .object({
+      id: zod.string().uuid().optional(),
+      type: zod
+        .enum(["promotional", "notice", "warning", "update", "maintenance"])
+        .optional(),
+      title: zod.string().optional(),
+      message: zod.string().optional(),
+      buttonText: zod.string().optional(),
+      buttonLink: zod.string().optional(),
+      imageUrl: zod.string().optional(),
+      isActive: zod.boolean().optional(),
+      priority: zod.number().optional(),
+      startTime: zod.coerce.date().optional(),
+      endTime: zod.coerce.date().optional(),
+      pages: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+      trigger: zod.enum(["load", "delay", "scroll", "exit"]).optional(),
+      triggerValue: zod.number().optional(),
+      frequency: zod.enum(["once", "every_visit", "once_per_day"]).optional(),
+      settings: zod.object({}).passthrough().optional(),
+      createdAt: zod.coerce.date().optional(),
+      updatedAt: zod.coerce.date().optional(),
+    })
+    .optional(),
+});
+
+/**
+ * @summary Delete popup
+ */
+export const DeletePopupParams = zod.object({
+  id: zod.coerce.string(),
 });

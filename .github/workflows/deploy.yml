@@ -1,0 +1,77 @@
+name: Deploy to Namecheap
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      # 1. Build the Backend API Server
+      - name: Build API Server
+        run: pnpm --filter @workspace/api-server run build
+
+      # 2. Build the Frontend Dashboard
+      # Assuming your API server will be hosted at https://api.falaadeals.shop
+      # If your Node.js App is at a different URL, update VITE_API_URL below!
+      - name: Build Frontend
+        env:
+          VITE_API_URL: https://api.falaadeals.shop
+        run: pnpm --filter @workspace/datamart-dashboard run build
+
+      # 3. Deploy Frontend to Namecheap public_html
+      - name: Deploy Frontend via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./artifacts/datamart-dashboard/dist/
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+
+      # 5. Restart Node.js App on Namecheap (Phusion Passenger)
+      # By creating/updating tmp/restart.txt, Namecheap's Node.js server will automatically restart
+      - name: Trigger Node.js App Restart
+        run: |
+          mkdir -p artifacts/api-server/tmp
+          date > artifacts/api-server/tmp/restart.txt
+
+      # 6. Deploy Backend to Namecheap Node.js App folder
+      # Assumes your Node.js app folder in cPanel is named "api-server"
+      - name: Deploy Backend via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./artifacts/api-server/
+          server-dir: /api-server/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            node_modules/**
+            .env
+            scratch/**

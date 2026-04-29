@@ -24,6 +24,10 @@ tags:
     description: Withdrawal operations
   - name: stats
     description: Usage statistics
+  - name: popups
+    description: Popup and announcement operations
+  - name: admin-popups
+    description: Admin popup management operations
 paths:
   /healthz:
     get:
@@ -51,7 +55,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [YELLO, TELECEL, AT_PREMIUM]
+            enum: [YELLO, TELECEL, AT_PREMIUM, at]
       responses:
         "200":
           description: Data packages
@@ -378,6 +382,117 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /popups/active:
+    get:
+      operationId: getActivePopups
+      tags: [popups]
+      summary: Get active popups
+      description: Returns all active popups based on status and scheduling
+      responses:
+        "200":
+          description: List of active popups
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data: { type: array, items: { $ref: "#/components/schemas/Popup" } }
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /popups/{id}/track:
+    post:
+      operationId: trackPopupEvent
+      tags: [popups]
+      summary: Track popup event
+      description: Record impression, click, or dismissal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PopupAnalyticsRequest" }
+      responses:
+        "200":
+          description: Tracked successfully
+        "500":
+          description: Server error
+
+  /admin/popups:
+    get:
+      operationId: getAdminPopups
+      tags: [admin-popups]
+      summary: Get all popups (Admin)
+      description: Returns all popups with analytics summary
+      responses:
+        "200":
+          description: List of popups
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  data: { type: array, items: { $ref: "#/components/schemas/AdminPopup" } }
+    post:
+      operationId: createPopup
+      tags: [admin-popups]
+      summary: Create popup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PopupRequest" }
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PopupResponse" }
+
+  /admin/popups/{id}:
+    patch:
+      operationId: updatePopup
+      tags: [admin-popups]
+      summary: Update popup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PopupRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PopupResponse" }
+    delete:
+      operationId: deletePopup
+      tags: [admin-popups]
+      summary: Delete popup
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+
+
 components:
   schemas:
     HealthStatus:
@@ -407,11 +522,19 @@ components:
           type: string
         price:
           type: number
+        inStock:
+          type: boolean
+        oldPrice:
+          type: ["number", "null"]
+        showOldPrice:
+          type: boolean
       required:
         - capacity
         - mb
         - network
         - price
+        - inStock
+        - showOldPrice
 
     DataPackagesResponse:
       type: object
@@ -435,6 +558,10 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/DataPackage"
+            at:
+              type: array
+              items:
+                $ref: "#/components/schemas/DataPackage"
       required:
         - status
         - data
@@ -446,7 +573,7 @@ components:
           type: string
         network:
           type: string
-          enum: [YELLO, TELECEL, AT_PREMIUM]
+          enum: [YELLO, TELECEL, AT_PREMIUM, at]
         capacity:
           type: string
         gateway:
@@ -754,7 +881,7 @@ components:
           type: string
         network:
           type: string
-          enum: [YELLO, TELECEL, AT_PREMIUM]
+          enum: [YELLO, TELECEL, AT_PREMIUM, at]
         capacity:
           type: string
         ref:
@@ -901,6 +1028,10 @@ components:
           type: string
         orderReference:
           type: string
+        customerName:
+          type: string
+        costPrice:
+          type: number
         balanceBefore:
           type: ["number", "null"]
         balanceAfter:
@@ -986,6 +1117,10 @@ components:
           type: number
         successRate:
           type: number
+        pendingSpent:
+          type: number
+        allTimeSpent:
+          type: number
         networkBreakdown:
           type: array
           items:
@@ -999,6 +1134,8 @@ components:
         - totalSpent
         - totalGB
         - successRate
+        - pendingSpent
+        - allTimeSpent
 
     UsageStatsResponse:
       type: object
@@ -1112,3 +1249,132 @@ components:
           $ref: "#/components/schemas/WithdrawalStatusData"
       required:
         - status
+
+    Popup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [promotional, notice, warning, update, maintenance]
+        title:
+          type: string
+        message:
+          type: string
+        buttonText:
+          type: string
+        buttonLink:
+          type: string
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        priority:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        pages:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        trigger:
+          type: string
+          enum: [load, delay, scroll, exit]
+        triggerValue:
+          type: integer
+        frequency:
+          type: string
+          enum: [once, every_visit, once_per_day]
+        settings:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PopupRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [promotional, notice, warning, update, maintenance]
+        title:
+          type: string
+        message:
+          type: string
+        buttonText:
+          type: string
+        buttonLink:
+          type: string
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        priority:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        pages:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        trigger:
+          type: string
+          enum: [load, delay, scroll, exit]
+        triggerValue:
+          type: integer
+        frequency:
+          type: string
+          enum: [once, every_visit, once_per_day]
+        settings:
+          type: object
+
+    PopupResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: "#/components/schemas/Popup"
+
+    AdminPopup:
+      allOf:
+        - $ref: "#/components/schemas/Popup"
+        - type: object
+          properties:
+            analytics:
+              type: object
+              properties:
+                impressions:
+                  type: integer
+                clicks:
+                  type: integer
+                dismissals:
+                  type: integer
+
+    PopupAnalyticsRequest:
+      type: object
+      properties:
+        event:
+          type: string
+          enum: [impression, click, dismiss]
+        metadata:
+          type: object
+      required:
+        - event

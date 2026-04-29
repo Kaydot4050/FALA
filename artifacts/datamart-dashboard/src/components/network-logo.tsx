@@ -9,148 +9,42 @@ interface NetworkLogoProps {
 export function NetworkLogo({ network, size = 56, className = "" }: NetworkLogoProps) {
   if (network === "YELLO") {
     return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 56 56"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-      >
-        <rect width="56" height="56" rx="12" fill="#FFCC00" />
-        <text
-          x="28"
-          y="36"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="900"
-          fontSize="18"
-          fill="#1a1a1a"
-          letterSpacing="-0.5"
-        >
-          MTN
-        </text>
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect width="100" height="100" rx="20" fill="#FFCC00" />
+        <ellipse cx="50" cy="50" rx="35" ry="18" stroke="black" strokeWidth="3" fill="none" />
+        <text x="50" y="56" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="20" fill="black">MTN</text>
       </svg>
     );
   }
 
   if (network === "TELECEL") {
     return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 56 56"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-      >
-        <rect width="56" height="56" rx="12" fill="#E60000" />
-        <text
-          x="28"
-          y="27"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="900"
-          fontSize="11"
-          fill="white"
-        >
-          Telecel
-        </text>
-        <text
-          x="28"
-          y="40"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="700"
-          fontSize="9"
-          fill="rgba(255,255,255,0.75)"
-        >
-          Ghana
-        </text>
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect width="100" height="100" rx="20" fill="#E60000" />
+        <circle cx="50" cy="35" r="18" fill="white" />
+        <text x="50" y="44" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="26" fill="#E60000">t</text>
+        <text x="50" y="70" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18" fill="white">telecel</text>
+        <text x="50" y="82" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="500" fontSize="6" fill="white" opacity="0.8">Connecting Energies</text>
       </svg>
     );
   }
 
-  if (network === "AT_PREMIUM") {
+  if (network === "AT_PREMIUM" || network === "at") {
     return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 56 56"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-      >
-        <rect width="56" height="56" rx="12" fill="#0033A0" />
-        <text
-          x="28"
-          y="27"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="900"
-          fontSize="16"
-          fill="white"
-        >
-          AT
-        </text>
-        <text
-          x="28"
-          y="40"
-          textAnchor="middle"
-          fontFamily="Arial, sans-serif"
-          fontWeight="600"
-          fontSize="8"
-          fill="rgba(255,255,255,0.8)"
-          letterSpacing="1"
-        >
-          PREMIUM
-        </text>
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <defs>
+          <clipPath id="logo-clip">
+            <rect width="100" height="100" rx="20" />
+          </clipPath>
+        </defs>
+        <g clipPath="url(#logo-clip)">
+          <rect width="100" height="100" fill="#1B365D" />
+          <path d="M0 65 Q 25 55, 50 65 T 100 65 V 100 H 0 Z" fill="#E60000" />
+        </g>
+        <text x="50" y="55" textAnchor="middle" fontFamily="'Inter', sans-serif" fontWeight="900" fontSize="38" fill="white" style={{ letterSpacing: '-2px' }}>at</text>
       </svg>
     );
   }
 
-  // "at" — AirtelTigo
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 56 56"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <rect width="28" height="56" rx="0" fill="#EF3D42" />
-      <rect x="28" width="28" height="56" rx="0" fill="#0033A0" />
-      <rect width="56" height="56" rx="12" fill="url(#at-grad)" />
-      <defs>
-        <linearGradient id="at-grad" x1="0" y1="0" x2="56" y2="0">
-          <stop offset="0%" stopColor="#EF3D42" />
-          <stop offset="50%" stopColor="#C0302F" />
-          <stop offset="100%" stopColor="#0033A0" />
-        </linearGradient>
-      </defs>
-      <text
-        x="28"
-        y="27"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontWeight="900"
-        fontSize="15"
-        fill="white"
-      >
-        Airtel
-      </text>
-      <text
-        x="28"
-        y="40"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontWeight="900"
-        fontSize="11"
-        fill="rgba(255,255,255,0.9)"
-      >
-        Tigo
-      </text>
-    </svg>
-  );
+  return null;
 }

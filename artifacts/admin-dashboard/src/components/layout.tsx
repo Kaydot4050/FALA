@@ -19,41 +19,20 @@ import {
   Search,
   Menu,
   X,
-  Check
+  Check,
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { useState, useEffect } from "react";
 
 function ColorCircle({ color, name }: { color: string, name: string }) {
-  const { setTheme } = useTheme();
-  // We use a small hack to detect current primary from CSS variable
-  const [isCurrent, setIsCurrent] = useState(false);
-
-  useEffect(() => {
-    const current = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
-    setIsCurrent(current === color);
-  }, [color]);
-
-  const handleClick = () => {
-    document.documentElement.style.setProperty('--primary', color);
-    setIsCurrent(true);
-    // Force refresh others
-    const event = new CustomEvent('themeChange', { detail: color });
-    window.dispatchEvent(event);
-  };
-
-  useEffect(() => {
-    const handleRefresh = (e: any) => {
-       setIsCurrent(e.detail === color);
-    };
-    window.addEventListener('themeChange', handleRefresh);
-    return () => window.removeEventListener('themeChange', handleRefresh);
-  }, [color]);
+  const { brandColor, setBrandColor } = useTheme();
+  const isCurrent = brandColor === color;
 
   return (
     <button 
-      onClick={handleClick}
+      onClick={() => setBrandColor(color)}
       title={name}
       className={cn(
         "h-6 w-6 rounded-full transition-all hover:scale-125 border-2",
@@ -75,8 +54,10 @@ const MAIN_LINKS = [
 ];
 
 const TOOLS_LINKS = [
-  { href: "/promo", label: "Promo Codes", icon: ArrowUpRight, badge: "NEW" },
+  { href: "/suggestions", label: "Suggestions", icon: MessageSquare, badge: "NEW" },
+  { href: "/promo", label: "Promo Codes", icon: ArrowUpRight },
   { href: "/performance", label: "Performance", icon: BarChart3 },
+  { href: "/popups", label: "Popups", icon: Bell },
   { href: "/bot", label: "WhatsApp Bot", icon: MessageSquare, badge: "BETA" },
   { href: "/email", label: "Email Marketing", icon: Mail },
 ];
@@ -95,11 +76,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen text-slate-100 overflow-hidden font-sans relative">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-black/40 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground glow-primary">
-            <Store size={18} strokeWidth={2.5} />
-          </div>
-          <span className="font-black text-sm tracking-tight glow-text uppercase">Falaa Admin</span>
+        <Link href="/" className="flex items-center">
+          <img src="/logo.png" alt="Falaa Deals" className="h-6 w-auto" />
         </Link>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -124,14 +102,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}>
         {/* Brand/Search Section */}
         <div className="p-8 pb-4 space-y-8">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-              <Store size={22} strokeWidth={2.5} />
-            </div>
-            <div>
-              <span className="font-black text-sm tracking-tight block leading-none">Falaa Admin</span>
-              <span className="text-[10px] text-primary font-bold uppercase tracking-widest opacity-80">Store Control</span>
-            </div>
+          <Link href="/" className="flex items-center group">
+            <img 
+              src="/logo.png" 
+              alt="Falaa Deals" 
+              className="h-8 w-auto group-hover:scale-105 transition-transform" 
+            />
           </Link>
 
           <div className="relative group">
@@ -225,10 +201,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-16 lg:pt-0">
-        <div className="w-full py-6 md:py-10 px-4 md:px-10 max-w-7xl mx-auto">
+      <main className="flex-1 overflow-y-auto pt-16 lg:pt-0 flex flex-col">
+        <div className="flex-1 w-full py-6 md:py-10 px-4 md:px-10 max-w-7xl mx-auto">
           {children}
         </div>
+        
+        {/* ── Footer ── */}
+        <footer className="mt-auto py-12 px-10 border-t border-white/5 bg-black/20">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="FalaaDeals" className="h-6 w-auto brightness-200" />
+            </div>
+            
+            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">
+              &copy; {new Date().getFullYear()} Internal Management System. Built for Performance.
+            </p>
+            
+            <div className="flex items-center gap-4">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">System Operational</span>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );

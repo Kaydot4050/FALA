@@ -16,19 +16,16 @@ import {
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
-export type NetworkId = "YELLO" | "TELECEL" | "AT_PREMIUM";
+export type NetworkId = "YELLO" | "TELECEL" | "AT_PREMIUM" | "at";
 
 const NETWORKS: {
   id: NetworkId;
   name: string;
   sub: string;
-  gradient: string;
-  glow: string;
-  trace: string;
 }[] = [
-  { id: "YELLO",   name: "MTN",       sub: "Non-Expiry",  gradient: "from-[#FFCC00] to-[#FF9500]", glow: "shadow-[0_0_30px_rgba(255,204,0,0.15)]", trace: "#FFCC00" },
-  { id: "TELECEL",  name: "Telecel",   sub: "Instant",     gradient: "from-[#E60000] to-[#FF4444]", glow: "shadow-[0_0_30px_rgba(230,0,0,0.15)]", trace: "#E60000" },
-  { id: "AT_PREMIUM", name: "AirtelTigo", sub: "Standard",   gradient: "from-[#0033A0] to-[#EF3D42]", glow: "shadow-[0_0_30px_rgba(239,61,66,0.15)]", trace: "#EF3D42" },
+  { id: "YELLO",   name: "MTN",       sub: "Non-Expiry" },
+  { id: "TELECEL",  name: "Telecel",   sub: "Instant"    },
+  { id: "AT_PREMIUM", name: "AirtelTigo", sub: "Standard"  },
 ];
 
 const STEPS = [
@@ -105,47 +102,50 @@ export default function BuyData() {
              <div className="h-8 w-8 rounded-full bg-white text-slate-950 flex items-center justify-center font-black text-xs">1</div>
              <h2 className="text-2xl font-black tracking-tight">Select Network</h2>
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-6">
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-6 md:gap-12 max-w-5xl mx-auto px-4">
             {NETWORKS.map((net) => {
               const isSelected = selectedNetwork === net.id;
+              // Map network ID to trace color
+              const traceColor = net.id === "YELLO" ? "#FFCC00" : net.id === "TELECEL" ? "#E60000" : "#1B365D";
               
               return (
                 <button
                   key={net.id}
                   onClick={() => setSelectedNetwork(net.id as NetworkId)}
-                  style={{ "--trace-color": net.trace } as any}
                   className={cn(
-                    "relative flex flex-col items-center gap-2 md:gap-6 rounded-[20px] transition-all duration-500 overflow-hidden isolate active:scale-95 active:brightness-95 p-[4px]",
-                    isSelected
-                      ? "bg-slate-900 shadow-2xl scale-[1.02]"
-                      : "bg-slate-950/50 hover:bg-slate-900 border-2 border-white/5"
+                    "group relative flex flex-col items-center transition-all duration-500",
+                    isSelected ? "scale-[1.1] z-20" : "opacity-40 hover:opacity-100 grayscale-[40%] hover:grayscale-0"
                   )}
                 >
-                  {/* Moving Border Trace */}
-                  {isSelected && (
-                    <div className="absolute inset-0 z-0">
-                      <div className="trace-border animate-border-spin" />
-                    </div>
-                  )}
-
-                  {/* Content Container */}
-                  <div className={cn(
-                    "relative z-10 w-full h-full flex flex-col items-center gap-2 md:gap-6 p-3 md:p-10 rounded-[18px] transition-all bg-inherit",
-                    isSelected ? "bg-slate-900" : "bg-transparent"
-                  )}>
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent z-[-1]" />
+                  <div 
+                    style={{ "--trace-color": traceColor } as any}
+                    className={cn(
+                      "relative w-full aspect-square rounded-[32px] overflow-hidden transition-all duration-700 flex items-center justify-center isolate",
+                      isSelected ? "shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-float" : "hover:-translate-y-2"
                     )}
-                    <div className="relative z-10 p-2 md:p-4 rounded-[12px] bg-white/5 border border-white/5 group-hover:scale-110 transition-transform">
-                      <NetworkLogo network={net.id as NetworkId} size={52} />
-                    </div>
-                    <div className="text-center relative z-10">
-                      <p className="font-extrabold text-[10px] md:text-xl text-white mb-0.5 uppercase tracking-tight md:tracking-widest">{net.name}</p>
-                      <span className="hidden md:block text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">
-                        {net.sub}
-                      </span>
+                  >
+                    {/* Moving Trace Border */}
+                    {isSelected && (
+                      <div className="absolute inset-0 z-0">
+                        <div className="trace-border animate-border-spin scale-[1.5]" />
+                      </div>
+                    )}
+
+                    {/* Inner Card */}
+                    <div className={cn(
+                      "absolute inset-[3px] rounded-[29px] overflow-hidden z-10 transition-all duration-500 bg-background",
+                    )}>
+                      {/* Brand Inner Glow */}
+                      {isSelected && (
+                        <div 
+                          className="absolute inset-0 opacity-20 animate-pulse-slow" 
+                          style={{ backgroundColor: traceColor }}
+                        />
+                      )}
+                      <NetworkLogo network={net.id as NetworkId} className="w-full h-full relative z-20" />
                     </div>
                   </div>
+                  
                 </button>
               );
             })}
