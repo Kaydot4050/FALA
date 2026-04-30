@@ -35,10 +35,10 @@ export default function PaymentCallback() {
     toast({ title: "Copied", description: "Tracking # copied to clipboard." });
   };
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const reference = params.get("reference") || params.get("trxref");
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("reference") || params.get("trxref");
 
+  useEffect(() => {
     if (!reference) {
       setStatus("failed");
       return;
@@ -118,11 +118,6 @@ export default function PaymentCallback() {
     };
   }, []);
 
-  const NETWORK_LABELS: Record<string, string> = {
-    YELLO: "MTN",
-    TELECEL: "Telecel",
-    at: "AirtelTigo",
-  };
 
   if (status === "on_hold") {
     return (
