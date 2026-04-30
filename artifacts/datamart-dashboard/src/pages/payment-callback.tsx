@@ -16,6 +16,13 @@ interface OrderData {
   amount: string;
 }
 
+const NETWORK_LABELS: Record<string, string> = {
+  "YELLO": "MTN",
+  "TELECEL": "Telecel",
+  "at": "AT",
+  "AIRTELTIGO": "AT"
+};
+
 export default function PaymentCallback() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
