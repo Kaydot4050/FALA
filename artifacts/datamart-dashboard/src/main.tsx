@@ -4,7 +4,8 @@ import App from "./App";
 import "./index.css";
 
 // Configure API base URL automatically for Netlify Cloud vs Localhost
-const defaultUrl = "";
-setBaseUrl(import.meta.env.VITE_API_URL || defaultUrl);
+const apiUrl = import.meta.env.VITE_API_URL || "";
+console.log("🚀 Falaa Deals Initializing - API URL:", apiUrl || "Local (Relative)");
+setBaseUrl(apiUrl);
 
 createRoot(document.getElementById("root")!).render(<App />);

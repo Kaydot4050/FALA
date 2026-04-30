@@ -61,18 +61,19 @@ export default function PaymentCallback() {
           setOrderData(data.data);
           const orderStatus = data.data.orderStatus;
 
-          if (orderStatus === "fulfilled") {
+          if (orderStatus === "fulfilled" || orderStatus === "completed") {
             setStatus("fulfilled");
             return;
           } 
           
-          if (orderStatus === "failed") {
+          if (orderStatus === "failed" || orderStatus === "error") {
             setStatus("failed");
             return;
           }
 
           // If status is paid, processing, or pending, keep polling
-          setStatus(orderStatus === "paid" || orderStatus === "processing" ? "paid" : "pending");
+          const isPendingState = ["paid", "processing", "pending", "on_hold"].includes(orderStatus);
+          setStatus(isPendingState ? (orderStatus === "paid" || orderStatus === "processing" ? "paid" : "pending") : "pending");
           
           // Safety cap: Stop after ~10 minutes of polling
           if (pollCount > 150) {

@@ -1,4 +1,4 @@
-import { ArrowRight, Search, Zap, ShieldCheck, Clock, TrendingUp, Sparkles, MessageSquare, Send, Star, ChevronDown, ChevronUp, User, RefreshCw, Check } from "lucide-react";
+import { ArrowRight, Search, Zap, ShieldCheck, Clock, TrendingUp, Sparkles, MessageSquare, Send, Star, ChevronDown, ChevronUp, User, RefreshCw, Check, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ function AnimatedSection({
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { data: packagesRes, isLoading } = useGetDataPackages();
+  const { data: packagesRes, isLoading, error } = useGetDataPackages();
   const [isSuggestionExpanded, setIsSuggestionExpanded] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -230,6 +230,20 @@ export default function Home() {
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="min-w-[150px] md:min-w-[270px] h-[200px] rounded-[20px] bg-muted animate-pulse" />
             ))
+          ) : error ? (
+            <div className="w-full py-12 flex flex-col items-center justify-center gap-4 text-center">
+              <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-lg font-bold">Failed to load bundles</p>
+                <p className="text-sm text-muted-foreground">Please check your internet or refresh the page.</p>
+              </div>
+              <Button onClick={() => window.location.reload()} variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </div>
           ) : (
             trendingBundles.map((btn: any, i) => (
               <div 
