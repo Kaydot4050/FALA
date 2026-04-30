@@ -29,28 +29,29 @@ jobs:
 
       # 1. Build the Backend API Server
       - name: Build API Server
+        run: pnpm --filter @workspace/api-server run build
+
+      # 2. Clean package.json for Namecheap
+      - name: Clean package.json for Namecheap
         run: |
-          pnpm --filter @workspace/api-server run build
-          # Clean package.json for Namecheap (removes pnpm workspace: dependencies)
           node -e "
             const fs = require('fs');
             const path = './artifacts/api-server/package.json';
             const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
-            console.log('Cleaning package.json dependencies...');
+            console.log('--- STARTING CLEAN ---');
             if (pkg.dependencies) {
               for (const key in pkg.dependencies) {
                 const val = pkg.dependencies[key];
                 if (val.includes('workspace:') || val.includes('catalog:')) {
-                  console.log('Removing pnpm dependency:', key);
+                  console.log('REMOVING:', key);
                   delete pkg.dependencies[key];
                 }
               }
             }
             if (pkg.devDependencies) delete pkg.devDependencies;
-            console.log('Final package.json content:');
-            console.log(JSON.stringify(pkg, null, 2));
+            console.log('CLEANED CONTENT:', JSON.stringify(pkg, null, 2));
             fs.writeFileSync(path, JSON.stringify(pkg, null, 2));
-            console.log('Cleaned package.json saved.');
+            console.log('--- CLEAN COMPLETE ---');
           "
 
       # 2. Build the Frontend Dashboard
@@ -90,7 +91,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./artifacts/api-server/
-          server-dir: api-server/
+          server-dir: ./api-server/
           exclude: |
             **/.git*
             **/.git*/**
