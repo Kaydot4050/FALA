@@ -54,19 +54,20 @@ jobs:
             console.log('--- CLEAN COMPLETE ---');
           "
 
-      # 2. Build the Frontend Dashboard
-      # Assuming your API server will be hosted at https://api.falaadeals.shop
-      # If your Node.js App is at a different URL, update VITE_API_URL below!
-      - name: Build Frontend
+      # 3. Build the Customer Dashboard
+      - name: Build Customer Dashboard
         env:
           VITE_API_URL: https://api.falaadeals.shop
-        run: |
-          pnpm --filter @workspace/datamart-dashboard run build
-          echo "Listing artifacts directory after build:"
-          ls -R artifacts/datamart-dashboard/dist || echo "DIST FOLDER NOT FOUND"
+        run: pnpm --filter @workspace/datamart-dashboard run build
 
-      # 3. Deploy Frontend to Namecheap public_html
-      - name: Deploy Frontend via FTP
+      # 4. Build the Admin Dashboard
+      - name: Build Admin Dashboard
+        env:
+          VITE_API_URL: https://api.falaadeals.shop
+        run: pnpm --filter @workspace/admin-dashboard run build
+
+      # 5. Deploy Customer Dashboard to public_html
+      - name: Deploy Customer Dashboard via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -78,15 +79,26 @@ jobs:
             **/.git*
             **/.git*/**
 
-      # 5. Restart Node.js App on Namecheap (Phusion Passenger)
-      # By creating/updating tmp/restart.txt, Namecheap's Node.js server will automatically restart
+      # 6. Deploy Admin Dashboard to admin subdomain root
+      - name: Deploy Admin Dashboard via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./artifacts/admin-dashboard/dist/
+          server-dir: /admin.falaadeals.shop/
+          exclude: |
+            **/.git*
+            **/.git*/**
+
+      # 7. Trigger Node.js App Restart
       - name: Trigger Node.js App Restart
         run: |
           mkdir -p artifacts/api-server/tmp
           date > artifacts/api-server/tmp/restart.txt
 
-      # 6. Deploy Backend to Namecheap Node.js App folder
-      # Assumes your Node.js app folder in cPanel is named "api-server"
+      # 8. Deploy Backend to api-server folder
       - name: Deploy Backend via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
