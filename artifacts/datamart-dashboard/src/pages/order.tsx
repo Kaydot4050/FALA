@@ -64,9 +64,13 @@ export default function OrderStatus() {
     const query = directQuery || searchInput.trim();
     if (!query) return;
 
-    // Auto-detect phone numbers (e.g. 0548169191 or 233548169191) to prevent user errors
+    // Auto-detect identifiers
     const isPhoneNumber = /^(?:\+?233|0)\d{9}$/.test(query);
-    const actualMode = isPhoneNumber ? 'phone' : searchMode;
+    const isReference = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(query) || query.length > 15;
+    
+    let actualMode = searchMode;
+    if (isPhoneNumber) actualMode = 'phone';
+    else if (isReference) actualMode = 'reference';
 
     if (actualMode !== searchMode) {
       setSearchMode(actualMode);

@@ -7,7 +7,8 @@ async function main() {
   const pool = new pg.Pool({ connectionString: DATABASE_URL });
   
   try {
-    const res = await pool.query("SELECT id, phone_number, status, audit_logs, created_at FROM orders ORDER BY created_at DESC LIMIT 5");
+    const res = await pool.query("SELECT id, status, created_at, updated_at FROM orders WHERE created_at >= now() - interval '15 minutes' ORDER BY created_at DESC");
+    console.log("--- Orders in last 15 mins ---");
     console.log(JSON.stringify(res.rows, null, 2));
 
   } catch (error) {
