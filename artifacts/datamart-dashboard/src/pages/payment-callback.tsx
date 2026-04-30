@@ -44,7 +44,7 @@ export default function PaymentCallback() {
       if (cancelled) return;
 
       try {
-        const res = await fetch(`/api/paystack/verify/${reference}`);
+        const res = await fetch(`/api/paystack/verify/${reference}?t=${Date.now()}`);
         
         // If we get a server error (500), just retry instead of failing
         if (!res.ok && res.status >= 500) {

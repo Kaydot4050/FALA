@@ -1,6 +1,20 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  
+  # 1. Force /api requests to NEVER be cached (critical for payment verification)
+  <IfModule mod_headers.c>
+    SetEnvIf Request_URI "^/api" IS_API
+    Header set Cache-Control "no-cache, no-store, must-revalidate" env=IS_API
+    Header set Pragma "no-cache" env=IS_API
+    Header set Expires 0 env=IS_API
+  </IfModule>
+
+  # 2. Ignore the /api path so it can reach the Node.js backend
+  RewriteCond %{REQUEST_URI} ^/api [NC]
+  RewriteRule .* - [L]
+
+  # Standard React Router support
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
