@@ -165,11 +165,11 @@ export default function PaymentCallback() {
             </div>
             <div>
               <h2 className="text-2xl font-bold">
-                {status === "paid" ? "Payment Confirmed!" : "Verifying Payment..."}
+                {status === "paid" || status === "pending" || status === "loading" ? "Payment Received!" : "Verifying Payment..."}
               </h2>
               <p className="text-muted-foreground mt-2">
-                {status === "paid"
-                  ? "We've received your payment. Your data bundle is being delivered instantly. Please stay on this page."
+                {status === "paid" || status === "pending" || status === "loading"
+                  ? "We've received your payment signal. Your data bundle is being delivered instantly. Please stay on this page."
                   : "We're just confirming your transaction with Paystack. This usually takes a few seconds."}
               </p>
             </div>
