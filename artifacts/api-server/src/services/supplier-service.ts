@@ -1,7 +1,7 @@
 import { datamartFetch } from "../lib/datamart";
 import { logger } from "../lib/logger";
 import { db, ordersTable, orderEventsTable } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, gt, ne } from "drizzle-orm";
 
 export interface FulfillmentResult {
   success: boolean;
@@ -38,9 +38,9 @@ export class SupplierService {
         .from(ordersTable)
         .where(and(
           eq(ordersTable.phoneNumber, order.phoneNumber),
-          sql`${ordersTable.createdAt} > ${fiveMinutesAgo}`,
-          sql`${ordersTable.id} != ${orderId}`,
-          sql`${ordersTable.status} IN ('completed', 'processing')`
+          gt(ordersTable.createdAt, fiveMinutesAgo),
+          ne(ordersTable.id, orderId),
+          sql`${ordersTable.status} IN ('completed', 'processing', 'on_hold')`
         ))
         .limit(1);
 
