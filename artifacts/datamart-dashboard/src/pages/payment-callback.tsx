@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { CheckCircle2, XCircle, Loader2, ArrowLeft, Phone, Wifi, Copy } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, ArrowLeft, Phone, Wifi, Copy, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-type OrderStatus = "loading" | "fulfilled" | "paid" | "pending" | "failed";
+type OrderStatus = "loading" | "fulfilled" | "paid" | "pending" | "failed" | "on_hold";
 
 interface OrderData {
   orderId: string;
