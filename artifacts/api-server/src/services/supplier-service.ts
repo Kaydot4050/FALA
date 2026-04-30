@@ -58,7 +58,12 @@ export class SupplierService {
           })
           .where(eq(ordersTable.id, orderId));
 
-        return { success: false, error: "Duplicate order for this phone number detected in last 5 minutes. Order is on hold for manual review." };
+        return { 
+          success: true, 
+          isOnHold: true, 
+          isDuplicate: true,
+          error: "Duplicate order for this phone number detected in last 5 minutes. Order is on hold for manual review." 
+        } as any;
       }
 
       // 4. Record attempt start

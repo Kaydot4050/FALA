@@ -71,23 +71,24 @@ export default function PaymentCallback() {
             return;
           }
 
-          // If status is paid, processing, or pending, keep polling
-          const isPendingState = ["paid", "processing", "pending", "on_hold"].includes(orderStatus);
-          setStatus(isPendingState ? (orderStatus === "paid" || orderStatus === "processing" ? "paid" : "pending") : "pending");
+          if (orderStatus === "on_hold") {
+            setStatus("on_hold");
+          } else {
+            const isPendingState = ["paid", "processing", "pending"].includes(orderStatus);
+            setStatus(isPendingState ? (orderStatus === "paid" || orderStatus === "processing" ? "paid" : "pending") : "pending");
+          }
           
-          // Safety cap: Stop after ~10 minutes of polling
           if (pollCount > 150) {
             setStatus("failed");
             return;
           }
 
           setPollCount((c) => c + 1);
-          // Faster polling for the first minute (1.5s), then slow down (5s)
           const delay = pollCount < 40 ? 1500 : 5000;
           timeoutId = setTimeout(checkStatus, delay);
         } else {
-          // If the order isn't found yet, it might be database lag, retry a few times
           if (pollCount < 5) {
+            console.log("Waiting for payment record to settle...");
             setPollCount((c) => c + 1);
             timeoutId = setTimeout(checkStatus, 3000);
           } else {
@@ -97,7 +98,6 @@ export default function PaymentCallback() {
       } catch (err) {
         console.error("Polling error:", err);
         if (!cancelled) {
-          // On network error, don't fail immediately, just wait and retry
           timeoutId = setTimeout(checkStatus, 5000);
         }
       }
@@ -117,10 +117,47 @@ export default function PaymentCallback() {
     at: "AirtelTigo",
   };
 
+  if (status === "on_hold") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 animate-fade-in text-center px-6">
+        <div className="relative">
+          <div className="h-24 w-24 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 animate-pulse">
+            <Clock className="h-12 w-12" />
+          </div>
+          <div className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-black border-4 border-background">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">Order On Hold</h1>
+          <p className="text-lg text-muted-foreground max-w-md mx-auto">
+            Your payment was received, but our system flagged this for manual review. 
+            <span className="block mt-2 font-bold text-amber-500/90">Please do not pay again.</span>
+          </p>
+        </div>
+
+        <div className="bg-card/50 border border-border/50 rounded-2xl p-6 w-full max-w-md space-y-4">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-muted-foreground">Reference</span>
+            <span className="font-mono text-white">{reference}</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed italic">
+            An administrator will review and process your bundle shortly. You can close this page.
+          </p>
+        </div>
+
+        <Button onClick={() => setLocation("/")} variant="outline" className="w-full max-w-md" size="lg">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Loading / Processing */}
         {(status === "loading" || status === "pending" || status === "paid") && (
           <div className="text-center space-y-6 animate-in fade-in">
             <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -155,7 +192,6 @@ export default function PaymentCallback() {
           </div>
         )}
 
-        {/* Success */}
         {status === "fulfilled" && (
           <div className="text-center space-y-6 animate-in fade-in">
             <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -206,7 +242,6 @@ export default function PaymentCallback() {
           </div>
         )}
 
-        {/* Failed */}
         {status === "failed" && (
           <div className="text-center space-y-6 animate-in fade-in">
             <div className="mx-auto w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center">
