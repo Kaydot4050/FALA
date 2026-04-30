@@ -44,7 +44,8 @@ export default function PaymentCallback() {
       if (cancelled) return;
 
       try {
-        const res = await fetch(`/api/paystack/verify/${reference}?t=${Date.now()}`);
+        const apiUrl = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${apiUrl}/api/paystack/verify/${reference}?t=${Date.now()}`);
         
         // If we get a server error (500), just retry instead of failing
         if (!res.ok && res.status >= 500) {

@@ -80,7 +80,8 @@ export default function OrderStatus() {
       setIsSearching(true);
       setSearchResults([]);
       try {
-        const res = await fetch(`/api/order/phone/${encodeURIComponent(query)}`);
+        const apiUrl = import.meta.env.VITE_API_URL || "";
+        const res = await fetch(`${apiUrl}/api/order/phone/${encodeURIComponent(query)}`);
         const data = await res.json();
         if (data.status === 'success' && data.data) {
           setSearchResults(data.data);

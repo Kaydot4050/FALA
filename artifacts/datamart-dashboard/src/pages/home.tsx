@@ -72,7 +72,8 @@ export default function Home() {
 
     setIsSending(true);
     try {
-      const response = await fetch("/api/suggestions", {
+      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const response = await fetch(`${apiUrl}/api/suggestions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
