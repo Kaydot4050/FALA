@@ -60,7 +60,10 @@ jobs:
       - name: Build Frontend
         env:
           VITE_API_URL: https://api.falaadeals.shop
-        run: pnpm --filter @workspace/datamart-dashboard run build
+        run: |
+          pnpm --filter @workspace/datamart-dashboard run build
+          echo "Listing artifacts directory after build:"
+          ls -R artifacts/datamart-dashboard/dist || echo "DIST FOLDER NOT FOUND"
 
       # 3. Deploy Frontend to Namecheap public_html
       - name: Deploy Frontend via FTP
