@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { CheckCircle2, XCircle, Loader2, ArrowLeft, Phone, Wifi, Copy, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, ArrowLeft, Phone, Wifi, Copy, Clock, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -161,19 +161,21 @@ export default function PaymentCallback() {
     <div className="min-h-[80vh] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {(status === "loading" || status === "pending" || status === "paid") && (
-          <div className="text-center space-y-6 animate-in fade-in">
-            <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          <div className="text-center space-y-6 animate-in zoom-in-95 duration-500">
+            <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">
-                {status === "paid" || status === "pending" || status === "loading" ? "Payment Received!" : "Verifying Payment..."}
+              <h2 className="text-2xl font-bold text-emerald-500">
+                Payment Confirmed!
               </h2>
               <p className="text-muted-foreground mt-2">
-                {status === "paid" || status === "pending" || status === "loading"
-                  ? "We've received your payment signal. Your data bundle is being delivered instantly. Please stay on this page."
-                  : "We're just confirming your transaction with Paystack. This usually takes a few seconds."}
+                We've successfully received your payment. Your data bundle is being delivered to your phone right now.
               </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-primary animate-pulse">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              Bundle delivery in progress...
             </div>
             {orderData && (
               <div className="bg-card border border-border rounded-[20px] p-4 text-left space-y-2">
