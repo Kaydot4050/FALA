@@ -201,25 +201,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-16 lg:pt-0 flex flex-col">
+      <main className="flex-1 overflow-y-auto pt-20 lg:pt-0 flex flex-col">
         <div className="flex-1 w-full py-6 md:py-10 px-4 md:px-10 max-w-7xl mx-auto">
           {children}
         </div>
         
         {/* ── Footer ── */}
-        <footer className="mt-auto py-12 px-10 border-t border-white/5 bg-black/20">
+        <footer className="mt-auto py-8 md:py-12 px-6 md:px-10 border-t border-white/5 bg-black/20">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="FalaaDeals" className="h-6 w-auto brightness-200" />
+              <img src="/logo.png" alt="FalaaDeals" className="h-5 md:h-6 w-auto brightness-200" />
             </div>
             
-            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">
+            <p className="text-[9px] md:text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] text-center">
               &copy; {new Date().getFullYear()} Internal Management System. Built for Performance.
             </p>
             
             <div className="flex items-center gap-4">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">System Operational</span>
+              <span className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">System Operational</span>
             </div>
           </div>
         </footer>

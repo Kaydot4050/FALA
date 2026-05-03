@@ -133,7 +133,7 @@ export default function Popups() {
     }
   };
 
-  if (isLoading) return <div className="p-8">Loading...</div>;
+  if (isLoading) return <PopupsSkeleton />;
 
   return (
     <div className="space-y-10 animate-fade-in pb-24">
@@ -166,46 +166,46 @@ export default function Popups() {
                   !popup.isActive && "opacity-60 grayscale"
                 )}
               >
-                <div className="flex items-center justify-between gap-6">
-                  <div className="flex items-center gap-5">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-start md:items-center gap-4 md:gap-5">
                     <div className={cn(
-                      "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 border border-white/5",
+                      "h-12 w-12 md:h-14 md:w-14 rounded-2xl flex items-center justify-center shrink-0 border border-white/5",
                       POPUP_TYPES.find(t => t.id === popup.type)?.bg,
                       POPUP_TYPES.find(t => t.id === popup.type)?.color
                     )}>
                       {(() => {
                         const Icon = POPUP_TYPES.find(t => t.id === popup.type)?.icon || Bell;
-                        return <Icon size={28} />;
+                        return <Icon className="h-6 w-6 md:h-7 md:w-7" />;
                       })()}
                     </div>
-                    <div>
-                      <h3 className="font-black text-lg tracking-tight flex items-center gap-3">
-                        {popup.title}
-                        {!popup.isActive && <Badge variant="outline" className="text-[9px] uppercase border-white/10">Disabled</Badge>}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black text-base md:text-lg tracking-tight flex flex-wrap items-center gap-2 md:gap-3">
+                        <span className="truncate">{popup.title}</span>
+                        {!popup.isActive && <Badge variant="outline" className="text-[8px] md:text-[9px] uppercase border-white/10 shrink-0">Disabled</Badge>}
                       </h3>
-                      <p className="text-slate-400 text-xs font-bold line-clamp-1 mt-0.5">{popup.message}</p>
-                      <div className="flex items-center gap-4 mt-3">
-                        <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      <p className="text-slate-400 text-[11px] md:text-xs font-bold line-clamp-1 mt-0.5">{popup.message}</p>
+                      <div className="flex flex-wrap items-center gap-3 md:gap-4 mt-3">
+                        <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                           <Target size={12} className="text-primary" />
-                          {popup.pages === "all" ? "All Pages" : "Targeted"}
+                          {popup.pages === "all" ? "All" : "Targeted"}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                           <Zap size={12} className="text-amber-500" />
                           {popup.trigger}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest">
                           <BarChart2 size={12} className="text-emerald-500" />
-                          {popup.analytics?.impressions || 0} Views
+                          {popup.analytics?.impressions || 0}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => setPreviewPopup(popup)} className="hover:bg-primary/10 hover:text-primary rounded-xl">
+                  <div className="flex items-center gap-2 pt-4 md:pt-0 border-t md:border-0 border-white/5 justify-end">
+                    <Button variant="ghost" size="icon" onClick={() => setPreviewPopup(popup)} className="h-9 w-9 md:h-10 md:w-10 hover:bg-primary/10 hover:text-primary rounded-xl shrink-0">
                       <Eye size={18} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(popup)} className="hover:bg-amber-500/10 hover:text-amber-500 rounded-xl">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(popup)} className="h-9 w-9 md:h-10 md:w-10 hover:bg-amber-500/10 hover:text-amber-500 rounded-xl shrink-0">
                       <Edit2 size={18} />
                     </Button>
                     <Button 
@@ -213,7 +213,7 @@ export default function Popups() {
                       size="icon" 
                       onClick={() => handleDelete(popup.id)} 
                       disabled={deleteMutation.isPending}
-                      className="hover:bg-red-500/10 hover:text-red-500 rounded-xl"
+                      className="h-9 w-9 md:h-10 md:w-10 hover:bg-red-500/10 hover:text-red-500 rounded-xl shrink-0"
                     >
                       <Trash2 size={18} />
                     </Button>
@@ -773,3 +773,27 @@ function AdminPopupPreview({ popup, onClose }: { popup: any, onClose: () => void
     </div>
   );
 }
+function PopupsSkeleton() {
+  return (
+    <div className="space-y-10 animate-pulse pb-24">
+      <div className="flex justify-between items-center">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-48 rounded-xl" />
+          <Skeleton className="h-4 w-96 rounded-lg opacity-50" />
+        </div>
+        <Skeleton className="h-12 w-48 rounded-2xl" />
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 space-y-4">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-[32px]" />)}
+        </div>
+        <div className="space-y-6">
+          <Skeleton className="h-40 rounded-[32px]" />
+          <Skeleton className="h-40 rounded-[32px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+import { Skeleton } from "@/components/ui/skeleton";

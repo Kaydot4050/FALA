@@ -323,6 +323,7 @@ export const getPurchaseHistoryQueryLimitDefault = 20;
 export const GetPurchaseHistoryQueryParams = zod.object({
   page: zod.coerce.number().default(getPurchaseHistoryQueryPageDefault),
   limit: zod.coerce.number().default(getPurchaseHistoryQueryLimitDefault),
+  status: zod.string().optional(),
 });
 
 export const GetPurchaseHistoryResponse = zod.object({

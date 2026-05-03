@@ -322,10 +322,18 @@ export interface NetworkStat {
 export interface UsageStatsData {
   totalOrders: number;
   totalSpent: number;
+  totalProfit: number;
   totalGB: number;
+  totalCustomers: number;
   successRate: number;
   pendingSpent: number;
   allTimeSpent: number;
+  allTimeProfit: number;
+  allTimeOrders: number;
+  globalSuccess?: { revenue: number, profit: number, count: number };
+  globalPending?: { revenue: number, profit: number, count: number };
+  globalFailed?: { revenue: number, profit: number, count: number };
+  growth?: { revenue: number, profit: number, orders: number };
   networkBreakdown?: NetworkStat[];
   recentActivity?: PurchaseRecord[];
 }
@@ -545,6 +553,7 @@ export type GetTransactionsParams = {
 export type GetPurchaseHistoryParams = {
   page?: number;
   limit?: number;
+  status?: string;
 };
 
 export type GetActivePopups200 = {

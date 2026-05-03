@@ -250,8 +250,8 @@ export default function BuyData() {
            <h3 className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground/60">Fulfillment Guide</h3>
            <div className="space-y-4">
               {STEPS.map(({ icon: Icon, title, desc }, i) => (
-                <div key={title} className="flex items-center gap-4 md:gap-6 p-4 md:p-6 rounded-[20px] bg-card border border-border text-left shadow-sm">
-                  <div className="h-12 w-12 rounded-[12px] bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <div key={title} className="flex items-center gap-4 md:gap-6 p-4 md:p-6 rounded-[35px] bg-card border border-border text-left shadow-sm transition-all duration-500 hover:border-primary/40 group">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                     <Icon className="h-6 w-6" />
                   </div>
                   <div>

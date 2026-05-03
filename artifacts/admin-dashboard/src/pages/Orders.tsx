@@ -1,4 +1,6 @@
-import { useGetPurchaseHistory } from "@workspace/api-client-react";
+import { useGetPurchaseHistory, useGetUsageStats } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingUp } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -21,13 +23,54 @@ import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Orders() {
-  const { data: historyData, isLoading, refetch } = useGetPurchaseHistory();
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeNetwork, setActiveNetwork] = useState<string>("ALL");
   const [activeStatus, setActiveStatus] = useState<string>("ALL");
+
+  const { data: historyData, isLoading, refetch } = useGetPurchaseHistory({ 
+    page: currentPage,
+    status: activeStatus
+  });
+  
+  const { data: statsData } = useGetUsageStats(undefined, { 
+    query: { 
+      refetchOnWindowFocus: true,
+      staleTime: 0 // Force fresh data
+    } 
+  });
+  
   const queryClient = useQueryClient();
 
   const orders = Array.isArray(historyData?.data?.purchases) ? historyData.data.purchases : [];
+  const pagination = historyData?.data?.pagination;
+
+  // Global aggregates from breakdown - FORCED GLOBAL TOTALS
+  const globalDisplayStats = useMemo(() => {
+    if (!statsData?.data) return null;
+    const d = statsData.data;
+    
+    if (activeStatus === "ALL") {
+      return {
+        revenue: d.allTimeSpent || 0,
+        profit: d.allTimeProfit || 0,
+        orders: d.allTimeOrders || 0,
+        label: "Total"
+      };
+    }
+
+    if (activeStatus === "SUCCESS" && d.globalSuccess) {
+      return { ...d.globalSuccess, orders: d.globalSuccess.count, label: "Success" };
+    }
+    if (activeStatus === "PENDING" && d.globalPending) {
+      return { ...d.globalPending, orders: d.globalPending.count, label: "Pending" };
+    }
+    if (activeStatus === "FAILED" && d.globalFailed) {
+      return { ...d.globalFailed, orders: d.globalFailed.count, label: "Failed" };
+    }
+
+    return null;
+  }, [statsData, activeStatus]);
 
   const { filteredOrders, stats } = useMemo(() => {
     const list = orders.filter(o => {
@@ -50,11 +93,7 @@ export default function Orders() {
       return matchesSearch && matchesNetwork && matchesStatus;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    const totalRevenue = list.reduce((acc, o) => {
-      const status = o.orderStatus?.toLowerCase() || '';
-      const isCompleted = status.includes("fulfilled") || status.includes("success") || status.includes("complete");
-      return acc + (isCompleted ? Number(o.price || 0) : 0);
-    }, 0);
+    const totalRevenue = list.reduce((acc, o) => acc + Number(o.price || 0), 0);
 
     const completedCount = list.filter(o => {
       const status = o.orderStatus?.toLowerCase() || '';
@@ -76,9 +115,7 @@ export default function Orders() {
              cost = price * 0.88;
           }
        }
-       const status = o.orderStatus?.toLowerCase() || '';
-       const isFulfilled = status === "completed" || status === "fulfilled" || status === "success";
-       return acc + (isFulfilled ? (price - cost) : 0);
+       return acc + (price - cost);
     }, 0);
 
     return { 
@@ -87,12 +124,7 @@ export default function Orders() {
     };
   }, [orders, searchTerm, activeNetwork, activeStatus]);
 
-  if (isLoading) return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Syncing Transactions...</p>
-    </div>
-  );
+  if (isLoading) return <OrdersSkeleton />;
 
   return (
     <div className="space-y-10 animate-fade-in pb-20">
@@ -124,11 +156,20 @@ export default function Orders() {
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-        <StatsCard label="Revenue" value={formatCurrency(stats.totalRevenue)} />
-        <StatsCard label="Net Profit" value={formatCurrency(stats.totalProfit)} color="text-primary" />
-        <StatsCard label="Success" value={stats.completed} />
-        <StatsCard label="Pending" value={stats.pending} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+        <StatsCard 
+          label="Revenue" 
+          value={formatCurrency(!searchTerm && activeNetwork === "ALL" ? (globalDisplayStats?.revenue ?? stats.totalRevenue) : stats.totalRevenue)} 
+        />
+        <StatsCard 
+          label="Profit" 
+          value={formatCurrency(!searchTerm && activeNetwork === "ALL" ? (globalDisplayStats?.profit ?? stats.totalProfit) : stats.totalProfit)} 
+          color="text-primary" 
+        />
+        <StatsCard 
+          label="Orders" 
+          value={!searchTerm && activeNetwork === "ALL" ? (globalDisplayStats?.orders ?? (stats.completed + stats.pending)) : (stats.completed + stats.pending)} 
+        />
       </div>
 
       {/* ── Status Filters ── */}
@@ -136,7 +177,10 @@ export default function Orders() {
         {['ALL', 'SUCCESS', 'PENDING', 'FAILED'].map((stat) => (
           <button 
             key={stat}
-            onClick={() => setActiveStatus(stat)}
+            onClick={() => {
+              setActiveStatus(stat);
+              setCurrentPage(1);
+            }}
             className={cn(
               "px-6 md:px-8 py-2.5 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
               activeStatus === stat
@@ -239,6 +283,31 @@ export default function Orders() {
           </Table>
         </div>
       </div>
+
+      {/* ── Pagination ── */}
+      {pagination && pagination.pages > 1 && (
+        <div className="flex items-center justify-between gap-4 py-4">
+          <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
+            Page {pagination.currentPage} of {pagination.pages}
+          </p>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="h-9 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed hover:text-primary transition-all"
+            >
+              Previous
+            </button>
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(pagination.pages, prev + 1))}
+              disabled={currentPage === pagination.pages}
+              className="h-9 px-4 glass rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed hover:text-primary transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -284,6 +353,46 @@ function StatusBadge({ status }: { status: string }) {
     <div className="inline-flex items-center gap-1.5 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
       <div className="h-1 w-1 rounded-full bg-amber-500 animate-pulse shadow-[0_0_5px_rgba(245,158,11,0.5)]" />
       <span className="text-[9px] font-black uppercase tracking-tight">Pending</span>
+    </div>
+  );
+}
+function OrdersSkeleton() {
+  return (
+    <div className="space-y-10 animate-pulse pb-20">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-48 rounded-xl" />
+          <Skeleton className="h-4 w-64 rounded-lg opacity-50" />
+        </div>
+        <div className="flex gap-4">
+          <Skeleton className="h-10 w-64 rounded-xl" />
+          <Skeleton className="h-10 w-24 rounded-xl" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-6">
+        {[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+      </div>
+      <div className="flex gap-3">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-12 w-24 rounded-2xl opacity-40" />)}
+      </div>
+      <div className="glass-card overflow-hidden">
+        <div className="p-8 space-y-4">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="flex items-center justify-between gap-6 py-4 border-b border-white/5 last:border-0">
+               <div className="flex items-center gap-4 flex-1">
+                  <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-1/3 rounded-lg" />
+                    <Skeleton className="h-3 w-1/4 rounded-lg opacity-40" />
+                  </div>
+               </div>
+               <Skeleton className="h-4 w-24 rounded-lg" />
+               <Skeleton className="h-6 w-20 rounded-full opacity-30" />
+               <Skeleton className="h-4 w-32 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

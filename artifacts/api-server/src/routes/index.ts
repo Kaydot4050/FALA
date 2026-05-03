@@ -16,6 +16,8 @@ import adminPackagesRouter from "./admin-packages";
 import adminCustomersRouter from "./admin-customers";
 import popupsRouter from "./popups";
 import suggestionsRouter from "./suggestions";
+import adminSmsRouter from "./admin-sms";
+import adminSmsLogsRouter from "./admin-sms-logs";
 
 const router: IRouter = Router();
 
@@ -36,5 +38,7 @@ router.use(paystackRouter);
 router.use(datamartWebhookRouter);
 router.use(popupsRouter);
 router.use(suggestionsRouter);
+router.use(adminSmsRouter);
+router.use(adminSmsLogsRouter);
 
 export default router;

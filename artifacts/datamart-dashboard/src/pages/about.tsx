@@ -72,7 +72,7 @@ export default function About() {
     <div className="flex flex-col gap-8 pb-28 md:pb-12 w-full">
 
       {/* ── Hero ── */}
-      <FadeSection className="relative overflow-hidden rounded-[20px] text-white px-6 py-12 md:px-10 md:py-20 shadow-2xl isolate border border-white/10 group">
+      <FadeSection className="relative overflow-hidden rounded-[28px] md:rounded-[35px] text-white px-6 py-12 md:px-10 md:py-24 shadow-2xl isolate border border-white/10 group">
         {/* Banner with Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105 z-[-2]" 
@@ -101,7 +101,7 @@ export default function About() {
 
       {/* ── Store information ── */}
       <FadeSection delay={80}>
-        <div className="bg-card border border-border rounded-[20px] overflow-hidden shadow-sm">
+        <div className="bg-card border border-border rounded-[28px] md:rounded-[35px] overflow-hidden shadow-xl">
           <div className="px-5 py-4 border-b border-border bg-muted/30">
             <h2 className="font-bold text-base">Store Information</h2>
           </div>
@@ -124,12 +124,12 @@ export default function About() {
       {/* ── Why Choose Us ── */}
       <FadeSection delay={120}>
         <div className="space-y-6">
-          <h2 className="font-black text-xl md:text-2xl tracking-tight">Why Choose Us?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <h2 className="font-black text-xl md:text-2xl tracking-tight px-2 md:px-0">Why Choose Us?</h2>
+          <div className="flex flex-nowrap overflow-x-auto pb-8 gap-4 snap-x no-scrollbar md:grid md:grid-cols-3 md:gap-6 md:overflow-visible px-2 md:px-0">
             {WHY_CHOOSE.map(({ color, title, desc }, i) => (
               <div
                 key={title}
-                className="group relative flex flex-col items-start gap-5 bg-card border border-border rounded-[24px] p-6 md:p-8 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 overflow-hidden isolate active:scale-95 active:brightness-95"
+                className="min-w-[280px] md:min-w-0 snap-start group relative flex flex-col items-start gap-5 bg-card border border-border rounded-[28px] md:rounded-[35px] p-6 md:p-8 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 overflow-hidden isolate active:scale-95 active:brightness-95"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-[-1]" />
@@ -170,20 +170,26 @@ export default function About() {
 
       {/* ── Mission ── */}
       <FadeSection delay={160}>
-        <div className="bg-card border border-border rounded-[20px] p-4 md:p-5 space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-              <Target className="w-5 h-5 text-primary" />
+        <div className="bg-card border border-border rounded-[28px] md:rounded-[35px] p-6 md:p-12 space-y-8 hover:border-primary/40 transition-all duration-500 group relative overflow-hidden isolate shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-[-1]" />
+          
+          <div className="flex items-center gap-4">
+            <span className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/20 border border-primary/20 text-primary shadow-lg shadow-primary/10 group-hover:rotate-12 transition-transform duration-500">
+              <Target className="w-6 h-6" />
             </span>
-            <h2 className="font-bold text-base">Our Mission</h2>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight">Our Mission</h2>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            To provide affordable and reliable data bundles to everyone, making internet connectivity accessible for work, education, and entertainment.
+
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl font-medium">
+            To provide affordable and reliable data bundles to everyone, making internet connectivity accessible for work, education, and entertainment across all of Ghana.
           </p>
-          <ul className="flex flex-col gap-2">
+
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 border-t border-border/50">
             {MISSION_POINTS.map((point) => (
-              <li key={point} className="flex items-center gap-2.5 text-sm font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <li key={point} className="flex items-center gap-3 text-sm md:text-base font-bold text-foreground/80 group/item">
+                <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all duration-300 shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
                 {point}
               </li>
             ))}
@@ -193,7 +199,7 @@ export default function About() {
 
       {/* ── Contact CTA ── */}
       <FadeSection delay={200}>
-        <div className="bg-gradient-to-br from-muted/50 via-card to-muted/80 rounded-[30px] border border-border p-8 md:p-12 text-center space-y-6 shadow-sm overflow-hidden relative">
+        <div className="bg-gradient-to-br from-muted/50 via-card to-muted/80 rounded-[28px] md:rounded-[35px] p-6 md:p-12 text-center space-y-6 shadow-xl overflow-hidden relative transition-all duration-500 hover:border-primary/40">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -translate-x-1/2 translate-y-1/2" />
           

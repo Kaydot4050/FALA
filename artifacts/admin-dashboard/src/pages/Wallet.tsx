@@ -24,6 +24,9 @@ export default function Wallet() {
      page: 1, 
      limit: 50
   });
+
+  if (isBalanceLoading) return <WalletSkeleton />;
+
   const [searchTerm, setSearchTerm] = useState("");
   const balance = balanceData?.data?.balance || 0;
   const rawTransactions = txData?.data?.transactions || [];
@@ -188,5 +191,26 @@ function StatsCard({ label, value, color = "text-foreground" }: { label: string,
         </p>
       </CardContent>
     </Card>
+  );
+}
+function WalletSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse pb-10">
+      <div className="flex gap-4">
+        {[1,2].map(i => <Skeleton key={i} className="h-10 w-40 rounded-xl" />)}
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+      </div>
+      <div className="space-y-6">
+        <div className="flex gap-4">
+          <Skeleton className="h-10 w-80 rounded-xl" />
+          <Skeleton className="h-10 w-48 rounded-xl" />
+        </div>
+        <div className="border border-border/30 rounded-xl overflow-hidden p-8 space-y-4">
+          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
+        </div>
+      </div>
+    </div>
   );
 }

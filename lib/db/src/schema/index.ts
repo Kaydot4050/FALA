@@ -4,6 +4,7 @@ export * from "./packages";
 export * from "./order_events";
 export * from "./popups";
 export * from "./suggestions";
+export * from "./sms";
 
 // Each model/table should ideally be split into different files.
 // Each model/table should define a Drizzle table, insert schema, and types:

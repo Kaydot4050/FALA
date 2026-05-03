@@ -32,11 +32,13 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
-  const { data: statsData, isLoading: statsLoading, error: statsError } = useGetUsageStats();
+  const [timeFilter, setTimeFilter] = useState("today");
+  const { data: statsData, isLoading: statsLoading, error: statsError } = useGetUsageStats({ 
+    period: timeFilter === 'all-time' ? 'all' : (timeFilter === 'this-week' ? 'week' : (timeFilter === 'this-month' ? 'month' : timeFilter)) 
+  });
   const { data: balanceData, isLoading: balanceLoading } = useGetBalance();
   const { data: historyData } = useGetPurchaseHistory();
   const rawOrders = Array.isArray(historyData?.data?.purchases) ? historyData.data.purchases : [];
-  const [timeFilter, setTimeFilter] = useState("today");
   
   // Calculate filtered orders and stats based on timeFilter
   const filteredData = useMemo(() => {
@@ -52,9 +54,15 @@ export default function Dashboard() {
       endDate = new Date(startDate);
       endDate.setHours(23, 59, 59, 999);
     } else if (timeFilter === 'this-week') {
-      startDate.setDate(now.getDate() - 7);
+      // Start of current week (Monday)
+      const day = now.getDay(); 
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
+      startDate = new Date(now.getFullYear(), now.getMonth(), diff);
+      startDate.setHours(0, 0, 0, 0);
     } else if (timeFilter === 'this-month') {
-      startDate.setMonth(now.getMonth() - 1);
+      // Start of current month (1st)
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      startDate.setHours(0, 0, 0, 0);
     } else {
       startDate = new Date(0); // All time
     }
@@ -62,17 +70,18 @@ export default function Dashboard() {
     const filtered = rawOrders.filter(o => {
       const date = new Date(o.createdAt);
       const isWithinTime = date >= startDate && date <= endDate;
-      
-      const status = o.orderStatus?.toLowerCase() || '';
-      const isCompleted = status.includes("fulfilled") || status.includes("success") || status.includes("complete");
-      
-      return isWithinTime && isCompleted;
+      return isWithinTime;
     });
 
-    // Calculate stats from the list of orders to ensure consistency across all views
-    const totalRevenue = filtered.reduce((acc, o) => acc + Number(o.price || 0), 0);
-    const totalOrders = filtered.length;
-    const totalProfit = filtered.reduce((acc, o) => {
+    const completedOrders = filtered.filter(o => {
+      const status = o.orderStatus?.toLowerCase() || '';
+      return status.includes("fulfilled") || status.includes("success") || status.includes("complete");
+    });
+
+    // Calculate stats from the list of completed orders
+    const totalRevenue = completedOrders.reduce((acc, o) => acc + Number(o.price || 0), 0);
+    const totalOrders = completedOrders.length;
+    const totalProfit = completedOrders.reduce((acc, o) => {
       const price = Number(o.price || 0);
       let cost = o.costPrice ? Number(o.costPrice) : null;
       if (cost === null) {
@@ -82,32 +91,58 @@ export default function Dashboard() {
           cost = price * 0.88;
         }
       }
-      const isFulfilled = o.orderStatus?.toLowerCase().includes('fulfil') || 
-                          o.orderStatus?.toLowerCase().includes('success') ||
-                          o.orderStatus?.toLowerCase().includes('complete');
-      return acc + (isFulfilled ? price - cost : 0);
+      return acc + (price - cost);
     }, 0);
 
-    const customers = new Set(filtered.map(o => o.phoneNumber)).size;
+    const customers = new Set(completedOrders.map(o => o.phoneNumber)).size;
+
+    const pendingSpent = filtered.reduce((acc, o) => {
+      const status = o.orderStatus?.toLowerCase() || '';
+      if (status === 'pending' || status === 'processing' || status === 'unpaid') {
+        return acc + Number(o.price || 0);
+      }
+      return acc;
+    }, 0);
 
     return {
-      orders: filtered,
-      totalRevenue,
-      totalOrders,
-      totalProfit,
-      customers,
-      pendingSpent: statsData?.data?.pendingSpent || 0
+      orders: completedOrders,
+      totalRevenue: timeFilter === 'all-time' ? (statsData?.data?.globalSuccess?.revenue || 0) : totalRevenue,
+      totalOrders: timeFilter === 'all-time' ? (statsData?.data?.globalSuccess?.count || 0) : totalOrders,
+      totalProfit: timeFilter === 'all-time' ? (statsData?.data?.globalSuccess?.profit || 0) : totalProfit,
+      customers: timeFilter === 'all-time' ? (statsData?.data?.totalCustomers || 0) : customers,
+      pendingSpent: timeFilter === 'all-time' ? (statsData?.data?.globalPending?.revenue || 0) : pendingSpent
     };
   }, [rawOrders, timeFilter, statsData]);
 
-  const displayOrders = filteredData.orders;
   const stats = filteredData;
+  const displayOrders = filteredData.orders;
 
   if (statsLoading || balanceLoading) {
     return <DashboardSkeleton />;
   }
 
-  const balance = balanceData?.data?.balance || 3.21;
+  if (statsError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-6 text-center animate-in fade-in zoom-in duration-500">
+        <div className="p-6 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 shadow-[0_0_50px_-12px_rgba(239,68,68,0.3)]">
+          <AlertCircle size={48} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black tracking-tight">Analytics Offline</h2>
+          <p className="text-slate-500 font-medium max-w-xs mx-auto">We couldn't sync your performance metrics. This is usually temporary.</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2 px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+        >
+          <RefreshCcw size={14} />
+          Retry Connection
+        </button>
+      </div>
+    );
+  }
+
+  const balance = balanceData?.data?.balance || 0;
   const totalEarnings = stats.totalRevenue;
 
   return (
@@ -127,7 +162,6 @@ export default function Dashboard() {
             <Bell size={16} />
           </button>
           <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 glass rounded-2xl border-white/10">
-            <div className="h-6 w-6 md:h-7 md:w-7 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-black text-[10px] md:text-xs">FY</div>
             <span className="text-[10px] md:text-xs font-black tracking-tight">Falaa Admin</span>
           </div>
         </div>
@@ -166,20 +200,20 @@ export default function Dashboard() {
       </div>
 
       {/* ── Giant Wallet Card ── */}
-      <div className="relative group overflow-hidden glass-card p-8 md:p-10 border-primary/20 overflow-hidden">
+      <div className="relative group overflow-hidden glass-card p-6 md:p-10 border-primary/20">
         <div className="absolute -top-10 -right-10 p-4 opacity-5 pointer-events-none rotate-12">
           <Wallet size={240} strokeWidth={1} />
         </div>
         
         <div className="relative z-10 space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/20 p-3 rounded-2xl glow-primary">
-                <Wallet size={24} className="text-primary" />
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="bg-primary/20 p-2.5 md:p-3 rounded-xl md:rounded-2xl glow-primary">
+                <Wallet size={20} className="text-primary" />
               </div>
               <div>
-                <span className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 block mb-1">Wallet Balance</span>
-                <p className="text-4xl md:text-6xl font-black tracking-tighter glow-text leading-none">₵{balance.toFixed(2)}</p>
+                <span className="font-black text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-slate-400 block mb-0.5 md:mb-1">Wallet Balance</span>
+                <p className="text-3xl md:text-6xl font-black tracking-tighter glow-text leading-none">₵{balance.toFixed(2)}</p>
               </div>
             </div>
             <button className="hidden md:flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
@@ -188,14 +222,14 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-12 pt-8 border-t border-white/5">
+          <div className="grid grid-cols-2 gap-4 md:gap-12 pt-6 md:pt-8 border-t border-white/5">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Pending Escrow</p>
-              <p className="text-3xl font-black truncate text-primary/60">₵{stats.pendingSpent.toFixed(2)}</p>
+              <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 md:mb-2">Pending Escrow</p>
+              <p className="text-xl md:text-3xl font-black truncate text-primary/60">₵{stats.pendingSpent.toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Total Earnings</p>
-              <p className="text-3xl font-black truncate">₵{totalEarnings.toFixed(2)}</p>
+              <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 md:mb-2">Total Earnings</p>
+              <p className="text-xl md:text-3xl font-black truncate">₵{totalEarnings.toFixed(2)}</p>
             </div>
           </div>
         </div>
@@ -319,13 +353,13 @@ function SmallStatsCard({ label, value, icon: Icon }: { label: string, value: st
       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
          <Icon className="h-8 w-8 md:h-12 md:w-12" />
       </div>
-      <div className="flex items-center justify-between mb-4 md:mb-6 relative z-10">
+      <div className="flex items-center justify-between mb-2 md:mb-6 relative z-10">
         <p className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{label}</p>
         <div className="text-primary/40 group-hover:text-primary transition-colors">
-          <Icon size={14} />
+          <Icon size={12} className="md:size-3.5" />
         </div>
       </div>
-      <p className="text-xl md:text-2xl font-black tracking-tighter glow-text relative z-10 truncate">
+      <p className="text-lg md:text-2xl font-black tracking-tighter glow-text relative z-10 truncate leading-tight">
         {value}
       </p>
     </div>

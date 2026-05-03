@@ -1,15 +1,19 @@
 import { useHealthCheck } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, Server, Database, Globe, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Status() {
   const { data: health, isLoading } = useHealthCheck();
 
+  if (isLoading) return <StatusSkeleton />;
+
   const services = [
     { name: "API Server", status: "online", icon: Server, description: "Main backend gateway" },
-    { name: "Database", status: health?.status === 'ok' ? "online" : "online", icon: Database, description: "Order & transaction storage" },
+    { name: "Database", status: health?.status === 'ok' ? "online" : "offline", icon: Database, description: "Order & transaction storage" },
     { name: "FalaaDeals Gateway", status: "online", icon: Globe, description: "Upstream bundle provider" },
     { name: "Paystack", status: "online", icon: Activity, description: "Payment processing gateway" },
   ];
@@ -69,3 +73,19 @@ export default function Status() {
     </div>
   );
 }
+
+function StatusSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-48 rounded-xl" />
+        <Skeleton className="h-4 w-96 rounded-lg opacity-50" />
+      </div>
+      <div className="grid gap-6 md:grid-cols-2">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+      </div>
+      <Skeleton className="h-64 rounded-xl" />
+    </div>
+  );
+}
+

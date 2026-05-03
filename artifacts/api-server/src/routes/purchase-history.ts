@@ -13,31 +13,39 @@ router.get("/purchase-history", async (req, res): Promise<void> => {
     const page = parsed.success ? parsed.data.page ?? 1 : 1;
     const limit = parsed.success ? parsed.data.limit ?? 20 : 20;
 
-    // 1. Fetch upstream orders
-    let upstreamPurchases: any[] = [];
-    let upstreamTotal = 0;
+    const statusFilter = parsed.success ? parsed.data.status : undefined;
     
-    try {
-      const upstream = await datamartFetch(`/purchase-history?page=${page}&limit=${limit}`);
-      if (upstream.ok) {
-        const data = await upstream.json() as any;
-        upstreamPurchases = data.data?.purchases || [];
-        upstreamTotal = data.data?.pagination?.total || 0;
+    let whereClause: any = undefined;
+    if (statusFilter && statusFilter !== 'ALL') {
+      const successStatuses = ['completed', 'fulfilled', 'complete', 'success'];
+      const pendingStatuses = ['pending', 'processing', 'unpaid', 'on_hold'];
+      const failedStatuses = ['failed', 'cancel'];
+      
+      if (statusFilter === 'SUCCESS') {
+        whereClause = sql`${ordersTable.status} IN (${sql.join(successStatuses.map(s => sql`${s}`), sql`, `)})`;
+      } else if (statusFilter === 'PENDING') {
+        whereClause = sql`${ordersTable.status} IN (${sql.join(pendingStatuses.map(s => sql`${s}`), sql`, `)})`;
+      } else if (statusFilter === 'FAILED') {
+        whereClause = sql`${ordersTable.status} IN (${sql.join(failedStatuses.map(s => sql`${s}`), sql`, `)})`;
       }
-    } catch (err) {
-      logger.warn({ err }, "Failed to fetch upstream purchase history");
     }
 
-    // 2. Fetch local orders (Show all orders, newest first)
+    // 1. Fetch local orders first (This is our source of truth)
     const offset = (page - 1) * limit;
-    const localOrders = await db.select()
-      .from(ordersTable)
+    let localOrdersQuery = db.select()
+      .from(ordersTable) as any;
+    
+    if (whereClause) {
+      localOrdersQuery = localOrdersQuery.where(whereClause);
+    }
+
+    const localOrders = await localOrdersQuery
       .orderBy(desc(ordersTable.createdAt))
       .limit(limit)
       .offset(offset);
 
-    // 3. Map local orders to the API format
-    const mappedLocal = localOrders.map(order => ({
+    // 2. Map local orders
+    const purchases = localOrders.map(order => ({
       id: order.id,
       customerName: order.customerName || "Valued Customer",
       phoneNumber: order.phoneNumber,
@@ -52,63 +60,83 @@ router.get("/purchase-history", async (req, res): Promise<void> => {
       isLocal: true
     }));
 
-    // 4. Merge and Deduplicate by Reference
-    // We use a Map to keep uniquely by reference, prioritizing local data for customer names
-    const mergedMap = new Map();
-    
-    // 1. Add upstream first as base
-    upstreamPurchases.forEach(p => {
-      const ref = (p.orderReference || p.reference || "").toString();
-      mergedMap.set(ref, {
-        ...p,
-        customerName: "Valued Customer"
-      });
-    });
-
-    // 2. Overlay local data (which has names)
-    // We try both the full reference and a truncated 8-character version for matching
-    mappedLocal.forEach(p => {
-      const fullRef = (p.orderReference || p.paystackReference || "").toString();
-      const shortRef = fullRef.substring(0, 8);
-      
-      // Look for any variation of the reference in the map
-      let matchedRef = null;
-      if (mergedMap.has(fullRef)) matchedRef = fullRef;
-      else if (mergedMap.has(shortRef)) matchedRef = shortRef;
-      // Also try reverse: if an upstream ref is a prefix of our local ref
-      else {
-        for (const upRef of mergedMap.keys()) {
-          if (fullRef.startsWith(upRef) || upRef.startsWith(shortRef)) {
-            matchedRef = upRef;
-            break;
+    // 3. Fetch upstream orders (To catch anything missed)
+    try {
+      const upstream = await datamartFetch(`/purchase-history?page=${page}&limit=${limit}`);
+      if (upstream.ok) {
+        const data = await upstream.json() as any;
+        const upstreamPurchases = data.data?.purchases || [];
+        
+        // Add upstream orders that aren't already in our local list (by reference)
+        const localRefs = new Set(purchases.map(p => p.orderReference));
+        upstreamPurchases.forEach((up: any) => {
+          if (!localRefs.has(up.orderReference)) {
+            purchases.push({
+              ...up,
+              customerName: up.customerName || "Valued Customer",
+              isLocal: false
+            });
           }
-        }
-      }
-
-      if (matchedRef) {
-        logger.info({ fullRef, matchedRef, name: p.customerName }, "Merging local name into upstream record");
-        // Merge - keep local customerName
-        const existing = mergedMap.get(matchedRef);
-        mergedMap.set(matchedRef, {
-          ...existing,
-          customerName: p.customerName || existing.customerName || "Valued Customer"
         });
-      } else {
-        // Not in upstream history yet, add as new entry
-        mergedMap.set(fullRef, p);
       }
-    });
+    } catch (err) {
+      logger.warn({ err }, "Failed to fetch upstream history");
+    }
 
-    const purchases = Array.from(mergedMap.values())
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // 4. Final sort
+    purchases.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    let statsQuery = db.select({ 
+      count: sql<number>`count(*)`,
+      totalRevenue: sql<number>`sum(${ordersTable.amount})`
+    }).from(ordersTable) as any;
+    
+    if (whereClause) {
+      statsQuery = statsQuery.where(whereClause);
+    }
+    
+    const [statsResult] = await statsQuery;
+    
+    const [profitResult] = await db.select({
+      totalProfit: sql<number>`sum(
+        CASE 
+          WHEN ${ordersTable.status} IN ('completed', 'complete', 'fulfilled', 'success') THEN
+            ${ordersTable.amount} - COALESCE(${ordersTable.costPrice}, 
+              CASE 
+                WHEN LOWER(${ordersTable.network}) LIKE '%mtn%' OR LOWER(${ordersTable.network}) LIKE '%yello%' 
+                THEN CAST(${ordersTable.capacity} AS DECIMAL) * 4
+                ELSE ${ordersTable.amount} * 0.88
+              END
+            )
+          ELSE 0 
+        END
+      )`,
+      completedCount: sql<number>`count(CASE WHEN ${ordersTable.status} IN ('completed', 'complete', 'fulfilled', 'success') THEN 1 END)`
+    })
+    .from(ordersTable);
+
+    const [pendingResult] = await db.select({
+      pendingCount: sql<number>`count(*)`
+    })
+    .from(ordersTable)
+    .where(sql`${ordersTable.status} IN ('pending', 'processing', 'unpaid')`);
+
+    const total = Number(statsResult.count);
 
     res.json({
       status: "success",
       data: {
         purchases,
+        globalStats: {
+          totalRevenue: Number(statsResult.totalRevenue || 0),
+          totalProfit: Number(profitResult[0]?.totalProfit || 0),
+          totalOrders: total,
+          completedCount: Number(profitResult[0]?.completedCount || 0),
+          pendingCount: Number(pendingResult[0]?.pendingCount || 0)
+        },
         pagination: {
-          total: Math.max(mergedMap.size, upstreamTotal), // Rough estimate for now
-          pages: Math.ceil(Math.max(mergedMap.size, upstreamTotal) / limit),
+          total: total,
+          pages: Math.ceil(total / limit),
           currentPage: page,
           limit
         }

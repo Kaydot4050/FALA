@@ -13,6 +13,7 @@ import Status from "@/pages/Status";
 import Popups from "@/pages/Popups";
 import Suggestions from "@/pages/Suggestions";
 import Login from "@/pages/Login";
+import Performance from "@/pages/Performance";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/status" component={Status} />
         <Route path="/popups" component={Popups} />
         <Route path="/suggestions" component={Suggestions} />
+        <Route path="/performance" component={Performance} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

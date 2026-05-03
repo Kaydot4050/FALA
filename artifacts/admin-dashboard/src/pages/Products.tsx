@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { customFetch } from "@workspace/api-client-react";
@@ -112,14 +113,7 @@ export default function Products() {
     };
   }, [packagesData]);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 animate-pulse">Syncing Inventory...</p>
-      </div>
-    );
-  }
+  if (isLoading) return <ProductsSkeleton />;
 
   return (
     <div className="space-y-10 animate-fade-in pb-20">
@@ -291,7 +285,7 @@ export default function Products() {
                          </div>
                        ) : (
                          <button 
-                           className="text-[10px] font-black uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-all"
+                           className="text-[10px] font-black uppercase tracking-widest text-primary lg:opacity-0 lg:group-hover:opacity-100 transition-all"
                            onClick={() => { 
                              setEditingId(pkgId); 
                              setEditPrice(pkg.price); 
@@ -323,6 +317,49 @@ function StatsCard({ label, value, icon, color }: { label: string, value: string
         </div>
       </div>
       <p className={cn("text-2xl font-black tracking-tighter glow-text", color || "text-white")}>{value}</p>
+    </div>
+  );
+}
+
+function ProductsSkeleton() {
+  return (
+    <div className="space-y-10 animate-pulse pb-20">
+      <div className="flex justify-between items-center">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-48 rounded-xl" />
+          <Skeleton className="h-4 w-64 rounded-lg opacity-50" />
+        </div>
+        <div className="flex gap-4">
+          <Skeleton className="h-11 w-64 rounded-xl" />
+          <Skeleton className="h-11 w-11 rounded-xl" />
+        </div>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-32 rounded-2xl border border-white/5 shrink-0" />)}
+      </div>
+      <div className="grid grid-cols-4 gap-6">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-2xl border border-white/5" />)}
+      </div>
+      <div className="glass-card overflow-hidden">
+        <div className="p-8 space-y-4">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="flex items-center justify-between gap-6 py-6 border-b border-white/5 last:border-0">
+               <div className="flex items-center gap-4 flex-1">
+                  <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-1/3 rounded-lg" />
+                    <Skeleton className="h-3 w-1/4 rounded-lg opacity-40" />
+                  </div>
+               </div>
+               <Skeleton className="h-4 w-16 rounded-lg" />
+               <Skeleton className="h-4 w-16 rounded-lg" />
+               <Skeleton className="h-4 w-16 rounded-lg opacity-20" />
+               <Skeleton className="h-8 w-8 rounded-xl opacity-20" />
+               <Skeleton className="h-4 w-24 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

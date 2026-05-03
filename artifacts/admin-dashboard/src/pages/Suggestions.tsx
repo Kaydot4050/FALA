@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn, formatDate } from "@/lib/utils";
 import { customFetch } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Suggestion {
   id: number;
@@ -76,16 +77,7 @@ export default function Suggestions() {
     archived: suggestions.filter((s) => s.status === "Archived").length,
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-        <p className="text-muted-foreground font-medium animate-pulse">
-          Loading suggestions...
-        </p>
-      </div>
-    );
-  }
+  if (isLoading) return <SuggestionsSkeleton />;
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -272,5 +264,27 @@ function StatCard({
         </p>
       </CardContent>
     </Card>
+  );
+}
+function SuggestionsSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse pb-10">
+      <div className="flex justify-between items-center">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-64 rounded-xl" />
+          <Skeleton className="h-4 w-96 rounded-lg opacity-50" />
+        </div>
+        <Skeleton className="h-10 w-32 rounded-xl" />
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+      </div>
+      <div className="flex gap-2">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-24 rounded-xl opacity-40" />)}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-40 rounded-3xl" />)}
+      </div>
+    </div>
   );
 }

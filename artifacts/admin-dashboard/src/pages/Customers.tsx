@@ -17,7 +17,10 @@ import {
   Filter,
   ArrowRightLeft,
   Download,
-  MessageSquare
+  MessageSquare,
+  Clock,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { 
   Table, 
@@ -29,10 +32,20 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { customFetch } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Types
 interface Customer {
@@ -43,26 +56,78 @@ interface Customer {
   lastOrderAt: string;
 }
 
+interface SmsLog {
+  id: string;
+  direction: string;
+  phoneNumber: string;
+  message: string;
+  status: string;
+  gatewayReference: string | null;
+  createdAt: string;
+}
+
 export default function Customers() {
-  const [activeTab, setActiveTab] = useState<'customers' | 'insights' | 'suggestions'>('customers');
+  const [activeTab, setActiveTab] = useState<'customers' | 'insights' | 'suggestions' | 'logs'>('customers');
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [smsTarget, setSmsTarget] = useState<Customer | null>(null);
+  const [smsMessage, setSmsMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSendSms = async () => {
+    if (!smsTarget || !smsMessage.trim()) return;
+    
+    setIsSending(true);
+    try {
+      await customFetch("/api/admin/sms/send", {
+        method: "POST",
+        body: JSON.stringify({
+          phoneNumber: smsTarget.phoneNumber,
+          message: smsMessage
+        })
+      });
+      toast.success(`SMS sent to ${smsTarget.phoneNumber}`);
+      setSmsTarget(null);
+      setSmsMessage("");
+    } catch (error) {
+      toast.error("Failed to send SMS");
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   // Fetch Suggestions
   const { data: suggestions = [], isLoading: isLoadingSuggestions, refetch: refetchSuggestions } = useQuery({
     queryKey: ["admin-suggestions"],
     queryFn: async () => {
-      const res = await customFetch<any>("/api/admin/suggestions");
+      const res = await customFetch<any>(`/api/admin/suggestions?t=${Date.now()}`);
       return res.data || [];
-    }
+    },
+    staleTime: 0
   });
 
   // Fetch Customers
-  const { data: customersData, isLoading, refetch } = useQuery({
-    queryKey: ["admin-customers"],
+  const { data: customersResponse, isLoading, refetch } = useQuery({
+    queryKey: ["admin-customers", currentPage],
     queryFn: async () => {
-      const data = await customFetch<any>("/api/admin/customers");
-      return data.data as Customer[];
-    }
+      const data = await customFetch<any>(`/api/admin/customers?page=${currentPage}&limit=20&t=${Date.now()}`);
+      return data;
+    },
+    staleTime: 0
+  });
+
+  const customersData = customersResponse?.data as Customer[] || [];
+  const pagination = customersResponse?.pagination;
+
+  // Fetch SMS Logs
+  const { data: smsLogs = [], isLoading: isLoadingLogs, refetch: refetchLogs } = useQuery({
+    queryKey: ["admin-sms-logs"],
+    queryFn: async () => {
+      const res = await customFetch<any>(`/api/admin/sms/logs?t=${Date.now()}`);
+      return res.data || [];
+    },
+    enabled: activeTab === 'logs',
+    staleTime: 0
   });
 
   // Filter logic
@@ -145,14 +210,7 @@ export default function Customers() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <RefreshCw className="h-8 w-8 text-primary animate-spin" />
-        <p className="text-muted-foreground font-medium animate-pulse">Analyzing customer data...</p>
-      </div>
-    );
-  }
+  if (isLoading) return <CustomersSkeleton />;
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
@@ -187,6 +245,16 @@ export default function Customers() {
         >
           <MessageSquare size={16} />
           Customer Suggestions
+        </button>
+        <button 
+          onClick={() => setActiveTab('logs')}
+          className={cn(
+            "px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap",
+            activeTab === 'logs' ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-card border border-border text-muted-foreground hover:bg-muted"
+          )}
+        >
+          <Clock size={16} />
+          SMS Logs
         </button>
       </div>
 
@@ -245,12 +313,13 @@ export default function Customers() {
                     <TableHead className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">Order Count</TableHead>
                     <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total Value</TableHead>
                     <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Last Seen</TableHead>
+                    <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCustomers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-64 text-center">
+                      <TableCell colSpan={7} className="h-64 text-center">
                         <div className="flex flex-col items-center justify-center gap-2 opacity-30">
                           <Users size={48} />
                           <p className="font-black text-sm uppercase tracking-tighter">No customers matching your search</p>
@@ -291,6 +360,17 @@ export default function Customers() {
                           </TableCell>
                           <TableCell className="px-6 py-4 text-right text-xs font-bold text-muted-foreground whitespace-nowrap">
                             {formatDate(customer.lastOrderAt)}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right">
+                            <Button 
+                              onClick={() => setSmsTarget(customer)}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 rounded-lg text-[9px] font-black uppercase hover:bg-primary/10 hover:text-primary transition-all gap-1.5"
+                            >
+                              <MessageSquare size={12} />
+                              Send SMS
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
@@ -358,6 +438,91 @@ export default function Customers() {
         </div>
       )}
 
+      {activeTab === 'logs' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-black text-white uppercase tracking-tight">Recent Activity</h3>
+            <Button onClick={() => refetchLogs()} variant="ghost" size="sm" className="h-8 rounded-lg text-[9px] font-black uppercase">
+              <RefreshCw size={12} className={isLoadingLogs ? "animate-spin" : "mr-1.5"} /> Refresh Logs
+            </Button>
+          </div>
+          
+          <div className="overflow-hidden rounded-xl border border-border/30">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type</TableHead>
+                    <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer</TableHead>
+                    <TableHead className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message</TableHead>
+                    <TableHead className="px-6 py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">Status</TableHead>
+                    <TableHead className="px-6 py-3 text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground">Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoadingLogs ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-48 text-center">
+                        <RefreshCw className="h-8 w-8 text-primary animate-spin mx-auto mb-2" />
+                        <p className="text-[10px] font-black uppercase text-muted-foreground animate-pulse">Loading logs...</p>
+                      </TableCell>
+                    </TableRow>
+                  ) : smsLogs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-48 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 opacity-30">
+                          <Clock size={32} />
+                          <p className="font-black text-[10px] uppercase tracking-tighter">No SMS activity recorded yet</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    smsLogs.map((log: SmsLog) => (
+                      <TableRow key={log.id} className="group border-border/20 hover:bg-white/[0.02] transition-colors">
+                        <TableCell className="px-6 py-4">
+                          <div className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-black uppercase border",
+                            log.direction === 'inbound' ? "bg-blue-500/10 text-blue-500 border-blue-500/20" : "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                          )}>
+                            {log.direction}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4 font-mono text-[11px] font-bold text-slate-300">
+                          {log.phoneNumber}
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="text-xs font-medium text-slate-400 max-w-md truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all">
+                            {log.message}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            {log.status === 'sent' || log.status === 'received' ? (
+                              <CheckCircle2 size={12} className="text-emerald-500" />
+                            ) : (
+                              <XCircle size={12} className="text-rose-500" />
+                            )}
+                            <span className={cn(
+                              "text-[10px] font-black uppercase tracking-tighter",
+                              log.status === 'sent' || log.status === 'received' ? "text-emerald-500" : "text-rose-500"
+                            )}>
+                              {log.status}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-right text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+                          {formatDate(log.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'insights' && (
         <div className="bg-card/30 border border-border/30 rounded-3xl p-12 text-center space-y-4">
           <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6">
@@ -367,6 +532,46 @@ export default function Customers() {
           <p className="text-muted-foreground max-w-sm mx-auto text-sm">We're building advanced analytics to help you understand your customers' buying patterns better.</p>
         </div>
       )}
+
+      {/* ── Send SMS Modal ── */}
+      <Dialog open={!!smsTarget} onOpenChange={(open) => !open && setSmsTarget(null)}>
+        <DialogContent className="bg-card/95 border-border/50 backdrop-blur-2xl sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+              <MessageSquare className="text-primary" />
+              Send SMS to {smsTarget?.customerName || smsTarget?.phoneNumber}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Message</label>
+              <Textarea 
+                placeholder="Type your message here..." 
+                className="min-h-[120px] bg-white/5 border-white/10 rounded-xl focus:border-primary/50 transition-all text-sm"
+                value={smsMessage}
+                onChange={(e) => setSmsMessage(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground italic">Message will be sent via Arkesel.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="ghost" 
+              onClick={() => setSmsTarget(null)}
+              className="font-bold text-[10px] uppercase tracking-wider"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSendSms}
+              disabled={isSending || !smsMessage.trim()}
+              className="bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-wider px-8 rounded-xl h-11"
+            >
+              {isSending ? <RefreshCw size={14} className="animate-spin" /> : "Send Now"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -384,5 +589,46 @@ function StatsCard({ label, value, color = "text-foreground" }: { label: string,
         </p>
       </CardContent>
     </Card>
+  );
+}
+function CustomersSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse pb-10">
+      <div className="flex gap-4 overflow-x-auto pb-2">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-40 rounded-xl shrink-0" />)}
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+      </div>
+      <div className="flex justify-between items-center gap-6">
+        <div className="flex gap-2">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-8 w-20 rounded-lg opacity-40" />)}
+        </div>
+        <Skeleton className="h-10 w-80 rounded-xl" />
+        <div className="flex gap-3">
+          <Skeleton className="h-10 w-24 rounded-xl" />
+          <Skeleton className="h-10 w-24 rounded-xl" />
+        </div>
+      </div>
+      <div className="border border-border/30 rounded-xl overflow-hidden">
+        <div className="p-8 space-y-4">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="flex items-center justify-between py-4 border-b border-white/5 last:border-0">
+               <div className="flex items-center gap-4 flex-1">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-1/4 rounded-lg" />
+                    <Skeleton className="h-3 w-1/5 rounded-lg opacity-40" />
+                  </div>
+               </div>
+               <Skeleton className="h-4 w-32 rounded-lg" />
+               <Skeleton className="h-6 w-16 rounded-full opacity-20" />
+               <Skeleton className="h-4 w-20 rounded-lg" />
+               <Skeleton className="h-8 w-24 rounded-lg opacity-10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

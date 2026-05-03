@@ -293,9 +293,9 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {STEPS.map(({ icon: Icon, title, desc }, i) => (
-            <div key={title} className="relative flex items-start gap-4 p-5 rounded-[20px] bg-card border border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-500 group overflow-hidden">
+            <div key={title} className="relative flex items-start gap-4 p-6 rounded-[35px] bg-card border border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-500 group overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:rotate-12 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-primary/10">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:rotate-12 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-primary/10">
                 <Icon className="h-5 w-5 text-primary group-hover:animate-pulse" />
               </div>
               <div className="relative z-10">
@@ -331,7 +331,7 @@ export default function Home() {
       {/* ── Suggestion Box Section ── */}
       <AnimatedSection className="pt-10 pb-4">
         <div className={cn(
-          "relative overflow-hidden rounded-[32px] border border-white/5 bg-card/20 backdrop-blur-3xl shadow-2xl group transition-all duration-500",
+          "relative overflow-hidden rounded-[32px] border border-border bg-card/50 backdrop-blur-3xl shadow-2xl group transition-all duration-500",
           isSuggestionExpanded ? "p-6 md:p-12" : "p-6 md:p-12"
         )}>
           {/* Background decoration */}
@@ -344,11 +344,11 @@ export default function Home() {
               onClick={() => setIsSuggestionExpanded(!isSuggestionExpanded)}
             >
               <div className="flex items-center gap-4 md:gap-0 md:block">
-                <div className="shrink-0 h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl md:rounded-2xl bg-primary/10 text-primary md:mb-4 border border-white/5 shadow-inner flex">
+                <div className="shrink-0 h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl md:rounded-2xl bg-primary/10 text-primary md:mb-4 border border-primary/20 shadow-inner flex">
                   <MessageSquare className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
                 
-                <h2 className="flex-1 text-lg md:text-4xl font-black tracking-tight text-white leading-tight text-left">
+                <h2 className="flex-1 text-lg md:text-4xl font-black tracking-tight text-foreground leading-tight text-left">
                   Help us <span className="text-primary">improve.</span>
                 </h2>
 
@@ -358,7 +358,7 @@ export default function Home() {
               </div>
 
               <p className={cn(
-                "text-white/40 font-medium text-xs md:text-base mt-2 md:mt-4 text-left transition-all duration-300",
+                "text-muted-foreground font-medium text-xs md:text-base mt-2 md:mt-4 text-left transition-all duration-300",
                 !isSuggestionExpanded ? "hidden md:block" : "block"
               )}>
                 Have a feature request or feedback? We'd love to hear from you.
@@ -385,8 +385,8 @@ export default function Home() {
                         <Check className="h-8 w-8" />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-xl font-black text-white">Message Sent!</h3>
-                        <p className="text-white/40 text-sm font-medium">Thank you for your feedback.</p>
+                        <h3 className="text-xl font-black text-foreground">Message Sent!</h3>
+                        <p className="text-muted-foreground text-sm font-medium">Thank you for your feedback.</p>
                       </div>
                     </motion.div>
                   ) : (
@@ -398,12 +398,12 @@ export default function Home() {
                         <Input 
                           ref={suggestionNameRef}
                           placeholder="Your name (optional)"
-                          className="h-12 rounded-2xl bg-black/40 border-white/5 focus:border-primary/50 focus:ring-primary/20 text-sm pl-11 placeholder:text-slate-600 transition-all shadow-inner mb-4"
+                          className="h-12 rounded-2xl bg-background border-border focus:border-primary/50 focus:ring-primary/20 text-sm pl-11 placeholder:text-muted-foreground/50 transition-all shadow-sm mb-4"
                         />
                         <Textarea 
                           ref={suggestionInputRef}
                           placeholder="Your suggestion..."
-                          className="min-h-[100px] rounded-2xl bg-black/40 border-white/5 focus:border-primary/50 focus:ring-primary/20 text-sm md:text-base p-4 placeholder:text-slate-600 transition-all resize-none shadow-inner"
+                          className="min-h-[100px] rounded-2xl bg-background border-border focus:border-primary/50 focus:ring-primary/20 text-sm md:text-base p-4 placeholder:text-muted-foreground/50 transition-all resize-none shadow-sm"
                         />
                       </div>
                       <Button 
